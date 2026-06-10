@@ -13,6 +13,8 @@ type Printer struct {
 	Out  io.Writer
 	Err  io.Writer
 	Mode Mode
+	// Quiet suppresses Status lines (--quiet); data on Out is never affected.
+	Quiet bool
 }
 
 // New returns a Printer bound to os.Stdout and os.Stderr.
@@ -36,9 +38,10 @@ func (p *Printer) Human(format string, a ...any) {
 }
 
 // Status writes a formatted progress line to Err. It is suppressed in JSON
-// mode so machine consumers never see interleaved progress noise.
+// mode — so machine consumers never see interleaved progress noise — and by
+// Quiet (--quiet).
 func (p *Printer) Status(format string, a ...any) {
-	if p.Mode.JSON {
+	if p.Mode.JSON || p.Quiet {
 		return
 	}
 	fmt.Fprintf(p.Err, format, a...)
