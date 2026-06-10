@@ -1,0 +1,89 @@
+# goreleaser v2 config — release assets are a cross-repo contract with the
+# positronick.com /install.sh installer and the in-repo install.sh fallback:
+#   positronick_<os>_<arch>.tar.gz (windows: .zip) + checksums.txt
+# Do NOT change archive/checksum name templates without updating both installers.
+version: 2
+
+project_name: positronick
+
+builds:
+  - id: positronick
+    main: ./cmd/positronick
+    binary: positronick
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X github.com/positronick/cli/internal/version.Version={{.Version}} -X github.com/positronick/cli/internal/version.Commit={{.Commit}} -X github.com/positronick/cli/internal/version.Date={{.Date}}
+
+archives:
+  - id: positronick
+    ids:
+      - positronick
+    # CRITICAL: matches the server-side installer (positronick.com/install.sh)
+    # and install.sh in this repo.
+    name_template: 'positronick_{{ .Os }}_{{ .Arch }}'
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  # sha256, "<hash>  <asset>" lines — the installers verify against this file.
+  name_template: checksums.txt
+
+sboms:
+  - artifacts: archive
+
+brews:
+  - name: positronick
+    ids:
+      - positronick
+    repository:
+      owner: Positronick
+      name: homebrew-tap
+      token: '{{ .Env.HOMEBREW_TAP_TOKEN }}'
+    directory: Formula
+    homepage: https://positronick.com
+    description: CLI for the Positronick Soul Hub — search, read and install agent souls and registry tooling
+    license: Apache-2.0
+    skip_upload: false
+    install: |
+      bin.install "positronick"
+      bin.install_symlink "positronick" => "pck"
+
+changelog:
+  use: github
+  sort: asc
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: Bug fixes
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 1
+    - title: Documentation
+      regexp: '^.*?docs(\(.+\))??!?:.+$'
+      order: 2
+    - title: Chores
+      regexp: '^.*?chore(\(.+\))??!?:.+$'
+      order: 3
+    - title: Other
+      order: 999
+
+release:
+  github:
+    owner: Positronick
+    name: cli
+  draft: false
