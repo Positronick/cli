@@ -32,6 +32,17 @@ func (p *Printer) EmitJSON(v any) error {
 	return err
 }
 
+// EmitJSONLine writes v as one compact JSON line to Out — the NDJSON building
+// block for streaming commands (e.g. `login --json`).
+func (p *Printer) EmitJSONLine(v any) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintln(p.Out, string(b))
+	return err
+}
+
 // Human writes formatted primary output to Out.
 func (p *Printer) Human(format string, a ...any) {
 	fmt.Fprintf(p.Out, format, a...)

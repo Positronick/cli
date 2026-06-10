@@ -1,0 +1,6 @@
+AUTHENTICATED  yes
+METHOD         device
+USER           Ada Lovelace
+EMAIL          ada@example.com
+ADMIN          no
+BASE URL       https://mock.positronick.test

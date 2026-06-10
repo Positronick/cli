@@ -76,6 +76,35 @@ Usage: `positronick agent-docs [flags]`
 
 Print the agent-facing manual for this CLI
 
+## positronick auth
+
+Usage: `positronick auth [flags]`
+
+Inspect authentication and manage API keys
+
+## positronick auth status
+
+Usage: `positronick auth status [flags]`
+
+Show who you are authenticated as (live check)
+
+## positronick auth token
+
+Usage: `positronick auth token [flags]`
+
+Manage API keys for unattended use
+
+## positronick auth token create
+
+Usage: `positronick auth token create [flags]`
+
+Create an API key (shown exactly once)
+
+Flags:
+
+- `--expires-days` (default `0`): key lifetime in days, 1-365 (0 = server default, 90)
+- `--name` (default `positronick-cli`): name for the new key
+
 ## positronick cli
 
 Usage: `positronick cli [flags]`
@@ -193,6 +222,22 @@ Flags:
 Usage: `positronick harness show <slug> [flags]`
 
 Show one harness listing in full
+
+## positronick login
+
+Usage: `positronick login [flags]`
+
+Log in to positronick.com via the device flow
+
+Flags:
+
+- `--no-browser` (default `false`): never auto-open the verification page in a browser
+
+## positronick logout
+
+Usage: `positronick logout [flags]`
+
+Log out — delete the cached credentials
 
 ## positronick loop
 

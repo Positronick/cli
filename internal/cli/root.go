@@ -36,6 +36,7 @@ func NewRootCmd() *cobra.Command {
 	for _, listingType := range api.ListingTypes {
 		root.AddCommand(newListingNounCmd(listingType))
 	}
+	root.AddCommand(newLoginCmd(), newLogoutCmd(), newAuthCmd())
 	root.AddCommand(newAgentDocsCmd())
 
 	return root

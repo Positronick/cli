@@ -36,8 +36,15 @@ func buildBinary(t *testing.T) string {
 // and returns stdout, stderr and the real process exit code.
 func run(t *testing.T, bin, baseURL string, args ...string) (stdout, stderr string, exitCode int) {
 	t.Helper()
+	return runEnv(t, bin, baseURL, nil, args...)
+}
+
+// runEnv is run with extra environment entries (later entries win).
+func runEnv(t *testing.T, bin, baseURL string, extraEnv []string, args ...string) (stdout, stderr string, exitCode int) {
+	t.Helper()
 	cmd := exec.Command(bin, args...)
 	cmd.Env = append(os.Environ(), "POSITRONICK_BASE_URL="+baseURL)
+	cmd.Env = append(cmd.Env, extraEnv...)
 	var outBuf, errBuf strings.Builder
 	cmd.Stdout = &outBuf
 	cmd.Stderr = &errBuf
@@ -132,6 +139,70 @@ func TestE2ESmoke(t *testing.T) {
 		}
 		if !strings.HasPrefix(stderr, `{"error":{"code":"error",`) {
 			t.Errorf("stderr = %q, want the generic JSON error envelope", stderr)
+		}
+	})
+
+	t.Run("login --json streams NDJSON and stores credentials 0600", func(t *testing.T) {
+		cfgDir := t.TempDir()
+		env := []string{"POSITRONICK_CONFIG_DIR=" + cfgDir, "POSITRONICK_API_KEY="}
+
+		stdout, stderr, code := runEnv(t, bin, srv.URL, env, "login", "--json")
+		if code != 0 {
+			t.Fatalf("exit code = %d, want 0 (stderr: %s)", code, stderr)
+		}
+		if stderr != "" {
+			t.Errorf("stderr = %q, want empty in JSON mode", stderr)
+		}
+
+		lines := strings.Split(strings.TrimRight(stdout, "\n"), "\n")
+		if len(lines) != 2 {
+			t.Fatalf("stdout = %q, want exactly 2 NDJSON lines", stdout)
+		}
+		var pending struct {
+			Status   string `json:"status"`
+			UserCode string `json:"userCode"`
+		}
+		if err := json.Unmarshal([]byte(lines[0]), &pending); err != nil {
+			t.Fatalf("line 1 is not valid JSON: %v (%q)", err, lines[0])
+		}
+		if pending.Status != "pending" || pending.UserCode != "TJSP-LLAV" {
+			t.Errorf("pending line = %+v, want status pending with the dashed code", pending)
+		}
+		var done struct {
+			Status string `json:"status"`
+			User   struct {
+				Email string `json:"email"`
+			} `json:"user"`
+		}
+		if err := json.Unmarshal([]byte(lines[1]), &done); err != nil {
+			t.Fatalf("line 2 is not valid JSON: %v (%q)", err, lines[1])
+		}
+		if done.Status != "authenticated" || done.User.Email != "ada@example.com" {
+			t.Errorf("authenticated line = %+v, want the /api/me identity", done)
+		}
+
+		info, err := os.Stat(filepath.Join(cfgDir, "credentials.json"))
+		if err != nil {
+			t.Fatalf("credentials.json missing after login: %v", err)
+		}
+		if perm := info.Mode().Perm(); perm != 0o600 {
+			t.Errorf("credentials.json mode = %o, want 0600", perm)
+		}
+
+		// The stored session must now authenticate a live status check.
+		stdout, _, code = runEnv(t, bin, srv.URL, env, "auth", "status", "--json")
+		if code != 0 {
+			t.Fatalf("auth status exit code = %d, want 0", code)
+		}
+		var status struct {
+			Authenticated bool   `json:"authenticated"`
+			Method        string `json:"method"`
+		}
+		if err := json.Unmarshal([]byte(stdout), &status); err != nil {
+			t.Fatalf("auth status stdout is not pure JSON: %v (%q)", err, stdout)
+		}
+		if !status.Authenticated || status.Method != "device" {
+			t.Errorf("status = %+v, want an authenticated device session", status)
 		}
 	})
 

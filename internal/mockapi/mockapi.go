@@ -1,7 +1,8 @@
 // Package mockapi serves a fixed positronick.com API fixture over
 // net/http/httptest-compatible handlers, implementing the read contract
 // (GET /api/souls, /api/souls/{slug}, /api/listings(?type=),
-// /api/listings/{slug}) for the CLI's golden and e2e tests. The dataset is
+// /api/listings/{slug}) and the auth contract (device flow, /api/me,
+// api-key/create) for the CLI's golden and e2e tests. The dataset is
 // deliberately frozen: golden files pin command output byte-for-byte against
 // it, so changing a fixture value is a contract-test change.
 package mockapi
@@ -11,11 +12,39 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/positronick/cli/internal/api"
 )
 
 func ptr[T any](v T) *T { return &v }
+
+// Auth fixture values. The device flow is scripted: the first token poll for
+// DeviceCode answers authorization_pending, every later poll succeeds with
+// AccessToken. The advertised poll interval is 0 so tests never really wait —
+// interval pacing (and slow_down growth) is unit-tested in internal/auth.
+const (
+	// DeviceCode is the device_code issued by /api/auth/device/code.
+	DeviceCode = "mock-device-code-0001"
+	// UserCode is the user_code the person types on the verification page.
+	UserCode = "TJSPLLAV"
+	// AccessToken is the session token granted once the device is approved;
+	// it is the only bearer /api/me and api-key/create accept.
+	AccessToken = "mock-session-token"
+	// APIKey is the raw key minted by api-key/create, also accepted by
+	// /api/me as x-api-key.
+	APIKey = "posi_mockkey1234567890"
+)
+
+// MeUser is the identity /api/me answers for valid credentials (isAdmin
+// false).
+var MeUser = api.User{
+	ID:          "usr_mock0001",
+	Name:        "Ada Lovelace",
+	Email:       "ada@example.com",
+	Image:       ptr("https://example.com/ada.png"),
+	GithubLogin: ptr("ada"),
+}
 
 // Souls is the fixture gallery: three souls with deliberately different
 // download counts, dates, categories and frameworks so ranking, sorting and
@@ -293,7 +322,127 @@ func Handler() http.Handler {
 		writeError(w, http.StatusNotFound, "not_found", "Listing not found")
 	})
 
+	mux.HandleFunc("POST /api/auth/device/code", func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			ClientID string `json:"client_id"`
+		}
+		if !decodeJSONBody(w, r, &body) {
+			return
+		}
+		if body.ClientID != "positronick-cli" {
+			writeOAuthError(w, "invalid_client", "unknown client_id")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{
+			"device_code":               DeviceCode,
+			"user_code":                 UserCode,
+			"verification_uri":          "http://" + r.Host + "/device",
+			"verification_uri_complete": "http://" + r.Host + "/device?user_code=" + UserCode,
+			"expires_in":                1800,
+			"interval":                  0,
+		})
+	})
+
+	var pollMu sync.Mutex
+	polls := 0
+	mux.HandleFunc("POST /api/auth/device/token", func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			GrantType  string `json:"grant_type"`
+			DeviceCode string `json:"device_code"`
+			ClientID   string `json:"client_id"`
+		}
+		if !decodeJSONBody(w, r, &body) {
+			return
+		}
+		if body.GrantType != "urn:ietf:params:oauth:grant-type:device_code" {
+			writeOAuthError(w, "unsupported_grant_type", "")
+			return
+		}
+		if body.DeviceCode != DeviceCode || body.ClientID != "positronick-cli" {
+			writeOAuthError(w, "invalid_grant", "")
+			return
+		}
+		pollMu.Lock()
+		polls++
+		pending := polls == 1
+		pollMu.Unlock()
+		if pending {
+			writeOAuthError(w, "authorization_pending", "")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{
+			"access_token": AccessToken,
+			"token_type":   "Bearer",
+			"expires_in":   604799,
+			"scope":        "",
+		})
+	})
+
+	mux.HandleFunc("GET /api/me", func(w http.ResponseWriter, r *http.Request) {
+		if !authorized(r) {
+			writeError(w, http.StatusUnauthorized, "unauthorized", "Authentication required")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"user": MeUser, "isAdmin": false})
+	})
+
+	mux.HandleFunc("POST /api/auth/api-key/create", func(w http.ResponseWriter, r *http.Request) {
+		// Server-side restriction: only a session (bearer) may mint keys.
+		if r.Header.Get("Authorization") != "Bearer "+AccessToken {
+			writeError(w, http.StatusUnauthorized, "unauthorized", "a session is required to create API keys")
+			return
+		}
+		var body struct {
+			Name      string `json:"name"`
+			ExpiresIn int    `json:"expiresIn"`
+		}
+		if !decodeJSONBody(w, r, &body) {
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{
+			"id":        "key_mock0001",
+			"name":      body.Name,
+			"start":     "posi_mock",
+			"prefix":    "posi_",
+			"key":       APIKey,
+			"expiresAt": "2026-09-08T09:00:00.000Z",
+		})
+	})
+
 	return mux
+}
+
+// authorized reports whether the request carries the fixture session token or
+// the fixture API key.
+func authorized(r *http.Request) bool {
+	return r.Header.Get("Authorization") == "Bearer "+AccessToken ||
+		r.Header.Get("x-api-key") == APIKey
+}
+
+// decodeJSONBody enforces the verified live behavior that the auth endpoints
+// take JSON bodies only: anything else (e.g. RFC 8628 form encoding) is a
+// 415, so a client regression is caught by every test using this mock.
+func decodeJSONBody(w http.ResponseWriter, r *http.Request, into any) bool {
+	if ct := r.Header.Get("Content-Type"); !strings.HasPrefix(ct, "application/json") {
+		writeError(w, http.StatusUnsupportedMediaType, "unsupported_media_type",
+			"expected application/json")
+		return false
+	}
+	if err := json.NewDecoder(r.Body).Decode(into); err != nil {
+		writeOAuthError(w, "invalid_request", "malformed JSON body")
+		return false
+	}
+	return true
+}
+
+// writeOAuthError writes the flat OAuth error shape the device endpoints use
+// — distinct from the API's {"error":{...}} envelope.
+func writeOAuthError(w http.ResponseWriter, code, description string) {
+	body := map[string]string{"error": code}
+	if description != "" {
+		body["error_description"] = description
+	}
+	writeJSON(w, http.StatusBadRequest, body)
 }
 
 func validType(t string) bool {

@@ -23,11 +23,12 @@ gofmt -l .            # must print nothing
 
 - `cmd/positronick` — `main` only; delegates to `internal/cli`. Its e2e test builds the real binary against `internal/mockapi`.
 - `internal/cli` — cobra command tree (noun commands, `agent-docs`); `Execute()` owns signals + error rendering. Golden files live in `internal/cli/testdata/golden/`; regenerate with `go test ./internal/cli -update`.
-- `internal/api` — typed HTTP client for the positronick.com read API; wire types mirror the product repo's `src/lib/types.ts`.
+- `internal/api` — typed HTTP client for the positronick.com API; wire types mirror the product repo's `src/lib/types.ts`.
+- `internal/auth` — device-flow login, the credential cache (`credentials.json`, 0600, keyed to its base URL), and the `api.CredentialsProvider` every command authenticates through (env `POSITRONICK_API_KEY` > cached bearer > anonymous).
 - `internal/search` — 1:1 Go port of the website's fuzzy ranking (`src/lib/filter.ts` / `listingFilter.ts`); change those first, mirror here.
 - `internal/config` — base-URL/config-dir resolution (flag > env > config file > default).
 - `internal/mockapi` — frozen API fixture served over httptest for golden + e2e tests; changing a fixture value is a contract-test change.
 - `internal/output` — exit codes, error envelope, environment/TTY detection, printer, tables.
 - `internal/version` — build metadata injected via ldflags.
 
-Planned (later PRs): `internal/auth`, `internal/install`, `internal/mcpserver`.
+Planned (later PRs): `internal/install`, `internal/mcpserver`.

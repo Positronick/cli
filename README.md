@@ -29,12 +29,45 @@ go install github.com/positronick/cli/cmd/positronick@latest
 | `positronick plugin search\|show\|list\|install` | Plugins | `search`/`show`/`list` available · `install` coming |
 | `positronick loop search\|show\|list\|install` | Agent loops | `search`/`show`/`list` available · `install` coming |
 | `positronick mcp serve` | Run the Positronick MCP server | (coming in v0.1.0) |
-| `positronick login` / `logout` / `auth status` | Authenticate against positronick.com | (coming in v0.1.0) |
+| `positronick login` / `logout` / `auth status` / `auth token create` | Authenticate against positronick.com | available |
 | `positronick init` | Bootstrap a project for agent capabilities | (coming in v0.1.0) |
 | `positronick agent-docs` | Print agent-facing usage docs | available |
 | `positronick completion` | Generate shell completions | available |
 | `positronick self update` | Update the CLI in place | (coming in v0.1.0) |
 | `positronick version` | Print version information | available |
+
+## Authentication
+
+Browsing is anonymous; authenticate for account features. Three setups:
+
+### On your laptop
+
+```sh
+positronick login
+```
+
+Prints a short code and auto-opens the verification page in your browser (macOS, or Linux with a display) — approve, done. The session is cached in `~/.config/positronick/credentials.json` (mode 0600), keyed to the API host that issued it. Sessions last about 7 days, sliding with use; when one expires (HTTP 401), just `positronick login` again.
+
+### On a server, over SSH
+
+```sh
+positronick login --no-browser
+```
+
+Copy the printed code and open the verification URL on any device — your phone works fine. The session lands on the machine where you ran `login`. (Auto-open is already skipped when there is no display; `--no-browser` makes it explicit.)
+
+### Unattended (CI, cron, agents)
+
+Mint an API key from a logged-in machine, then export it where the CLI runs:
+
+```sh
+positronick auth token create --name ci --expires-days 90
+export POSITRONICK_API_KEY=posi_...
+```
+
+The raw key is printed exactly once — the server stores only a hash. `POSITRONICK_API_KEY` always wins over a cached login and is never written to disk. Creating keys requires a logged-in session: an API key cannot mint more keys.
+
+Check who you are with `positronick auth status` (live check; exits 0 in every resolvable state). `positronick logout` deletes the cached session.
 
 ## For agents
 

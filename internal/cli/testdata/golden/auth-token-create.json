@@ -1,0 +1,10 @@
+{
+  "apiKey": {
+    "id": "key_mock0001",
+    "name": "ci-bot",
+    "start": "posi_mock",
+    "prefix": "posi_",
+    "key": "posi_mockkey1234567890",
+    "expiresAt": "2026-09-08T09:00:00.000Z"
+  }
+}

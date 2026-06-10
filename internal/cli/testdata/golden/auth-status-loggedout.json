@@ -1,0 +1,7 @@
+{
+  "authenticated": false,
+  "method": null,
+  "isAdmin": false,
+  "baseUrl": "https://mock.positronick.test",
+  "hint": "run positronick login"
+}
