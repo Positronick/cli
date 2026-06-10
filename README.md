@@ -94,4 +94,4 @@ golangci-lint run
 
 ## License
 
-[Apache-2.0](LICENSE) © 2026 MiDika SRL
+[Apache-2.0](LICENSE) © 2026 [MiDika SRL](https://midika.it)
