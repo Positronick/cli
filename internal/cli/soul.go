@@ -193,7 +193,12 @@ func soulNotFound(ctx context.Context, client *api.Client, slug string) error {
 		for i, s := range souls {
 			slugs[i] = s.Slug
 		}
-		if match := closestSlug(slug, slugs); match != "" {
+		if match := closestSlug(slug, slugs); match == slug {
+			// The list knows the slug but the detail fetch 404'd: the server is
+			// older than this CLI (no JSON detail endpoint yet) — say so instead
+			// of suggesting the input back to the user.
+			hint = "the server lists this soul but could not return its details — positronick.com may be running an older API"
+		} else if match != "" {
 			hint = fmt.Sprintf("did you mean %q? %s", match, hint)
 		}
 	}

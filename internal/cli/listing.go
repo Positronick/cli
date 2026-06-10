@@ -204,7 +204,11 @@ func listingNotFound(ctx context.Context, client *api.Client, listingType, slug 
 		for i, l := range listings {
 			slugs[i] = l.Slug
 		}
-		if match := closestSlug(slug, slugs); match != "" {
+		if match := closestSlug(slug, slugs); match == slug {
+			// Same self-suggestion guard as souls: list/detail disagreement means
+			// an older server, not a typo.
+			hint = "the server lists this " + listingType + " but could not return its details — positronick.com may be running an older API"
+		} else if match != "" {
 			hint = fmt.Sprintf("did you mean %q? %s", match, hint)
 		}
 	}
