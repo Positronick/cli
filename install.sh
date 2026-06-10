@@ -14,6 +14,8 @@ set -eu
 
 REPO="Positronick/cli"
 VERSION="${POSITRONICK_VERSION:-latest}"
+# Tags are v-prefixed (v0.1.0) but the pin is the bare version — tolerate both.
+VERSION="${VERSION#v}"
 INSTALL_DIR="${POSITRONICK_INSTALL_DIR:-$HOME/.local/bin}"
 
 err() {
@@ -39,11 +41,22 @@ command -v curl >/dev/null 2>&1 || err "curl is required"
 command -v tar >/dev/null 2>&1 || err "tar is required"
 
 ASSET="positronick_${OS}_${ARCH}.tar.gz"
+# Resolve "latest" to a concrete tag up front: the tarball and checksums.txt must come from
+# the SAME release (a release published between the two fetches would otherwise look like a
+# checksum mismatch), and the receipt should record a real version.
 if [ "$VERSION" = "latest" ]; then
-	BASE="https://github.com/$REPO/releases/latest/download"
-else
-	BASE="https://github.com/$REPO/releases/download/v$VERSION"
+	LATEST_URL=$(curl --proto '=https' --tlsv1.2 -fsSLI -o /dev/null -w '%{url_effective}' \
+		"https://github.com/$REPO/releases/latest") \
+		|| err "could not resolve the latest release of $REPO"
+	TAG="${LATEST_URL##*/}"
+	# With no releases published, GitHub redirects to /releases and TAG is "releases" —
+	# accept only a v-prefixed tag.
+	case "$TAG" in
+	v[0-9]*) VERSION="${TAG#v}" ;;
+	*) err "could not resolve the latest release of $REPO (got: $LATEST_URL)" ;;
+	esac
 fi
+BASE="https://github.com/$REPO/releases/download/v$VERSION"
 
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
@@ -57,7 +70,9 @@ fetch "$BASE/$ASSET" "$TMP/$ASSET"
 fetch "$BASE/checksums.txt" "$TMP/checksums.txt"
 
 cd "$TMP"
-EXPECTED=$(grep " $ASSET\$" checksums.txt | head -n1 | cut -d' ' -f1)
+# Exact-name match (grep would treat the dots in the asset name as wildcards), tolerating
+# both sha256sum output modes: "<hash>  <file>" (text) and "<hash> *<file>" (binary).
+EXPECTED=$(awk -v asset="$ASSET" '{ name = $2; sub(/^\*/, "", name) } name == asset { print $1; exit }' checksums.txt)
 [ -n "$EXPECTED" ] || err "no checksum for $ASSET in checksums.txt"
 if command -v sha256sum >/dev/null 2>&1; then
 	ACTUAL=$(sha256sum "$ASSET" | cut -d' ' -f1)
