@@ -22,6 +22,12 @@ linters:
         text: 'and that stutters'
         linters:
           - revive
+      # APIKey mirrors the product concept ("API key", the x-api-key header);
+      # api.Key would read as a key of the client, not the credential.
+      - path: internal/api/auth\.go
+        text: 'and that stutters'
+        linters:
+          - revive
 
 formatters:
   enable:

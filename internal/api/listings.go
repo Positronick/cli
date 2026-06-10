@@ -17,7 +17,7 @@ func (c *Client) Listings(ctx context.Context, listingType string) ([]Listing, e
 	var out struct {
 		Listings []Listing `json:"listings"`
 	}
-	if err := c.do(ctx, http.MethodGet, "/api/listings", query, &out); err != nil {
+	if err := c.do(ctx, http.MethodGet, "/api/listings", query, nil, &out); err != nil {
 		return nil, err
 	}
 	return out.Listings, nil
@@ -28,7 +28,7 @@ func (c *Client) Listing(ctx context.Context, slug string) (*Listing, error) {
 	var out struct {
 		Listing Listing `json:"listing"`
 	}
-	if err := c.do(ctx, http.MethodGet, "/api/listings/"+url.PathEscape(slug), nil, &out); err != nil {
+	if err := c.do(ctx, http.MethodGet, "/api/listings/"+url.PathEscape(slug), nil, nil, &out); err != nil {
 		return nil, err
 	}
 	return &out.Listing, nil

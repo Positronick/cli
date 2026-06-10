@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -111,27 +112,44 @@ func New(baseURL string, creds CredentialsProvider, opts ...Option) (*Client, er
 
 // do performs one API call: builds the request, injects auth, retries
 // transient failures (idempotent GETs only), and decodes the response into
-// out. out may be nil (discard), *string (raw body, for the .md endpoint), or
-// any JSON-decodable value. A status >= 400 returns a *APIError decoded from
-// the server's error envelope.
-func (c *Client) do(ctx context.Context, method, path string, query url.Values, out any) error {
+// out. A non-nil in is sent as a JSON body (Content-Type: application/json —
+// the API rejects form encoding). out may be nil (discard), *string (raw
+// body, for the .md endpoint), or any JSON-decodable value. A status >= 400
+// returns a *APIError decoded from the server's error envelope.
+func (c *Client) do(ctx context.Context, method, path string, query url.Values, in, out any) error {
 	reqURL := c.baseURL + path
 	if len(query) > 0 {
 		reqURL += "?" + query.Encode()
 	}
 	retryable := method == http.MethodGet
 
+	var payload []byte
+	if in != nil {
+		var err error
+		if payload, err = json.Marshal(in); err != nil {
+			return fmt.Errorf("%s %s: encoding request body: %w", method, path, err)
+		}
+	}
+
 	for attempt := 0; ; attempt++ {
 		if err := ctx.Err(); err != nil {
 			return fmt.Errorf("%s %s: %w", method, path, err)
 		}
 
-		req, err := http.NewRequestWithContext(ctx, method, reqURL, nil)
+		// A fresh reader per attempt so a retried request resends the body.
+		var reqBody io.Reader
+		if payload != nil {
+			reqBody = bytes.NewReader(payload)
+		}
+		req, err := http.NewRequestWithContext(ctx, method, reqURL, reqBody)
 		if err != nil {
 			return fmt.Errorf("%s %s: building request: %w", method, path, err)
 		}
 		if err := c.authorize(req); err != nil {
 			return err
+		}
+		if payload != nil {
+			req.Header.Set("Content-Type", "application/json")
 		}
 		req.Header.Set("User-Agent", c.userAgent)
 
