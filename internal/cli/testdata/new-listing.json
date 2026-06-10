@@ -1,0 +1,15 @@
+{
+	"id": "01JUNKULIDTHATMUSTBEDROPPED",
+	"slug": "sentry-mcp",
+	"name": "Sentry MCP",
+	"type": "mcp",
+	"tagline": "Errors, issues and traces as agent tools",
+	"description": "Query and triage Sentry issues from any MCP-speaking agent.",
+	"category": "DevOps",
+	"tags": ["observability", "errors"],
+	"official": true,
+	"sourceUrl": "https://example.com/sentry-mcp",
+	"repoUrl": "https://example.com/getsentry/sentry-mcp",
+	"installCmd": "npx @sentry/mcp-server",
+	"confidence": "high"
+}

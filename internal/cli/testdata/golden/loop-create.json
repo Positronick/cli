@@ -1,0 +1,32 @@
+{
+  "listing": {
+    "id": "01XCREATED0000000000000001",
+    "slug": "docs-to-green",
+    "profileHandle": "nsollazzo",
+    "profileName": "Nicholas Sollazzo",
+    "name": "Docs to Green",
+    "type": "loop",
+    "tagline": "Every doc page builds without warnings",
+    "description": null,
+    "category": "AI/ML",
+    "tags": [],
+    "official": true,
+    "sourceUrl": "https://positronick.com/registry/loop",
+    "repoUrl": null,
+    "installCmd": null,
+    "data": {
+      "checkCommand": "make docs",
+      "exitCondition": "make docs exits 0 twice in a row",
+      "goal": "Every doc page builds without warnings",
+      "kickoff": "Run the docs-to-green loop until the build is clean.",
+      "maxIterations": 20
+    },
+    "confidence": "high",
+    "status": "published",
+    "downloadCount": 0,
+    "createdAt": "2026-06-09T09:00:00.000Z",
+    "updatedAt": "2026-06-09T09:00:00.000Z",
+    "source": "api"
+  },
+  "created": true
+}
