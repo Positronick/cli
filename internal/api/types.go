@@ -3,6 +3,11 @@
 // retry policy; callers receive decoded structs or a typed *APIError.
 package api
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 // This file mirrors src/lib/types.ts in the product repo field for field —
 // that file is the single source of truth for the wire contract. Keep the two
 // in lockstep: a field added there is added here with the same camelCase JSON
@@ -97,6 +102,23 @@ type Listing struct {
 	DownloadCount int            `json:"downloadCount"`
 	CreatedAt     string         `json:"createdAt"`
 	UpdatedAt     string         `json:"updatedAt"`
+}
+
+// LoopData decodes the untyped Data payload into LoopData. Empty or nil Data
+// yields the zero value; a wrong-typed field is an error, never a silent zero.
+func (l *Listing) LoopData() (LoopData, error) {
+	var ld LoopData
+	if len(l.Data) == 0 {
+		return ld, nil
+	}
+	b, err := json.Marshal(l.Data)
+	if err != nil {
+		return ld, fmt.Errorf("encoding listing data: %w", err)
+	}
+	if err := json.Unmarshal(b, &ld); err != nil {
+		return ld, fmt.Errorf("decoding loop data for %q: %w", l.Slug, err)
+	}
+	return ld, nil
 }
 
 // LoopData is the type-specific extras for a `loop` listing, stored in
