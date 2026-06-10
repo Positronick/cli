@@ -412,6 +412,31 @@ func Handler() http.Handler {
 	return mux
 }
 
+// InstallHandler returns Handler plus the install contract: GET
+// /api/souls/{slug}.md answers the soul's markdown body verbatim — the one
+// endpoint that bumps the server's download counter. Read-command tests must
+// keep using Handler (which answers 418 on .md so an accidental hit fails
+// loudly); only install-path tests opt into this handler.
+func InstallHandler() http.Handler {
+	inner := Handler()
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		slug, isMD := strings.CutSuffix(strings.TrimPrefix(r.URL.Path, "/api/souls/"), ".md")
+		if r.Method == http.MethodGet && isMD &&
+			strings.HasPrefix(r.URL.Path, "/api/souls/") && !strings.Contains(slug, "/") {
+			for _, s := range Souls {
+				if s.Slug == slug {
+					w.Header().Set("Content-Type", "text/markdown; charset=utf-8")
+					_, _ = w.Write([]byte(s.Content))
+					return
+				}
+			}
+			writeError(w, http.StatusNotFound, "not_found", "Soul not found")
+			return
+		}
+		inner.ServeHTTP(w, r)
+	})
+}
+
 // authorized reports whether the request carries the fixture session token or
 // the fixture API key.
 func authorized(r *http.Request) bool {

@@ -38,6 +38,7 @@ func NewRootCmd() *cobra.Command {
 	}
 	root.AddCommand(newLoginCmd(), newLogoutCmd(), newAuthCmd())
 	root.AddCommand(newAgentDocsCmd())
+	attachInstallCommands(root)
 
 	return root
 }

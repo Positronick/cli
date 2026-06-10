@@ -44,6 +44,19 @@
       "flags": []
     },
     {
+      "path": "positronick agent install",
+      "use": "positronick agent install \u003cslug\u003e [flags]",
+      "description": "Print (or run with --run) the official install command for one agent",
+      "flags": [
+        {
+          "name": "run",
+          "shorthand": "",
+          "usage": "execute the install command via `sh -c` instead of printing it",
+          "default": "false"
+        }
+      ]
+    },
+    {
       "path": "positronick agent list",
       "use": "positronick agent list [flags]",
       "description": "List all agent listings",
@@ -147,6 +160,19 @@
       "use": "positronick cli [flags]",
       "description": "Discover official CLI tools in the registry",
       "flags": []
+    },
+    {
+      "path": "positronick cli install",
+      "use": "positronick cli install \u003cslug\u003e [flags]",
+      "description": "Print (or run with --run) the official install command for one cli",
+      "flags": [
+        {
+          "name": "run",
+          "shorthand": "",
+          "usage": "execute the install command via `sh -c` instead of printing it",
+          "default": "false"
+        }
+      ]
     },
     {
       "path": "positronick cli list",
@@ -269,6 +295,19 @@
       "flags": []
     },
     {
+      "path": "positronick harness install",
+      "use": "positronick harness install \u003cslug\u003e [flags]",
+      "description": "Print (or run with --run) the official install command for one harness",
+      "flags": [
+        {
+          "name": "run",
+          "shorthand": "",
+          "usage": "execute the install command via `sh -c` instead of printing it",
+          "default": "false"
+        }
+      ]
+    },
+    {
       "path": "positronick harness list",
       "use": "positronick harness list [flags]",
       "description": "List all harness listings",
@@ -325,6 +364,25 @@
       "flags": []
     },
     {
+      "path": "positronick init",
+      "use": "positronick init [flags]",
+      "description": "Set up this machine: detect the harness, install a soul, suggest tooling",
+      "flags": [
+        {
+          "name": "soul",
+          "shorthand": "",
+          "usage": "slug of the soul to install (required when non-interactive)",
+          "default": ""
+        },
+        {
+          "name": "target",
+          "shorthand": "",
+          "usage": "install target: hermes, claude, cursor or openclaw (default: detected harness, else hermes)",
+          "default": ""
+        }
+      ]
+    },
+    {
       "path": "positronick login",
       "use": "positronick login [flags]",
       "description": "Log in to positronick.com via the device flow",
@@ -347,6 +405,12 @@
       "path": "positronick loop",
       "use": "positronick loop [flags]",
       "description": "Discover reusable agent loops in the registry",
+      "flags": []
+    },
+    {
+      "path": "positronick loop install",
+      "use": "positronick loop install \u003cslug\u003e [flags]",
+      "description": "Print a loop's kickoff prompt, ready to paste into your agent",
       "flags": []
     },
     {
@@ -412,6 +476,19 @@
       "flags": []
     },
     {
+      "path": "positronick mcp install",
+      "use": "positronick mcp install \u003cslug\u003e [flags]",
+      "description": "Print (or run with --run) the official install command for one mcp",
+      "flags": [
+        {
+          "name": "run",
+          "shorthand": "",
+          "usage": "execute the install command via `sh -c` instead of printing it",
+          "default": "false"
+        }
+      ]
+    },
+    {
       "path": "positronick mcp list",
       "use": "positronick mcp list [flags]",
       "description": "List all mcp listings",
@@ -474,6 +551,19 @@
       "flags": []
     },
     {
+      "path": "positronick plugin install",
+      "use": "positronick plugin install \u003cslug\u003e [flags]",
+      "description": "Print (or run with --run) the official install command for one plugin",
+      "flags": [
+        {
+          "name": "run",
+          "shorthand": "",
+          "usage": "execute the install command via `sh -c` instead of printing it",
+          "default": "false"
+        }
+      ]
+    },
+    {
       "path": "positronick plugin list",
       "use": "positronick plugin list [flags]",
       "description": "List all plugin listings",
@@ -530,10 +620,48 @@
       "flags": []
     },
     {
+      "path": "positronick self",
+      "use": "positronick self [flags]",
+      "description": "Manage this positronick installation",
+      "flags": []
+    },
+    {
+      "path": "positronick self update",
+      "use": "positronick self update [flags]",
+      "description": "Update the positronick binary to the latest release",
+      "flags": [
+        {
+          "name": "check",
+          "shorthand": "",
+          "usage": "only report whether an update is available",
+          "default": "false"
+        },
+        {
+          "name": "version",
+          "shorthand": "",
+          "usage": "update to this release tag (e.g. v0.2.0) instead of latest",
+          "default": ""
+        }
+      ]
+    },
+    {
       "path": "positronick skill",
       "use": "positronick skill [flags]",
       "description": "Discover agent skills in the registry",
       "flags": []
+    },
+    {
+      "path": "positronick skill install",
+      "use": "positronick skill install \u003cslug\u003e [flags]",
+      "description": "Print (or run with --run) the official install command for one skill",
+      "flags": [
+        {
+          "name": "run",
+          "shorthand": "",
+          "usage": "execute the install command via `sh -c` instead of printing it",
+          "default": "false"
+        }
+      ]
     },
     {
       "path": "positronick skill list",
@@ -596,6 +724,37 @@
       "use": "positronick soul [flags]",
       "description": "Discover SOUL.md personality files",
       "flags": []
+    },
+    {
+      "path": "positronick soul install",
+      "use": "positronick soul install \u003cslug\u003e [flags]",
+      "description": "Install a soul's SOUL.md for your agent framework",
+      "flags": [
+        {
+          "name": "force",
+          "shorthand": "",
+          "usage": "overwrite an existing file without asking",
+          "default": "false"
+        },
+        {
+          "name": "link",
+          "shorthand": "",
+          "usage": "claude target only: add an @-import line to ~/.claude/CLAUDE.md",
+          "default": "false"
+        },
+        {
+          "name": "path",
+          "shorthand": "",
+          "usage": "write the SOUL.md to this exact file instead of the target's path",
+          "default": ""
+        },
+        {
+          "name": "target",
+          "shorthand": "",
+          "usage": "install target: hermes, claude, cursor or openclaw (default: detected harness, else hermes)",
+          "default": ""
+        }
+      ]
     },
     {
       "path": "positronick soul list",

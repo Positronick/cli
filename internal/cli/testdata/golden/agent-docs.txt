@@ -40,6 +40,16 @@ Usage: `positronick agent [flags]`
 
 Discover agent SDKs and frameworks in the registry
 
+## positronick agent install
+
+Usage: `positronick agent install <slug> [flags]`
+
+Print (or run with --run) the official install command for one agent
+
+Flags:
+
+- `--run` (default `false`): execute the install command via `sh -c` instead of printing it
+
 ## positronick agent list
 
 Usage: `positronick agent list [flags]`
@@ -110,6 +120,16 @@ Flags:
 Usage: `positronick cli [flags]`
 
 Discover official CLI tools in the registry
+
+## positronick cli install
+
+Usage: `positronick cli install <slug> [flags]`
+
+Print (or run with --run) the official install command for one cli
+
+Flags:
+
+- `--run` (default `false`): execute the install command via `sh -c` instead of printing it
 
 ## positronick cli list
 
@@ -193,6 +213,16 @@ Usage: `positronick harness [flags]`
 
 Discover agent harnesses in the registry
 
+## positronick harness install
+
+Usage: `positronick harness install <slug> [flags]`
+
+Print (or run with --run) the official install command for one harness
+
+Flags:
+
+- `--run` (default `false`): execute the install command via `sh -c` instead of printing it
+
 ## positronick harness list
 
 Usage: `positronick harness list [flags]`
@@ -223,6 +253,17 @@ Usage: `positronick harness show <slug> [flags]`
 
 Show one harness listing in full
 
+## positronick init
+
+Usage: `positronick init [flags]`
+
+Set up this machine: detect the harness, install a soul, suggest tooling
+
+Flags:
+
+- `--soul` (default ``): slug of the soul to install (required when non-interactive)
+- `--target` (default ``): install target: hermes, claude, cursor or openclaw (default: detected harness, else hermes)
+
 ## positronick login
 
 Usage: `positronick login [flags]`
@@ -244,6 +285,12 @@ Log out — delete the cached credentials
 Usage: `positronick loop [flags]`
 
 Discover reusable agent loops in the registry
+
+## positronick loop install
+
+Usage: `positronick loop install <slug> [flags]`
+
+Print a loop's kickoff prompt, ready to paste into your agent
 
 ## positronick loop list
 
@@ -281,6 +328,16 @@ Usage: `positronick mcp [flags]`
 
 Discover MCP servers in the registry
 
+## positronick mcp install
+
+Usage: `positronick mcp install <slug> [flags]`
+
+Print (or run with --run) the official install command for one mcp
+
+Flags:
+
+- `--run` (default `false`): execute the install command via `sh -c` instead of printing it
+
 ## positronick mcp list
 
 Usage: `positronick mcp list [flags]`
@@ -317,6 +374,16 @@ Usage: `positronick plugin [flags]`
 
 Discover agent plugins in the registry
 
+## positronick plugin install
+
+Usage: `positronick plugin install <slug> [flags]`
+
+Print (or run with --run) the official install command for one plugin
+
+Flags:
+
+- `--run` (default `false`): execute the install command via `sh -c` instead of printing it
+
 ## positronick plugin list
 
 Usage: `positronick plugin list [flags]`
@@ -347,11 +414,38 @@ Usage: `positronick plugin show <slug> [flags]`
 
 Show one plugin listing in full
 
+## positronick self
+
+Usage: `positronick self [flags]`
+
+Manage this positronick installation
+
+## positronick self update
+
+Usage: `positronick self update [flags]`
+
+Update the positronick binary to the latest release
+
+Flags:
+
+- `--check` (default `false`): only report whether an update is available
+- `--version` (default ``): update to this release tag (e.g. v0.2.0) instead of latest
+
 ## positronick skill
 
 Usage: `positronick skill [flags]`
 
 Discover agent skills in the registry
+
+## positronick skill install
+
+Usage: `positronick skill install <slug> [flags]`
+
+Print (or run with --run) the official install command for one skill
+
+Flags:
+
+- `--run` (default `false`): execute the install command via `sh -c` instead of printing it
 
 ## positronick skill list
 
@@ -388,6 +482,19 @@ Show one skill listing in full
 Usage: `positronick soul [flags]`
 
 Discover SOUL.md personality files
+
+## positronick soul install
+
+Usage: `positronick soul install <slug> [flags]`
+
+Install a soul's SOUL.md for your agent framework
+
+Flags:
+
+- `--force` (default `false`): overwrite an existing file without asking
+- `--link` (default `false`): claude target only: add an @-import line to ~/.claude/CLAUDE.md
+- `--path` (default ``): write the SOUL.md to this exact file instead of the target's path
+- `--target` (default ``): install target: hermes, claude, cursor or openclaw (default: detected harness, else hermes)
 
 ## positronick soul list
 

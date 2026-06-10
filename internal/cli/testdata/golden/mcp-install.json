@@ -1,0 +1,9 @@
+{
+  "listing": {
+    "slug": "grafana-mcp",
+    "name": "Grafana MCP",
+    "type": "mcp"
+  },
+  "installCmd": "https://example.com/grafana-mcp",
+  "executed": false
+}
