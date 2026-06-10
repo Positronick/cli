@@ -1,0 +1,23 @@
+version: "2"
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - misspell
+    - revive
+    - staticcheck
+  exclusions:
+    presets:
+      - std-error-handling
+    rules:
+      # main.go is a pinned, delegation-only entrypoint; no package doc needed.
+      - path: cmd/positronick/main\.go
+        text: 'package-comments'
+        linters:
+          - revive
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
