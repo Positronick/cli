@@ -85,11 +85,18 @@ The CLI is designed to be driven by coding agents:
 - **Streams**: stdout carries data, stderr carries progress and errors. Pipe-safe.
 - **Non-interactive auto-detection**: prompts and color are disabled automatically when stdout is not a TTY, under CI (`CI`, `GITHUB_ACTIONS`), or under a coding agent (`CLAUDECODE`, `GEMINI_CLI`, `CURSOR_EDITOR`). `NO_COLOR` and `--no-color` are honored.
 
+## Verifying releases
+
+Release archives ship with `checksums.txt` (SHA-256) and sigstore-backed build
+provenance; the install script verifies checksums automatically. See
+[SECURITY.md](SECURITY.md) for manual verification commands and the
+vulnerability reporting policy.
+
 ## Development
 
 ```sh
-go test ./...
-golangci-lint run
+make check   # everything CI runs: tidy/fmt/lint/vuln/shellcheck/actionlint/race tests/cross-builds
+make help    # list all targets
 ```
 
 ## License
