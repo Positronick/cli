@@ -1,0 +1,387 @@
+# positronick — agent manual
+
+`positronick` is the command-line client for positronick.com. It discovers agent capabilities: souls (installable SOUL.md personality files) and a registry of official tooling (harnesses, CLIs, MCP servers, agents, skills, plugins, loops). It is built to be driven by coding agents — pass `--json` to any command for stable machine-readable JSON on stdout, read progress and errors from stderr, and branch on the exit code. Read commands never prompt.
+
+Exit codes:
+
+| Code | Meaning |
+| ---- | ------- |
+| 0 | ok |
+| 1 | error |
+| 2 | cancelled |
+| 3 | not found |
+| 4 | auth required |
+
+On failure with `--json`, stderr carries exactly one error-envelope line:
+
+```json
+{"error":{"code":"<code>","message":"<message>","hint":"<optional hint>"}}
+```
+
+Error codes: `error`, `cancelled`, `not_found`, `auth_required`. `hint` is omitted when empty.
+
+## positronick
+
+Usage: `positronick [flags]`
+
+Discover and install agent capabilities from positronick.com
+
+Flags:
+
+- `--base-url` (default ``): override the positronick.com API base URL
+- `--json` (default `false`): emit machine-readable JSON on stdout
+- `--no-color` (default `false`): disable color output
+- `--quiet` (default `false`): suppress progress output on stderr
+- `--yes` (default `false`): assume yes for confirmation prompts
+
+## positronick agent
+
+Usage: `positronick agent [flags]`
+
+Discover agent SDKs and frameworks in the registry
+
+## positronick agent list
+
+Usage: `positronick agent list [flags]`
+
+List all agent listings
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `name`): sort order: relevance, name, downloads or newest
+
+## positronick agent search
+
+Usage: `positronick agent search <query> [flags]`
+
+Search agent listings by fuzzy relevance
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `relevance`): sort order: relevance, name, downloads or newest
+
+## positronick agent show
+
+Usage: `positronick agent show <slug> [flags]`
+
+Show one agent listing in full
+
+## positronick agent-docs
+
+Usage: `positronick agent-docs [flags]`
+
+Print the agent-facing manual for this CLI
+
+## positronick cli
+
+Usage: `positronick cli [flags]`
+
+Discover official CLI tools in the registry
+
+## positronick cli list
+
+Usage: `positronick cli list [flags]`
+
+List all cli listings
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `name`): sort order: relevance, name, downloads or newest
+
+## positronick cli search
+
+Usage: `positronick cli search <query> [flags]`
+
+Search cli listings by fuzzy relevance
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `relevance`): sort order: relevance, name, downloads or newest
+
+## positronick cli show
+
+Usage: `positronick cli show <slug> [flags]`
+
+Show one cli listing in full
+
+## positronick completion
+
+Usage: `positronick completion [flags]`
+
+Generate the autocompletion script for the specified shell
+
+## positronick completion bash
+
+Usage: `positronick completion bash`
+
+Generate the autocompletion script for bash
+
+Flags:
+
+- `--no-descriptions` (default `false`): disable completion descriptions
+
+## positronick completion fish
+
+Usage: `positronick completion fish [flags]`
+
+Generate the autocompletion script for fish
+
+Flags:
+
+- `--no-descriptions` (default `false`): disable completion descriptions
+
+## positronick completion powershell
+
+Usage: `positronick completion powershell [flags]`
+
+Generate the autocompletion script for powershell
+
+Flags:
+
+- `--no-descriptions` (default `false`): disable completion descriptions
+
+## positronick completion zsh
+
+Usage: `positronick completion zsh [flags]`
+
+Generate the autocompletion script for zsh
+
+Flags:
+
+- `--no-descriptions` (default `false`): disable completion descriptions
+
+## positronick harness
+
+Usage: `positronick harness [flags]`
+
+Discover agent harnesses in the registry
+
+## positronick harness list
+
+Usage: `positronick harness list [flags]`
+
+List all harness listings
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `name`): sort order: relevance, name, downloads or newest
+
+## positronick harness search
+
+Usage: `positronick harness search <query> [flags]`
+
+Search harness listings by fuzzy relevance
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `relevance`): sort order: relevance, name, downloads or newest
+
+## positronick harness show
+
+Usage: `positronick harness show <slug> [flags]`
+
+Show one harness listing in full
+
+## positronick loop
+
+Usage: `positronick loop [flags]`
+
+Discover reusable agent loops in the registry
+
+## positronick loop list
+
+Usage: `positronick loop list [flags]`
+
+List all loop listings
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `name`): sort order: relevance, name, downloads or newest
+
+## positronick loop search
+
+Usage: `positronick loop search <query> [flags]`
+
+Search loop listings by fuzzy relevance
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `relevance`): sort order: relevance, name, downloads or newest
+
+## positronick loop show
+
+Usage: `positronick loop show <slug> [flags]`
+
+Show one loop listing in full
+
+## positronick mcp
+
+Usage: `positronick mcp [flags]`
+
+Discover MCP servers in the registry
+
+## positronick mcp list
+
+Usage: `positronick mcp list [flags]`
+
+List all mcp listings
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `name`): sort order: relevance, name, downloads or newest
+
+## positronick mcp search
+
+Usage: `positronick mcp search <query> [flags]`
+
+Search mcp listings by fuzzy relevance
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `relevance`): sort order: relevance, name, downloads or newest
+
+## positronick mcp show
+
+Usage: `positronick mcp show <slug> [flags]`
+
+Show one mcp listing in full
+
+## positronick plugin
+
+Usage: `positronick plugin [flags]`
+
+Discover agent plugins in the registry
+
+## positronick plugin list
+
+Usage: `positronick plugin list [flags]`
+
+List all plugin listings
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `name`): sort order: relevance, name, downloads or newest
+
+## positronick plugin search
+
+Usage: `positronick plugin search <query> [flags]`
+
+Search plugin listings by fuzzy relevance
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `relevance`): sort order: relevance, name, downloads or newest
+
+## positronick plugin show
+
+Usage: `positronick plugin show <slug> [flags]`
+
+Show one plugin listing in full
+
+## positronick skill
+
+Usage: `positronick skill [flags]`
+
+Discover agent skills in the registry
+
+## positronick skill list
+
+Usage: `positronick skill list [flags]`
+
+List all skill listings
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `name`): sort order: relevance, name, downloads or newest
+
+## positronick skill search
+
+Usage: `positronick skill search <query> [flags]`
+
+Search skill listings by fuzzy relevance
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `relevance`): sort order: relevance, name, downloads or newest
+
+## positronick skill show
+
+Usage: `positronick skill show <slug> [flags]`
+
+Show one skill listing in full
+
+## positronick soul
+
+Usage: `positronick soul [flags]`
+
+Discover SOUL.md personality files
+
+## positronick soul list
+
+Usage: `positronick soul list [flags]`
+
+List all souls
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--framework` (default ``): only souls supporting this framework (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `name`): sort order: relevance, name, downloads or newest
+
+## positronick soul search
+
+Usage: `positronick soul search <query> [flags]`
+
+Search souls by fuzzy relevance
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--framework` (default ``): only souls supporting this framework (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `relevance`): sort order: relevance, name, downloads or newest
+
+## positronick soul show
+
+Usage: `positronick soul show <slug> [flags]`
+
+Show one soul in full
+
+Flags:
+
+- `--raw` (default `false`): print only the SOUL.md body verbatim (overrides --json)
+
+## positronick version
+
+Usage: `positronick version [flags]`
+
+Print the positronick CLI version

@@ -1,0 +1,31 @@
+{
+  "query": "git",
+  "count": 1,
+  "listings": [
+    {
+      "id": "01LSTGITHUBCLI0000000000XX",
+      "slug": "github-cli",
+      "profileHandle": "github",
+      "profileName": "GitHub",
+      "name": "GitHub CLI",
+      "type": "cli",
+      "tagline": "GitHub from the command line",
+      "description": "Work with issues, PRs and releases from the shell.",
+      "category": "DevOps",
+      "tags": [
+        "git",
+        "github"
+      ],
+      "official": true,
+      "sourceUrl": "https://example.com/cli",
+      "repoUrl": "https://example.com/cli/cli",
+      "installCmd": "brew install gh",
+      "data": {},
+      "confidence": "official",
+      "status": "published",
+      "downloadCount": 64,
+      "createdAt": "2026-02-01T09:00:00.000Z",
+      "updatedAt": "2026-02-03T09:00:00.000Z"
+    }
+  ]
+}

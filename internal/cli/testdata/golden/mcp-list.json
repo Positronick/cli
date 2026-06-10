@@ -1,0 +1,29 @@
+{
+  "count": 1,
+  "listings": [
+    {
+      "id": "01LSTGRAFANAMCP000000000XX",
+      "slug": "grafana-mcp",
+      "profileHandle": "grafana",
+      "profileName": "Grafana Labs",
+      "name": "Grafana MCP",
+      "type": "mcp",
+      "tagline": "Dashboards, alerts and incidents as agent tools",
+      "description": null,
+      "category": "DevOps",
+      "tags": [
+        "observability"
+      ],
+      "official": true,
+      "sourceUrl": "https://example.com/grafana-mcp",
+      "repoUrl": null,
+      "installCmd": null,
+      "data": {},
+      "confidence": "official",
+      "status": "published",
+      "downloadCount": 31,
+      "createdAt": "2026-03-15T09:00:00.000Z",
+      "updatedAt": "2026-03-15T09:00:00.000Z"
+    }
+  ]
+}

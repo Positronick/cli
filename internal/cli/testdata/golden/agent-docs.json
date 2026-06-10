@@ -1,0 +1,633 @@
+{
+  "commands": [
+    {
+      "path": "positronick",
+      "use": "positronick [flags]",
+      "description": "Discover and install agent capabilities from positronick.com",
+      "flags": [
+        {
+          "name": "base-url",
+          "shorthand": "",
+          "usage": "override the positronick.com API base URL",
+          "default": ""
+        },
+        {
+          "name": "json",
+          "shorthand": "",
+          "usage": "emit machine-readable JSON on stdout",
+          "default": "false"
+        },
+        {
+          "name": "no-color",
+          "shorthand": "",
+          "usage": "disable color output",
+          "default": "false"
+        },
+        {
+          "name": "quiet",
+          "shorthand": "",
+          "usage": "suppress progress output on stderr",
+          "default": "false"
+        },
+        {
+          "name": "yes",
+          "shorthand": "",
+          "usage": "assume yes for confirmation prompts",
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "path": "positronick agent",
+      "use": "positronick agent [flags]",
+      "description": "Discover agent SDKs and frameworks in the registry",
+      "flags": []
+    },
+    {
+      "path": "positronick agent list",
+      "use": "positronick agent list [flags]",
+      "description": "List all agent listings",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "name"
+        }
+      ]
+    },
+    {
+      "path": "positronick agent search",
+      "use": "positronick agent search \u003cquery\u003e [flags]",
+      "description": "Search agent listings by fuzzy relevance",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "relevance"
+        }
+      ]
+    },
+    {
+      "path": "positronick agent show",
+      "use": "positronick agent show \u003cslug\u003e [flags]",
+      "description": "Show one agent listing in full",
+      "flags": []
+    },
+    {
+      "path": "positronick agent-docs",
+      "use": "positronick agent-docs [flags]",
+      "description": "Print the agent-facing manual for this CLI",
+      "flags": []
+    },
+    {
+      "path": "positronick cli",
+      "use": "positronick cli [flags]",
+      "description": "Discover official CLI tools in the registry",
+      "flags": []
+    },
+    {
+      "path": "positronick cli list",
+      "use": "positronick cli list [flags]",
+      "description": "List all cli listings",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "name"
+        }
+      ]
+    },
+    {
+      "path": "positronick cli search",
+      "use": "positronick cli search \u003cquery\u003e [flags]",
+      "description": "Search cli listings by fuzzy relevance",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "relevance"
+        }
+      ]
+    },
+    {
+      "path": "positronick cli show",
+      "use": "positronick cli show \u003cslug\u003e [flags]",
+      "description": "Show one cli listing in full",
+      "flags": []
+    },
+    {
+      "path": "positronick completion",
+      "use": "positronick completion [flags]",
+      "description": "Generate the autocompletion script for the specified shell",
+      "flags": []
+    },
+    {
+      "path": "positronick completion bash",
+      "use": "positronick completion bash",
+      "description": "Generate the autocompletion script for bash",
+      "flags": [
+        {
+          "name": "no-descriptions",
+          "shorthand": "",
+          "usage": "disable completion descriptions",
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "path": "positronick completion fish",
+      "use": "positronick completion fish [flags]",
+      "description": "Generate the autocompletion script for fish",
+      "flags": [
+        {
+          "name": "no-descriptions",
+          "shorthand": "",
+          "usage": "disable completion descriptions",
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "path": "positronick completion powershell",
+      "use": "positronick completion powershell [flags]",
+      "description": "Generate the autocompletion script for powershell",
+      "flags": [
+        {
+          "name": "no-descriptions",
+          "shorthand": "",
+          "usage": "disable completion descriptions",
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "path": "positronick completion zsh",
+      "use": "positronick completion zsh [flags]",
+      "description": "Generate the autocompletion script for zsh",
+      "flags": [
+        {
+          "name": "no-descriptions",
+          "shorthand": "",
+          "usage": "disable completion descriptions",
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "path": "positronick harness",
+      "use": "positronick harness [flags]",
+      "description": "Discover agent harnesses in the registry",
+      "flags": []
+    },
+    {
+      "path": "positronick harness list",
+      "use": "positronick harness list [flags]",
+      "description": "List all harness listings",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "name"
+        }
+      ]
+    },
+    {
+      "path": "positronick harness search",
+      "use": "positronick harness search \u003cquery\u003e [flags]",
+      "description": "Search harness listings by fuzzy relevance",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "relevance"
+        }
+      ]
+    },
+    {
+      "path": "positronick harness show",
+      "use": "positronick harness show \u003cslug\u003e [flags]",
+      "description": "Show one harness listing in full",
+      "flags": []
+    },
+    {
+      "path": "positronick loop",
+      "use": "positronick loop [flags]",
+      "description": "Discover reusable agent loops in the registry",
+      "flags": []
+    },
+    {
+      "path": "positronick loop list",
+      "use": "positronick loop list [flags]",
+      "description": "List all loop listings",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "name"
+        }
+      ]
+    },
+    {
+      "path": "positronick loop search",
+      "use": "positronick loop search \u003cquery\u003e [flags]",
+      "description": "Search loop listings by fuzzy relevance",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "relevance"
+        }
+      ]
+    },
+    {
+      "path": "positronick loop show",
+      "use": "positronick loop show \u003cslug\u003e [flags]",
+      "description": "Show one loop listing in full",
+      "flags": []
+    },
+    {
+      "path": "positronick mcp",
+      "use": "positronick mcp [flags]",
+      "description": "Discover MCP servers in the registry",
+      "flags": []
+    },
+    {
+      "path": "positronick mcp list",
+      "use": "positronick mcp list [flags]",
+      "description": "List all mcp listings",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "name"
+        }
+      ]
+    },
+    {
+      "path": "positronick mcp search",
+      "use": "positronick mcp search \u003cquery\u003e [flags]",
+      "description": "Search mcp listings by fuzzy relevance",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "relevance"
+        }
+      ]
+    },
+    {
+      "path": "positronick mcp show",
+      "use": "positronick mcp show \u003cslug\u003e [flags]",
+      "description": "Show one mcp listing in full",
+      "flags": []
+    },
+    {
+      "path": "positronick plugin",
+      "use": "positronick plugin [flags]",
+      "description": "Discover agent plugins in the registry",
+      "flags": []
+    },
+    {
+      "path": "positronick plugin list",
+      "use": "positronick plugin list [flags]",
+      "description": "List all plugin listings",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "name"
+        }
+      ]
+    },
+    {
+      "path": "positronick plugin search",
+      "use": "positronick plugin search \u003cquery\u003e [flags]",
+      "description": "Search plugin listings by fuzzy relevance",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "relevance"
+        }
+      ]
+    },
+    {
+      "path": "positronick plugin show",
+      "use": "positronick plugin show \u003cslug\u003e [flags]",
+      "description": "Show one plugin listing in full",
+      "flags": []
+    },
+    {
+      "path": "positronick skill",
+      "use": "positronick skill [flags]",
+      "description": "Discover agent skills in the registry",
+      "flags": []
+    },
+    {
+      "path": "positronick skill list",
+      "use": "positronick skill list [flags]",
+      "description": "List all skill listings",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "name"
+        }
+      ]
+    },
+    {
+      "path": "positronick skill search",
+      "use": "positronick skill search \u003cquery\u003e [flags]",
+      "description": "Search skill listings by fuzzy relevance",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "relevance"
+        }
+      ]
+    },
+    {
+      "path": "positronick skill show",
+      "use": "positronick skill show \u003cslug\u003e [flags]",
+      "description": "Show one skill listing in full",
+      "flags": []
+    },
+    {
+      "path": "positronick soul",
+      "use": "positronick soul [flags]",
+      "description": "Discover SOUL.md personality files",
+      "flags": []
+    },
+    {
+      "path": "positronick soul list",
+      "use": "positronick soul list [flags]",
+      "description": "List all souls",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "framework",
+          "shorthand": "",
+          "usage": "only souls supporting this framework (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "name"
+        }
+      ]
+    },
+    {
+      "path": "positronick soul search",
+      "use": "positronick soul search \u003cquery\u003e [flags]",
+      "description": "Search souls by fuzzy relevance",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "framework",
+          "shorthand": "",
+          "usage": "only souls supporting this framework (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "relevance"
+        }
+      ]
+    },
+    {
+      "path": "positronick soul show",
+      "use": "positronick soul show \u003cslug\u003e [flags]",
+      "description": "Show one soul in full",
+      "flags": [
+        {
+          "name": "raw",
+          "shorthand": "",
+          "usage": "print only the SOUL.md body verbatim (overrides --json)",
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "path": "positronick version",
+      "use": "positronick version [flags]",
+      "description": "Print the positronick CLI version",
+      "flags": []
+    }
+  ],
+  "exitCodes": {
+    "0": "ok",
+    "1": "error",
+    "2": "cancelled",
+    "3": "not found",
+    "4": "auth required"
+  }
+}

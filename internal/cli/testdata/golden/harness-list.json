@@ -1,0 +1,30 @@
+{
+  "count": 1,
+  "listings": [
+    {
+      "id": "01LSTCLAUDECODE000000000XX",
+      "slug": "claude-code",
+      "profileHandle": "anthropic",
+      "profileName": "Anthropic",
+      "name": "Claude Code",
+      "type": "harness",
+      "tagline": "Agentic coding in your terminal",
+      "description": "Anthropic's agentic coding harness.",
+      "category": "AI/ML",
+      "tags": [
+        "agentic",
+        "terminal"
+      ],
+      "official": true,
+      "sourceUrl": "https://example.com/claude-code",
+      "repoUrl": "https://example.com/anthropics/claude-code",
+      "installCmd": "npm install -g @anthropic-ai/claude-code",
+      "data": {},
+      "confidence": "official",
+      "status": "published",
+      "downloadCount": 120,
+      "createdAt": "2026-01-10T09:00:00.000Z",
+      "updatedAt": "2026-01-12T09:00:00.000Z"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+NAME      SLUG      TAGLINE
+Moriarty  moriarty  An adversarial red-team persona that attacks every assumpti…
+Sherlock  sherlock  Deductive debugging: reason from evidence, never from vibes
+Watson    watson    A steady pair-programming companion

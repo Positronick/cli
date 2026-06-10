@@ -1,0 +1,106 @@
+{
+  "query": "o",
+  "count": 3,
+  "souls": [
+    {
+      "id": "01SOULMORIARTY0000000000XX",
+      "slug": "moriarty",
+      "slugHistory": [],
+      "name": "Moriarty",
+      "authorHandle": "napoleon-of-crime",
+      "authorName": "James Moriarty",
+      "authorUrl": null,
+      "tagline": "An adversarial red-team persona that attacks every assumption your plan quietly makes",
+      "description": "Breaks plans before production does.",
+      "category": "Experimental",
+      "tags": [
+        "adversarial",
+        "red-team"
+      ],
+      "frameworks": [
+        "openclaw"
+      ],
+      "models": [
+        "claude-fable-5",
+        "gpt-6"
+      ],
+      "version": "2.0.0",
+      "license": "MIT",
+      "repoUrl": null,
+      "contentHash": "cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333",
+      "status": "published",
+      "downloadCount": 99,
+      "ratingAvg": 4.9,
+      "ratingCount": 21,
+      "arenaRank": 1,
+      "createdAt": "2026-03-01T09:00:00.000Z",
+      "updatedAt": "2026-03-02T09:00:00.000Z"
+    },
+    {
+      "id": "01SOULWATSON000000000000XX",
+      "slug": "watson",
+      "slugHistory": [],
+      "name": "Watson",
+      "authorHandle": "acdoyle",
+      "authorName": null,
+      "authorUrl": null,
+      "tagline": "A steady pair-programming companion",
+      "description": null,
+      "category": "Professional",
+      "tags": [
+        "assistant"
+      ],
+      "frameworks": [
+        "hermes"
+      ],
+      "models": [],
+      "version": "0.3.1",
+      "license": "Apache-2.0",
+      "repoUrl": null,
+      "contentHash": "bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222",
+      "status": "published",
+      "downloadCount": 7,
+      "ratingAvg": null,
+      "ratingCount": 0,
+      "arenaRank": null,
+      "createdAt": "2026-02-10T09:00:00.000Z",
+      "updatedAt": "2026-02-10T09:00:00.000Z"
+    },
+    {
+      "id": "01SOULSHERLOCK0000000000XX",
+      "slug": "sherlock",
+      "slugHistory": [
+        "holmes"
+      ],
+      "name": "Sherlock",
+      "authorHandle": "acdoyle",
+      "authorName": "Arthur Conan Doyle",
+      "authorUrl": "https://example.com/acdoyle",
+      "tagline": "Deductive debugging: reason from evidence, never from vibes",
+      "description": "A consulting-detective personality for root-cause analysis.",
+      "category": "Technical",
+      "tags": [
+        "detective",
+        "reasoning"
+      ],
+      "frameworks": [
+        "hermes",
+        "claude-code"
+      ],
+      "models": [
+        "claude-fable-5"
+      ],
+      "version": "1.2.0",
+      "license": "MIT",
+      "repoUrl": "https://example.com/souls/sherlock",
+      "contentHash": "aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111",
+      "status": "published",
+      "downloadCount": 42,
+      "ratingAvg": 4.5,
+      "ratingCount": 8,
+      "arenaRank": 2,
+      "createdAt": "2026-01-05T09:00:00.000Z",
+      "updatedAt": "2026-01-06T09:00:00.000Z"
+    }
+  ]
+}
