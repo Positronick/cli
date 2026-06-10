@@ -1,0 +1,4 @@
+#!/usr/bin/env node
+'use strict';
+// `pck` is the short alias for `positronick` — same launcher.
+require('./positronick');

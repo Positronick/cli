@@ -1,0 +1,42 @@
+#!/usr/bin/env node
+'use strict';
+// Thin launcher (esbuild/biome pattern): resolves the real binary shipped in the
+// matching @positronick/cli-<os>-<arch> optional dependency and spawns it.
+
+const { spawnSync } = require('node:child_process');
+
+const PLATFORM_PACKAGES = {
+	'darwin-x64': '@positronick/cli-darwin-amd64',
+	'darwin-arm64': '@positronick/cli-darwin-arm64',
+	'linux-x64': '@positronick/cli-linux-amd64',
+	'linux-arm64': '@positronick/cli-linux-arm64'
+};
+
+function fail(message) {
+	console.error(`positronick: ${message}`);
+	console.error('Fall back to the shell installer:');
+	console.error('  curl -fsSL https://positronick.com/install.sh | sh');
+	process.exit(1);
+}
+
+function resolveBinary() {
+	const key = `${process.platform}-${process.arch}`;
+	const pkg = PLATFORM_PACKAGES[key];
+	if (!pkg) {
+		fail(`unsupported platform ${key} (supported: ${Object.keys(PLATFORM_PACKAGES).join(', ')}).`);
+	}
+	try {
+		return require.resolve(`${pkg}/bin/positronick`);
+	} catch {
+		fail(
+			`platform package ${pkg} is missing — your package manager may have skipped ` +
+				'optionalDependencies. Reinstall with optional dependencies enabled.'
+		);
+	}
+}
+
+const result = spawnSync(resolveBinary(), process.argv.slice(2), { stdio: 'inherit' });
+if (result.error) {
+	fail(result.error.message);
+}
+process.exit(result.status === null ? 1 : result.status);

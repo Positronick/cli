@@ -1,0 +1,24 @@
+{
+	"name": "positronick",
+	"version": "0.0.0-placeholder",
+	"description": "CLI for the Positronick Soul Hub — search, read and install agent souls and registry tooling",
+	"keywords": ["positronick", "soul", "agents", "cli"],
+	"homepage": "https://positronick.com",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Positronick/cli.git",
+		"directory": "packages/npm/positronick"
+	},
+	"license": "Apache-2.0",
+	"bin": {
+		"positronick": "bin/positronick",
+		"pck": "bin/pck"
+	},
+	"files": ["bin"],
+	"optionalDependencies": {
+		"@positronick/cli-darwin-amd64": "0.0.0-placeholder",
+		"@positronick/cli-darwin-arm64": "0.0.0-placeholder",
+		"@positronick/cli-linux-amd64": "0.0.0-placeholder",
+		"@positronick/cli-linux-arm64": "0.0.0-placeholder"
+	}
+}
