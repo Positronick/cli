@@ -1,0 +1,10 @@
+{
+  "installed": {
+    "slug": "sherlock",
+    "name": "Sherlock",
+    "version": "1.2.0",
+    "target": "hermes",
+    "path": "/home/mock/.hermes/SOUL.md",
+    "bytes": 93
+  }
+}

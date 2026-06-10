@@ -27,8 +27,10 @@ gofmt -l .            # must print nothing
 - `internal/auth` — device-flow login, the credential cache (`credentials.json`, 0600, keyed to its base URL), and the `api.CredentialsProvider` every command authenticates through (env `POSITRONICK_API_KEY` > cached bearer > anonymous).
 - `internal/search` — 1:1 Go port of the website's fuzzy ranking (`src/lib/filter.ts` / `listingFilter.ts`); change those first, mirror here.
 - `internal/config` — base-URL/config-dir resolution (flag > env > config file > default).
-- `internal/mockapi` — frozen API fixture served over httptest for golden + e2e tests; changing a fixture value is a contract-test change.
+- `internal/install` — SOUL.md install conventions: harness detection (`.hermes`/`.claude`/`.cursor`/`.openclaw` in cwd, then home), the per-target path table, the overwrite gate (the counter-bumping `.md` fetch runs only after the gate passes), and the `positronick-install-receipt.json` contract shared with install.sh.
+- `internal/selfupdate` — `self update` machinery: install-method classification (only the installer receipt authorizes an in-place replace), GitHub releases lookup (base URL injectable for tests), checksums.txt verification, atomic binary swap.
+- `internal/mockapi` — frozen API fixture served over httptest for golden + e2e tests; changing a fixture value is a contract-test change. Read tests use `Handler()` (418 on `.md`); install tests opt into `InstallHandler()`.
 - `internal/output` — exit codes, error envelope, environment/TTY detection, printer, tables.
 - `internal/version` — build metadata injected via ldflags.
 
-Planned (later PRs): `internal/install`, `internal/mcpserver`.
+Planned (later PRs): `internal/mcpserver`.

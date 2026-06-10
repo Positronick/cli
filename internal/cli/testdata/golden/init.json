@@ -1,0 +1,22 @@
+{
+  "harness": "",
+  "actions": [
+    {
+      "kind": "soul_install",
+      "slug": "sherlock",
+      "path": "/home/mock/.hermes/SOUL.md"
+    },
+    {
+      "kind": "suggestion",
+      "type": "mcp",
+      "slug": "grafana-mcp",
+      "installCmd": "https://example.com/grafana-mcp"
+    },
+    {
+      "kind": "suggestion",
+      "type": "skill",
+      "slug": "superpowers",
+      "installCmd": "https://example.com/superpowers"
+    }
+  ]
+}

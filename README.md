@@ -20,20 +20,20 @@ go install github.com/positronick/cli/cmd/positronick@latest
 
 | Command | Description | Status |
 | --- | --- | --- |
-| `positronick soul search\|show\|list\|install` | Find and install `SOUL.md` personality files | `search`/`show`/`list` available · `install` coming |
-| `positronick harness search\|show\|list\|install` | Agent harnesses | `search`/`show`/`list` available · `install` coming |
-| `positronick cli search\|show\|list\|install` | CLI tools | `search`/`show`/`list` available · `install` coming |
-| `positronick mcp search\|show\|list\|install` | MCP servers | `search`/`show`/`list` available · `install` coming |
-| `positronick agent search\|show\|list\|install` | Agents | `search`/`show`/`list` available · `install` coming |
-| `positronick skill search\|show\|list\|install` | Skills | `search`/`show`/`list` available · `install` coming |
-| `positronick plugin search\|show\|list\|install` | Plugins | `search`/`show`/`list` available · `install` coming |
-| `positronick loop search\|show\|list\|install` | Agent loops | `search`/`show`/`list` available · `install` coming |
+| `positronick soul search\|show\|list\|install` | Find and install `SOUL.md` personality files | available |
+| `positronick harness search\|show\|list\|install` | Agent harnesses | available |
+| `positronick cli search\|show\|list\|install` | CLI tools | available |
+| `positronick mcp search\|show\|list\|install` | MCP servers | available |
+| `positronick agent search\|show\|list\|install` | Agents | available |
+| `positronick skill search\|show\|list\|install` | Skills | available |
+| `positronick plugin search\|show\|list\|install` | Plugins | available |
+| `positronick loop search\|show\|list\|install` | Agent loops | available |
 | `positronick mcp serve` | Run the Positronick MCP server | (coming in v0.1.0) |
 | `positronick login` / `logout` / `auth status` / `auth token create` | Authenticate against positronick.com | available |
-| `positronick init` | Bootstrap a project for agent capabilities | (coming in v0.1.0) |
+| `positronick init` | Detect your harness, install a soul, suggest tooling | available |
 | `positronick agent-docs` | Print agent-facing usage docs | available |
 | `positronick completion` | Generate shell completions | available |
-| `positronick self update` | Update the CLI in place | (coming in v0.1.0) |
+| `positronick self update` | Update the CLI in place | available |
 | `positronick version` | Print version information | available |
 
 ## Authentication

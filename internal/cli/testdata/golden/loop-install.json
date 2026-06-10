@@ -1,0 +1,8 @@
+{
+  "listing": {
+    "slug": "pr-to-green",
+    "name": "PR to Green",
+    "type": "loop"
+  },
+  "kickoff": "Run the pr-to-green loop on the open PR:\n1. Read every review finding.\n2. Fix the valid ones, push back on the invalid.\n3. Push and re-check until green."
+}

@@ -1,0 +1,10 @@
+{
+  "listing": {
+    "slug": "claude-code",
+    "name": "Claude Code",
+    "type": "harness"
+  },
+  "installCmd": "npm install -g @anthropic-ai/claude-code",
+  "executed": true,
+  "exitCode": 0
+}
