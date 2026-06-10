@@ -40,6 +40,7 @@ func NewRootCmd() *cobra.Command {
 	root.AddCommand(newAgentDocsCmd())
 	attachInstallCommands(root)
 	registerAdminCommands(root) // hidden write commands; revealed for cached admins
+	attachMCPServeCommand(root)
 
 	return root
 }

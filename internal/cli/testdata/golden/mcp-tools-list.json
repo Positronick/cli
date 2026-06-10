@@ -1,0 +1,554 @@
+[
+  {
+    "description": "Search positronick.com's registry of verified agent tooling — harnesses, CLIs, MCP servers, agent SDKs, skills, plugins and loops — ranked by fuzzy relevance. Follow up with listing_show for the full record.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "description": "only listings in this category (case-insensitive)",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "description": "maximum number of results",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "query": {
+          "description": "text matched fuzzily against listing names, taglines, publishers, types and tags",
+          "type": "string"
+        },
+        "type": {
+          "description": "only listings of this type",
+          "enum": [
+            "harness",
+            "cli",
+            "mcp",
+            "agent",
+            "skill",
+            "plugin",
+            "loop"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "type": "object"
+    },
+    "name": "listing_search",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "count": {
+          "type": "integer"
+        },
+        "listings": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "installCmd": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "slug": {
+                "type": "string"
+              },
+              "sourceUrl": {
+                "type": "string"
+              },
+              "tagline": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "slug",
+              "name",
+              "type",
+              "tagline",
+              "sourceUrl"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        }
+      },
+      "required": [
+        "count",
+        "listings"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "description": "Fetch one registry listing in full, including its type-specific data — for loops that means the recipe and the ready-to-paste kickoff prompt.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "slug": {
+          "description": "the listing's slug, as returned by listing_search",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slug"
+      ],
+      "type": "object"
+    },
+    "name": "listing_show",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "listing": {
+          "additionalProperties": false,
+          "properties": {
+            "category": {
+              "type": "string"
+            },
+            "confidence": {
+              "type": "string"
+            },
+            "createdAt": {
+              "type": "string"
+            },
+            "data": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "description": {
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "downloadCount": {
+              "type": "integer"
+            },
+            "id": {
+              "type": "string"
+            },
+            "installCmd": {
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "name": {
+              "type": "string"
+            },
+            "official": {
+              "type": "boolean"
+            },
+            "profileHandle": {
+              "type": "string"
+            },
+            "profileName": {
+              "type": "string"
+            },
+            "repoUrl": {
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "slug": {
+              "type": "string"
+            },
+            "sourceUrl": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "tagline": {
+              "type": "string"
+            },
+            "tags": {
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            },
+            "type": {
+              "type": "string"
+            },
+            "updatedAt": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "slug",
+            "profileHandle",
+            "profileName",
+            "name",
+            "type",
+            "tagline",
+            "description",
+            "category",
+            "tags",
+            "official",
+            "sourceUrl",
+            "repoUrl",
+            "installCmd",
+            "data",
+            "confidence",
+            "status",
+            "downloadCount",
+            "createdAt",
+            "updatedAt"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "listing"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "description": "Install a soul's SOUL.md where the target harness reads it (counts as a download on positronick.com). It never overwrites: an existing file is an error — pass a different path or remove the file first. A relative path must resolve inside the user's home directory; pass an absolute path to install elsewhere.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "write to this exact file instead of the target's conventional path",
+          "type": "string"
+        },
+        "slug": {
+          "description": "the soul's slug, as returned by soul_search",
+          "type": "string"
+        },
+        "target": {
+          "description": "install target (default: the harness detected from marker directories, else hermes)",
+          "enum": [
+            "hermes",
+            "claude",
+            "cursor",
+            "openclaw"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "slug"
+      ],
+      "type": "object"
+    },
+    "name": "soul_install",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "installed": {
+          "additionalProperties": false,
+          "properties": {
+            "bytes": {
+              "type": "integer"
+            },
+            "path": {
+              "type": "string"
+            },
+            "slug": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "slug",
+            "target",
+            "path",
+            "bytes"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "installed"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "description": "Search positronick.com souls — installable SOUL.md personality files for coding agents — ranked by fuzzy relevance. Start here; then call soul_show to inspect a result and soul_install to install it.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "description": "only souls in this category (case-insensitive)",
+          "type": "string"
+        },
+        "framework": {
+          "description": "only souls supporting this framework (case-insensitive)",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "description": "maximum number of results",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "query": {
+          "description": "text matched fuzzily against soul names, taglines, tags, authors and frameworks",
+          "type": "string"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "type": "object"
+    },
+    "name": "soul_search",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "count": {
+          "type": "integer"
+        },
+        "souls": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "category": {
+                "type": "string"
+              },
+              "downloadCount": {
+                "type": "integer"
+              },
+              "frameworks": {
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "slug": {
+                "type": "string"
+              },
+              "tagline": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "slug",
+              "name",
+              "tagline",
+              "category",
+              "frameworks",
+              "version",
+              "downloadCount"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "null",
+            "array"
+          ]
+        }
+      },
+      "required": [
+        "count",
+        "souls"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "description": "Fetch one soul in full, including its verbatim SOUL.md body. Use it to inspect a soul_search result before installing.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "slug": {
+          "description": "the soul's slug, as returned by soul_search",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slug"
+      ],
+      "type": "object"
+    },
+    "name": "soul_show",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "soul": {
+          "additionalProperties": false,
+          "properties": {
+            "arenaRank": {
+              "type": [
+                "null",
+                "integer"
+              ]
+            },
+            "authorHandle": {
+              "type": "string"
+            },
+            "authorName": {
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "authorUrl": {
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "category": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            },
+            "contentHash": {
+              "type": "string"
+            },
+            "createdAt": {
+              "type": "string"
+            },
+            "description": {
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "downloadCount": {
+              "type": "integer"
+            },
+            "frameworks": {
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            },
+            "id": {
+              "type": "string"
+            },
+            "license": {
+              "type": "string"
+            },
+            "models": {
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            },
+            "name": {
+              "type": "string"
+            },
+            "ratingAvg": {
+              "type": [
+                "null",
+                "number"
+              ]
+            },
+            "ratingCount": {
+              "type": "integer"
+            },
+            "repoUrl": {
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "slug": {
+              "type": "string"
+            },
+            "slugHistory": {
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            },
+            "status": {
+              "type": "string"
+            },
+            "tagline": {
+              "type": "string"
+            },
+            "tags": {
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "null",
+                "array"
+              ]
+            },
+            "updatedAt": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "slug",
+            "slugHistory",
+            "name",
+            "authorHandle",
+            "authorName",
+            "authorUrl",
+            "tagline",
+            "description",
+            "category",
+            "tags",
+            "frameworks",
+            "models",
+            "version",
+            "license",
+            "repoUrl",
+            "contentHash",
+            "status",
+            "downloadCount",
+            "ratingAvg",
+            "ratingCount",
+            "arenaRank",
+            "createdAt",
+            "updatedAt",
+            "content"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "soul"
+      ],
+      "type": "object"
+    }
+  }
+]
