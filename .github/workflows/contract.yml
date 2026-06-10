@@ -1,0 +1,43 @@
+name: API contract
+
+on:
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Base URL of the Positronick API to test against
+        required: false
+        default: 'https://positronick.com'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      # The contract-tagged tests land separately; skip gracefully until they exist
+      # so this workflow is mergeable now and active later.
+      - name: Detect contract-tagged tests
+        id: detect
+        run: |
+          if grep -rl '//go:build contract' internal/ >/dev/null 2>&1; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo 'No //go:build contract files under internal/ — skipping contract tests.'
+          fi
+
+      - name: Run contract tests
+        if: steps.detect.outputs.found == 'true'
+        run: go test -tags contract ./internal/api/... -run Contract -v
+        env:
+          POSITRONICK_BASE_URL: ${{ inputs.base_url || 'https://positronick.com' }}
