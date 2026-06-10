@@ -106,6 +106,43 @@
       "flags": []
     },
     {
+      "path": "positronick auth",
+      "use": "positronick auth [flags]",
+      "description": "Inspect authentication and manage API keys",
+      "flags": []
+    },
+    {
+      "path": "positronick auth status",
+      "use": "positronick auth status [flags]",
+      "description": "Show who you are authenticated as (live check)",
+      "flags": []
+    },
+    {
+      "path": "positronick auth token",
+      "use": "positronick auth token [flags]",
+      "description": "Manage API keys for unattended use",
+      "flags": []
+    },
+    {
+      "path": "positronick auth token create",
+      "use": "positronick auth token create [flags]",
+      "description": "Create an API key (shown exactly once)",
+      "flags": [
+        {
+          "name": "expires-days",
+          "shorthand": "",
+          "usage": "key lifetime in days, 1-365 (0 = server default, 90)",
+          "default": "0"
+        },
+        {
+          "name": "name",
+          "shorthand": "",
+          "usage": "name for the new key",
+          "default": "positronick-cli"
+        }
+      ]
+    },
+    {
       "path": "positronick cli",
       "use": "positronick cli [flags]",
       "description": "Discover official CLI tools in the registry",
@@ -285,6 +322,25 @@
       "path": "positronick harness show",
       "use": "positronick harness show \u003cslug\u003e [flags]",
       "description": "Show one harness listing in full",
+      "flags": []
+    },
+    {
+      "path": "positronick login",
+      "use": "positronick login [flags]",
+      "description": "Log in to positronick.com via the device flow",
+      "flags": [
+        {
+          "name": "no-browser",
+          "shorthand": "",
+          "usage": "never auto-open the verification page in a browser",
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "path": "positronick logout",
+      "use": "positronick logout [flags]",
+      "description": "Log out — delete the cached credentials",
       "flags": []
     },
     {

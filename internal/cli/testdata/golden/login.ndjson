@@ -1,0 +1,2 @@
+{"status":"pending","userCode":"TJSP-LLAV","verificationUri":"https://mock.positronick.test/device","verificationUriComplete":"https://mock.positronick.test/device?user_code=TJSPLLAV","expiresIn":1800}
+{"status":"authenticated","user":{"id":"usr_mock0001","name":"Ada Lovelace","email":"ada@example.com","image":"https://example.com/ada.png","githubLogin":"ada"},"isAdmin":false}

@@ -1,0 +1,7 @@
+{
+  "authenticated": false,
+  "method": "device",
+  "isAdmin": false,
+  "baseUrl": "https://mock.positronick.test",
+  "hint": "credentials were rejected — run positronick login"
+}

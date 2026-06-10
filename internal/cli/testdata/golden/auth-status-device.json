@@ -1,0 +1,13 @@
+{
+  "authenticated": true,
+  "method": "device",
+  "user": {
+    "id": "usr_mock0001",
+    "name": "Ada Lovelace",
+    "email": "ada@example.com",
+    "image": "https://example.com/ada.png",
+    "githubLogin": "ada"
+  },
+  "isAdmin": false,
+  "baseUrl": "https://mock.positronick.test"
+}

@@ -5,6 +5,20 @@ import (
 	"testing"
 )
 
+// NDJSON streams (e.g. `login --json`) need one compact JSON object per line
+// — pretty-printing would break line-oriented consumers.
+func TestEmitJSONLine(t *testing.T) {
+	var out bytes.Buffer
+	p := &Printer{Out: &out, Err: &bytes.Buffer{}, Mode: Mode{JSON: true}}
+	if err := p.EmitJSONLine(map[string]any{"status": "pending", "expiresIn": 1800}); err != nil {
+		t.Fatalf("EmitJSONLine: %v", err)
+	}
+	want := `{"expiresIn":1800,"status":"pending"}` + "\n"
+	if out.String() != want {
+		t.Errorf("out = %q, want %q (compact, newline-terminated)", out.String(), want)
+	}
+}
+
 // Status lines are progress noise: machine consumers (--json) and users who
 // asked for --quiet must never see them, while data on Out is untouched.
 func TestStatusSuppression(t *testing.T) {

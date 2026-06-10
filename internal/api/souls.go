@@ -11,7 +11,7 @@ func (c *Client) Souls(ctx context.Context) ([]SoulCard, error) {
 	var out struct {
 		Souls []SoulCard `json:"souls"`
 	}
-	if err := c.do(ctx, http.MethodGet, "/api/souls", nil, &out); err != nil {
+	if err := c.do(ctx, http.MethodGet, "/api/souls", nil, nil, &out); err != nil {
 		return nil, err
 	}
 	return out.Souls, nil
@@ -24,7 +24,7 @@ func (c *Client) Soul(ctx context.Context, slug string) (*Soul, error) {
 	var out struct {
 		Soul Soul `json:"soul"`
 	}
-	if err := c.do(ctx, http.MethodGet, "/api/souls/"+url.PathEscape(slug), nil, &out); err != nil {
+	if err := c.do(ctx, http.MethodGet, "/api/souls/"+url.PathEscape(slug), nil, nil, &out); err != nil {
 		return nil, err
 	}
 	return &out.Soul, nil
@@ -35,7 +35,7 @@ func (c *Client) Soul(ctx context.Context, slug string) (*Soul, error) {
 // what `curl .../api/souls/{slug}.md` writes, so installs are lossless.
 func (c *Client) SoulMarkdown(ctx context.Context, slug string) (string, error) {
 	var body string
-	if err := c.do(ctx, http.MethodGet, "/api/souls/"+url.PathEscape(slug)+".md", nil, &body); err != nil {
+	if err := c.do(ctx, http.MethodGet, "/api/souls/"+url.PathEscape(slug)+".md", nil, nil, &body); err != nil {
 		return "", err
 	}
 	return body, nil

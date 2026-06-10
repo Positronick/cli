@@ -505,7 +505,7 @@ func TestNoRetryOnNonGet(t *testing.T) {
 	defer srv.Close()
 
 	c, spy := newTestClient(t, srv.URL, Anonymous{})
-	err := c.do(context.Background(), http.MethodPost, "/api/souls", nil, nil)
+	err := c.do(context.Background(), http.MethodPost, "/api/souls", nil, nil, nil)
 	if err == nil {
 		t.Fatal("POST 500 should error")
 	}
