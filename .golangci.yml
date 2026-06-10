@@ -16,6 +16,12 @@ linters:
         text: 'package-comments'
         linters:
           - revive
+      # APIError is the PR-B1 spec'd name; api.Error would shadow the error
+      # interface at call sites and read worse than the "stutter".
+      - path: internal/api/errors\.go
+        text: 'and that stutters'
+        linters:
+          - revive
 
 formatters:
   enable:
