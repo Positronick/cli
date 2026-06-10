@@ -58,7 +58,10 @@ brews:
     homepage: https://positronick.com
     description: CLI for the Positronick Soul Hub — search, read and install agent souls and registry tooling
     license: Apache-2.0
-    skip_upload: false
+    # TODO: flip to false once the HOMEBREW_TAP_TOKEN secret exists on this repo
+    # (fine-grained PAT, contents:write on Positronick/homebrew-tap). Until then a
+    # tagged release would fail at the formula-publish step.
+    skip_upload: true
     install: |
       bin.install "positronick"
       bin.install_symlink "positronick" => "pck"
