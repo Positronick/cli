@@ -49,9 +49,12 @@ if [ "$VERSION" = "latest" ]; then
 		"https://github.com/$REPO/releases/latest") \
 		|| err "could not resolve the latest release of $REPO"
 	TAG="${LATEST_URL##*/}"
-	VERSION="${TAG#v}"
-	[ -n "$VERSION" ] && [ "$VERSION" != "latest" ] \
-		|| err "could not resolve the latest release of $REPO (got: $LATEST_URL)"
+	# With no releases published, GitHub redirects to /releases and TAG is "releases" —
+	# accept only a v-prefixed tag.
+	case "$TAG" in
+	v[0-9]*) VERSION="${TAG#v}" ;;
+	*) err "could not resolve the latest release of $REPO (got: $LATEST_URL)" ;;
+	esac
 fi
 BASE="https://github.com/$REPO/releases/download/v$VERSION"
 
