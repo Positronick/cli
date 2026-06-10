@@ -270,6 +270,7 @@ var Listings = []api.Listing{
 // the consuming test must surface.
 func Handler() http.Handler {
 	mux := http.NewServeMux()
+	registerAdmin(mux) // the /api/admin write surface (see admin.go)
 
 	mux.HandleFunc("GET /api/souls", func(w http.ResponseWriter, _ *http.Request) {
 		cards := make([]api.SoulCard, len(Souls))

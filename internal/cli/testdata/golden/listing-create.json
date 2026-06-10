@@ -1,0 +1,29 @@
+{
+  "listing": {
+    "id": "01XCREATED0000000000000001",
+    "slug": "sentry-mcp",
+    "profileHandle": "nsollazzo",
+    "profileName": "Nicholas Sollazzo",
+    "name": "Sentry MCP",
+    "type": "mcp",
+    "tagline": "Errors, issues and traces as agent tools",
+    "description": "Query and triage Sentry issues from any MCP-speaking agent.",
+    "category": "DevOps",
+    "tags": [
+      "observability",
+      "errors"
+    ],
+    "official": true,
+    "sourceUrl": "https://example.com/sentry-mcp",
+    "repoUrl": "https://example.com/getsentry/sentry-mcp",
+    "installCmd": "npx @sentry/mcp-server",
+    "data": {},
+    "confidence": "high",
+    "status": "published",
+    "downloadCount": 0,
+    "createdAt": "2026-06-09T09:00:00.000Z",
+    "updatedAt": "2026-06-09T09:00:00.000Z",
+    "source": "api"
+  },
+  "created": true
+}

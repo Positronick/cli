@@ -1,0 +1,39 @@
+{
+  "listing": {
+    "id": "01LSTPRTOGREEN0000000000XX",
+    "slug": "pr-to-green",
+    "profileHandle": "nsollazzo",
+    "profileName": "Nicholas Sollazzo",
+    "name": "PR to Green",
+    "type": "loop",
+    "tagline": "Drive a pull request until CI is green and review approves",
+    "description": "A goal loop: fix findings, push, re-check, repeat.",
+    "category": "Productivity",
+    "tags": [
+      "ci",
+      "automation"
+    ],
+    "official": true,
+    "sourceUrl": "https://example.com/pr-to-green",
+    "repoUrl": null,
+    "installCmd": null,
+    "data": {
+      "checkCommand": "gh pr checks --json state",
+      "compatibleTools": [
+        "claude-code",
+        "codex"
+      ],
+      "exitCondition": "All checks pass and the latest review is APPROVED",
+      "goal": "The PR has a fresh approval, green CI, and is mergeable",
+      "kickoff": "Run the pr-to-green loop on the open PR:\n1. Read every review finding.\n2. Fix the valid ones, push back on the invalid.\n3. Push and re-check until green.",
+      "maxIterations": 20
+    },
+    "confidence": "official",
+    "status": "draft",
+    "downloadCount": 12,
+    "createdAt": "2026-05-01T09:00:00.000Z",
+    "updatedAt": "2026-06-09T10:00:00.000Z",
+    "source": "api"
+  },
+  "tookOwnership": true
+}
