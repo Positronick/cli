@@ -1,0 +1,32 @@
+package mcpserver
+
+// SetupInstructions is the human help `mcp serve` prints — instead of
+// starting the server — when stdin is a terminal: an interactive shell is
+// never the MCP client, so hand the user ready-to-paste setup for the major
+// clients. Changing this text changes a golden file.
+func SetupInstructions() string {
+	return `positronick mcp serve — run this binary as an MCP server
+
+stdin is a terminal, so the stdio server was not started. Register the
+command with your MCP client and let it launch the server:
+
+Claude Code:
+
+  claude mcp add positronick -- positronick mcp serve
+
+Cursor — add to ~/.cursor/mcp.json:
+
+  {
+    "mcpServers": {
+      "positronick": {
+        "command": "positronick",
+        "args": ["mcp", "serve"]
+      }
+    }
+  }
+
+Any other MCP client that speaks stdio can launch ` + "`positronick mcp serve`" + `
+directly — JSON-RPC on stdin/stdout. Pass --stdio to force the server even
+when stdin is a terminal.
+`
+}

@@ -539,6 +539,19 @@
       ]
     },
     {
+      "path": "positronick mcp serve",
+      "use": "positronick mcp serve [flags]",
+      "description": "Run an MCP stdio server exposing positronick's tools",
+      "flags": [
+        {
+          "name": "stdio",
+          "shorthand": "",
+          "usage": "run the stdio server even when stdin is a terminal",
+          "default": "false"
+        }
+      ]
+    },
+    {
       "path": "positronick mcp show",
       "use": "positronick mcp show \u003cslug\u003e [flags]",
       "description": "Show one mcp listing in full",

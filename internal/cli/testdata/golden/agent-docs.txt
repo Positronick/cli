@@ -362,6 +362,16 @@ Flags:
 - `--limit` (default `20`): maximum number of results
 - `--sort` (default `relevance`): sort order: relevance, name, downloads or newest
 
+## positronick mcp serve
+
+Usage: `positronick mcp serve [flags]`
+
+Run an MCP stdio server exposing positronick's tools
+
+Flags:
+
+- `--stdio` (default `false`): run the stdio server even when stdin is a terminal
+
 ## positronick mcp show
 
 Usage: `positronick mcp show <slug> [flags]`
