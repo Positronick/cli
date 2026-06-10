@@ -20,18 +20,18 @@ go install github.com/positronick/cli/cmd/positronick@latest
 
 | Command | Description | Status |
 | --- | --- | --- |
-| `positronick soul search\|show\|list\|install` | Find and install `SOUL.md` personality files | (coming in v0.1.0) |
-| `positronick harness search\|show\|list\|install` | Agent harnesses | (coming in v0.1.0) |
-| `positronick cli search\|show\|list\|install` | CLI tools | (coming in v0.1.0) |
-| `positronick mcp search\|show\|list\|install` | MCP servers | (coming in v0.1.0) |
-| `positronick agent search\|show\|list\|install` | Agents | (coming in v0.1.0) |
-| `positronick skill search\|show\|list\|install` | Skills | (coming in v0.1.0) |
-| `positronick plugin search\|show\|list\|install` | Plugins | (coming in v0.1.0) |
-| `positronick loop search\|show\|list\|install` | Agent loops | (coming in v0.1.0) |
+| `positronick soul search\|show\|list\|install` | Find and install `SOUL.md` personality files | `search`/`show`/`list` available · `install` coming |
+| `positronick harness search\|show\|list\|install` | Agent harnesses | `search`/`show`/`list` available · `install` coming |
+| `positronick cli search\|show\|list\|install` | CLI tools | `search`/`show`/`list` available · `install` coming |
+| `positronick mcp search\|show\|list\|install` | MCP servers | `search`/`show`/`list` available · `install` coming |
+| `positronick agent search\|show\|list\|install` | Agents | `search`/`show`/`list` available · `install` coming |
+| `positronick skill search\|show\|list\|install` | Skills | `search`/`show`/`list` available · `install` coming |
+| `positronick plugin search\|show\|list\|install` | Plugins | `search`/`show`/`list` available · `install` coming |
+| `positronick loop search\|show\|list\|install` | Agent loops | `search`/`show`/`list` available · `install` coming |
 | `positronick mcp serve` | Run the Positronick MCP server | (coming in v0.1.0) |
 | `positronick login` / `logout` / `auth status` | Authenticate against positronick.com | (coming in v0.1.0) |
 | `positronick init` | Bootstrap a project for agent capabilities | (coming in v0.1.0) |
-| `positronick agent-docs` | Print agent-facing usage docs | (coming in v0.1.0) |
+| `positronick agent-docs` | Print agent-facing usage docs | available |
 | `positronick completion` | Generate shell completions | available |
 | `positronick self update` | Update the CLI in place | (coming in v0.1.0) |
 | `positronick version` | Print version information | available |

@@ -1,0 +1,26 @@
+NAME              PR to Green
+SLUG              pr-to-green
+TYPE              loop
+PROFILE           @nsollazzo (Nicholas Sollazzo)
+TAGLINE           Drive a pull request until CI is green and review approves
+DESCRIPTION       A goal loop: fix findings, push, re-check, repeat.
+CATEGORY          Productivity
+TAGS              ci, automation
+OFFICIAL          yes
+SOURCE            https://example.com/pr-to-green
+CONFIDENCE        official
+STATUS            published
+DOWNLOADS         12
+CREATED           2026-05-01T09:00:00.000Z
+UPDATED           2026-05-02T09:00:00.000Z
+GOAL              The PR has a fresh approval, green CI, and is mergeable
+CHECK COMMAND     gh pr checks --json state
+EXIT CONDITION    All checks pass and the latest review is APPROVED
+MAX ITERATIONS    20
+COMPATIBLE TOOLS  claude-code, codex
+
+KICKOFF
+Run the pr-to-green loop on the open PR:
+1. Read every review finding.
+2. Fix the valid ones, push back on the invalid.
+3. Push and re-check until green.

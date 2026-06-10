@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/positronick/cli/internal/api"
 	"github.com/positronick/cli/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -31,6 +32,11 @@ func NewRootCmd() *cobra.Command {
 	flags.Bool("yes", false, "assume yes for confirmation prompts")
 
 	root.AddCommand(newVersionCmd())
+	root.AddCommand(newSoulCmd())
+	for _, listingType := range api.ListingTypes {
+		root.AddCommand(newListingNounCmd(listingType))
+	}
+	root.AddCommand(newAgentDocsCmd())
 
 	return root
 }

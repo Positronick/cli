@@ -1,0 +1,30 @@
+{
+  "count": 1,
+  "listings": [
+    {
+      "id": "01LSTSUPERPOWERS00000000XX",
+      "slug": "superpowers",
+      "profileHandle": "obra",
+      "profileName": "Jesse Vincent",
+      "name": "Superpowers",
+      "type": "skill",
+      "tagline": "A methodology pack that upgrades your coding agent",
+      "description": "Skills for planning, debugging and shipping.",
+      "category": "AI/ML",
+      "tags": [
+        "skills",
+        "methodology"
+      ],
+      "official": true,
+      "sourceUrl": "https://example.com/superpowers",
+      "repoUrl": "https://example.com/obra/superpowers",
+      "installCmd": null,
+      "data": {},
+      "confidence": "official",
+      "status": "published",
+      "downloadCount": 18,
+      "createdAt": "2026-04-01T09:00:00.000Z",
+      "updatedAt": "2026-04-02T09:00:00.000Z"
+    }
+  ]
+}

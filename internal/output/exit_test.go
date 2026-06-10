@@ -53,6 +53,14 @@ func TestRenderErrorClassification(t *testing.T) {
 			wantMessage: "bad input: x",
 		},
 		{
+			name:        "error with hint",
+			err:         ErrorWithHint("soul search requires a query", "run `positronick soul list`"),
+			wantCode:    ExitError,
+			wantErrCode: "error",
+			wantMessage: "soul search requires a query",
+			wantHint:    "run `positronick soul list`",
+		},
+		{
 			name:        "raw context.Canceled maps to cancelled",
 			err:         context.Canceled,
 			wantCode:    ExitCancelled,

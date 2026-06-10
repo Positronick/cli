@@ -1,0 +1,16 @@
+NAME         Sherlock
+SLUG         sherlock
+AUTHOR       @acdoyle (Arthur Conan Doyle)
+TAGLINE      Deductive debugging: reason from evidence, never from vibes
+DESCRIPTION  A consulting-detective personality for root-cause analysis.
+CATEGORY     Technical
+TAGS         detective, reasoning
+FRAMEWORKS   hermes, claude-code
+MODELS       claude-fable-5
+VERSION      1.2.0
+LICENSE      MIT
+REPO         https://example.com/souls/sherlock
+DOWNLOADS    42
+STATUS       published
+CREATED      2026-01-05T09:00:00.000Z
+UPDATED      2026-01-06T09:00:00.000Z

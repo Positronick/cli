@@ -50,3 +50,9 @@ func CancelledError(msg string) *CodedError {
 func Errorf(format string, a ...any) *CodedError {
 	return &CodedError{Code: ExitError, ErrCode: "error", Message: fmt.Sprintf(format, a...)}
 }
+
+// ErrorWithHint returns a generic CodedError (exit 1) carrying a remediation
+// hint for the envelope/human output.
+func ErrorWithHint(msg, hint string) *CodedError {
+	return &CodedError{Code: ExitError, ErrCode: "error", Message: msg, Hint: hint}
+}
