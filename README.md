@@ -98,6 +98,8 @@ The CLI is designed to be driven by coding agents:
 - **Exit codes**: `0` ok · `1` error · `2` cancelled · `3` not found · `4` auth required.
 - **Streams**: stdout carries data, stderr carries progress and errors. Pipe-safe.
 - **Non-interactive auto-detection**: prompts and color are disabled automatically when stdout is not a TTY, under CI (`CI`, `GITHUB_ACTIONS`), or under a coding agent (`CLAUDECODE`, `GEMINI_CLI`, `CURSOR_EDITOR`). `NO_COLOR` and `--no-color` are honored.
+- **MCP server**: `positronick mcp serve` speaks MCP over stdio (`claude mcp add positronick -- positronick mcp serve`). The initialize response carries usage instructions for the client's model.
+- **Agent skill**: [`skills/positronick/SKILL.md`](skills/positronick/SKILL.md) teaches agents the full search → show → install workflow; it is published on the registry itself as the `positronick` skill listing once released.
 
 ## Verifying releases
 

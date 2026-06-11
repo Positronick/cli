@@ -93,6 +93,29 @@ func TestMCPServeHandshake(t *testing.T) {
 	}
 }
 
+// The initialize result carries server instructions — the zero-install way
+// every MCP client teaches its model the tool workflow. They must name every
+// advertised tool (derived from tools/list so a new tool can't be silently
+// omitted) and the install caveat agents trip over (no overwrites).
+func TestMCPServeHandshakeInstructions(t *testing.T) {
+	session := newMCPSession(t, mockapi.Handler(), t.TempDir(), t.TempDir())
+	got := session.InitializeResult().Instructions
+
+	tools, err := session.ListTools(t.Context(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"never overwrites"}
+	for _, tool := range tools.Tools {
+		want = append(want, tool.Name)
+	}
+	for _, w := range want {
+		if !strings.Contains(got, w) {
+			t.Errorf("initialize instructions missing %q:\n%s", w, got)
+		}
+	}
+}
+
 // tools/list is the MCP public contract: exactly five consolidated tools with
 // pinned names, descriptions and schemas. A golden diff here is a contract
 // change and must be called out in the PR.

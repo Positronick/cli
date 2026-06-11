@@ -22,6 +22,7 @@ match CI.
 - **Every command's `RunE` returns a typed result through `internal/output`** — never `fmt.Print` directly in command code. `internal/output` is the single rendering authority (Printer, RenderTable, EmitJSON).
 - **Errors flow up to `Execute()`; render exactly once.** Commands return errors (use `internal/output` constructors: `NotFoundError`, `AuthError`, `CancelledError`, `Errorf`) and never print them. `cli.Execute` renders via `output.RenderError` and maps to the exit code. Cobra's `SilenceErrors`/`SilenceUsage` stay on.
 - **Conventional commits.** `feat:`, `fix:`, `docs:`, `chore:`, `ci:`, `test:`, `refactor:`.
+- **Repo-root artifacts are pinned from `cmd/positronick`.** Tests that guard a repo-root file against Go exports (.goreleaser.yaml/install.sh in `release_contract_test.go`, skills/positronick/SKILL.md in `skill_contract_test.go`) live there — not in `internal/*`. Add new drift guards to that package.
 
 ## Layout
 

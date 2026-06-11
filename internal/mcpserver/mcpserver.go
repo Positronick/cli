@@ -40,9 +40,11 @@ type Options struct {
 }
 
 // New builds the MCP server advertising the five positronick tools. The
-// server name is "positronick"; the version is the binary's build version.
+// server name is "positronick"; the version is the binary's build version;
+// the initialize result carries serverInstructions for the client's model.
 func New(opts Options) *mcp.Server {
-	srv := mcp.NewServer(&mcp.Implementation{Name: "positronick", Version: version.Version}, nil)
+	srv := mcp.NewServer(&mcp.Implementation{Name: "positronick", Version: version.Version},
+		&mcp.ServerOptions{Instructions: serverInstructions})
 	addSoulTools(srv, opts)
 	addListingTools(srv, opts)
 	return srv
