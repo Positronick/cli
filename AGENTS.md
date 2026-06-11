@@ -7,9 +7,13 @@ Guidance for coding agents working in this repository.
 ```sh
 go build ./...        # compile everything
 go test ./... -race   # full test suite (CI runs exactly this)
-golangci-lint run     # lint (v2 config in .golangci.yml); zero issues required
-gofmt -l .            # must print nothing
+make lint             # golangci-lint at the CI-pinned version; zero issues required
+make check            # everything CI runs (tidy/fmt/lint/vuln/shellcheck/actionlint/race tests/cross-builds)
 ```
+
+Tool versions are pinned in the Makefile (synced with `.github/workflows/ci.yml`) —
+prefer the make targets over bare `golangci-lint`/`govulncheck` so local results
+match CI.
 
 ## Rules
 

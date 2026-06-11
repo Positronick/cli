@@ -94,6 +94,8 @@ case ":$PATH:" in
 	*":$INSTALL_DIR:"*) ;;
 	*)
 		printf 'NOTE: %s is not on your PATH. Add this to your shell profile:\n' "$INSTALL_DIR"
+		# $PATH must stay literal in the printed hint.
+		# shellcheck disable=SC2016
 		printf '  export PATH="%s:$PATH"\n' "$INSTALL_DIR"
 		;;
 esac

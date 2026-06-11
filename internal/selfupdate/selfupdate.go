@@ -28,6 +28,17 @@ const DefaultAPIBase = "https://api.github.com"
 // DefaultRepo is the owner/name of the CLI's release repository.
 const DefaultRepo = "Positronick/cli"
 
+// ChecksumsName is the checksum file published with every release — a
+// cross-repo contract with .goreleaser.yaml and both installers.
+const ChecksumsName = "checksums.txt"
+
+// AssetName returns the release archive name for a platform — the same
+// cross-repo naming contract (windows releases use .zip, which this updater
+// does not handle).
+func AssetName(goos, goarch string) string {
+	return fmt.Sprintf("positronick_%s_%s.tar.gz", goos, goarch)
+}
+
 // DetectMethod classifies the install method. The receipt is authoritative
 // when it says "installer"; otherwise the resolved binary path is matched
 // against homebrew, npm and go-install conventions (goBin is the caller's
@@ -171,12 +182,12 @@ func (u *Updater) get(ctx context.Context, url, accept string) ([]byte, error) {
 // is rewritten with the new version. Verification failures leave the
 // existing binary and receipt untouched.
 func (u *Updater) Apply(ctx context.Context, rel *Release) error {
-	assetName := fmt.Sprintf("positronick_%s_%s.tar.gz", u.GOOS, u.GOARCH)
+	assetName := AssetName(u.GOOS, u.GOARCH)
 	asset, err := findAsset(rel, assetName)
 	if err != nil {
 		return err
 	}
-	checksums, err := findAsset(rel, "checksums.txt")
+	checksums, err := findAsset(rel, ChecksumsName)
 	if err != nil {
 		return err
 	}
@@ -227,7 +238,7 @@ func verifyChecksum(archive, checksums []byte, assetName string) error {
 		}
 	}
 	if expected == "" {
-		return fmt.Errorf("checksums.txt has no entry for %s", assetName)
+		return fmt.Errorf("%s has no entry for %s", ChecksumsName, assetName)
 	}
 	actual := fmt.Sprintf("%x", sha256.Sum256(archive))
 	if actual != expected {

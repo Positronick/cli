@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **SECURITY.md**: private vulnerability reporting policy and release verification instructions (`gh attestation verify` + `checksums.txt`).
+
+#### Internal
+<!-- internal -->
+- Makefile dev loop mirroring CI (`make check`: tidy/fmt/lint/vuln/shellcheck/actionlint/race tests/cross-builds) with tool versions pinned to match CI.
+- Release-contract test pinning the `positronick_<os>_<arch>` / `checksums.txt` asset naming shared by .goreleaser.yaml, install.sh and self-update (new `selfupdate.AssetName`/`ChecksumsName` exports).
+- CI hardening: all actions SHA-pinned, `persist-credentials: false`, per-job release permissions, PR-run cancellation, new govulncheck + hygiene (tidy drift, shellcheck, actionlint) checks, weekly grouped Dependabot for gomod and actions.
+
 - Read commands: `soul` and the seven registry nouns (`harness`, `cli`, `mcp`, `agent`, `skill`, `plugin`, `loop`), each with `search`/`list`/`show` (`--limit`, `--sort`, `--category`, souls also `--framework`; `soul show --raw` prints the SOUL.md body verbatim; `loop show` renders the loop recipe). Golden-file-pinned `--json` output, did-you-mean hints on exit 3, and the `agent-docs` self-description command.
 - CLI scaffold: cobra root command, `version` subcommand, output/exit-code contract (`--json` error envelope, exit codes 0–4), environment auto-detection (TTY/CI/agent/NO_COLOR), CI workflow.
 
