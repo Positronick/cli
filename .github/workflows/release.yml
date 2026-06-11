@@ -7,8 +7,7 @@ on:
     tags:
       - 'v*'
 
-# Write permissions are granted per job so future jobs (e.g. the npm publish
-# TODO below) don't silently inherit them.
+# Write permissions are granted per job so no job silently inherits them.
 permissions: {}
 
 jobs:
@@ -38,8 +37,18 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Publisher credentials. Each publisher in .goreleaser.yaml gates itself
+          # on its env var being non-empty, so a missing secret skips that channel
+          # instead of failing the release.
           # Pushes the formula to Positronick/homebrew-tap (owner-created PAT).
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          # Pushes the manifest to Positronick/scoop-bucket (owner-created PAT).
+          SCOOP_BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+          # Opens a PR to microsoft/winget-pkgs from the Positronick/winget-pkgs
+          # fork (classic PAT, public_repo scope).
+          WINGET_GITHUB_TOKEN: ${{ secrets.WINGET_GITHUB_TOKEN }}
+          # Pushes the PKGBUILD to aur.archlinux.org/positronick-bin (SSH key).
+          AUR_SSH_KEY: ${{ secrets.AUR_SSH_KEY }}
 
       - uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
         with:
@@ -48,6 +57,61 @@ jobs:
             dist/*.zip
             dist/checksums.txt
 
-      # TODO: npm publish — packages/npm/ is scaffolded but the "positronick" npm
-      # name is not claimed yet. Once it is: build per-platform packages from
-      # dist/, fill real versions, and `npm publish` them here.
+  npm:
+    # Publishes positronick + the four @positronick/cli-* platform packages via
+    # npm Trusted Publishing (OIDC — no token secret; needs npm >= 11.5.1, which
+    # Node 24 bundles). Gated on the NPM_PUBLISH repo variable because the
+    # one-time bootstrap is manual: claim the names with a first manual publish,
+    # configure this repo+workflow as the trusted publisher for all five
+    # packages on npmjs.com, then set NPM_PUBLISH=true. See packages/npm/README.md.
+    if: vars.NPM_PUBLISH == 'true'
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      # Repackage what was actually released (and checksum-verified), not a
+      # rebuild: download the published archives from the GitHub release.
+      - name: Download release archives
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+            --pattern 'positronick_*.tar.gz' --pattern 'checksums.txt' --dir dist
+          cd dist
+          grep -E ' positronick_(linux|darwin)_(amd64|arm64)\.tar\.gz$' checksums.txt | sha256sum -c
+
+      - name: Build npm packages
+        run: ./scripts/build-npm-packages.sh "${GITHUB_REF_NAME#v}" dist npm-dist
+
+      # Platform packages must exist on the registry before the meta-package
+      # that pins them in optionalDependencies.
+      # Prereleases (any version with a hyphen, e.g. v0.2.0-rc.1) go to the
+      # `next` dist-tag so `npm install positronick` keeps serving the latest
+      # stable. Already-published versions are skipped so a partially failed
+      # run can be re-run without dying on EPUBLISHCONFLICT.
+      - name: Publish
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          case "$version" in
+            *-*) tag=next ;;
+            *)   tag=latest ;;
+          esac
+          for pkg in npm-dist/@positronick/* npm-dist/positronick; do
+            name=$(node -p "require('./$pkg/package.json').name")
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "skip: $name@$version already published"
+              continue
+            fi
+            npm publish "$pkg" --access public --tag "$tag"
+          done

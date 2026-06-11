@@ -46,7 +46,11 @@ checksum:
 sboms:
   - artifacts: archive
 
-brews:
+# Cask, not formula: goreleaser deprecated `brews` in v2.10 (enforced v2.16) in
+# favor of homebrew_casks for prebuilt binaries. The postflight hook strips the
+# macOS quarantine attribute because our binaries are not signed/notarized;
+# drop it if we ever start notarizing.
+homebrew_casks:
   - name: positronick
     ids:
       - positronick
@@ -54,17 +58,86 @@ brews:
       owner: Positronick
       name: homebrew-tap
       token: '{{ .Env.HOMEBREW_TAP_TOKEN }}'
-    directory: Formula
+    homepage: https://positronick.com
+    description: CLI for the Positronick Soul Hub — search, read and install agent souls and registry tooling
+    # Homepage (positronick.com) differs from the download domain (github.com);
+    # `verified` keeps `brew audit` happy about that.
+    url:
+      verified: github.com/Positronick/cli/
+    binaries:
+      - positronick
+    # `pck` alias for the same binary (custom_block because goreleaser's
+    # `binaries` key cannot express a renamed target).
+    custom_block: |
+      binary "positronick", target: "pck"
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/positronick"]
+          end
+    # Publishes automatically once the HOMEBREW_TAP_TOKEN secret exists on this
+    # repo (fine-grained PAT, contents:write on Positronick/homebrew-tap); until
+    # then the cask is only written to dist/ and the release still succeeds.
+    skip_upload: '{{ if envOrDefault "HOMEBREW_TAP_TOKEN" "" }}false{{ else }}true{{ end }}'
+
+scoops:
+  - name: positronick
+    ids:
+      - positronick
+    repository:
+      owner: Positronick
+      name: scoop-bucket
+      token: '{{ .Env.SCOOP_BUCKET_TOKEN }}'
     homepage: https://positronick.com
     description: CLI for the Positronick Soul Hub — search, read and install agent souls and registry tooling
     license: Apache-2.0
-    # TODO: flip to false once the HOMEBREW_TAP_TOKEN secret exists on this repo
-    # (fine-grained PAT, contents:write on Positronick/homebrew-tap). Until then a
-    # tagged release would fail at the formula-publish step.
-    skip_upload: true
-    install: |
-      bin.install "positronick"
-      bin.install_symlink "positronick" => "pck"
+    # Publishes automatically once the SCOOP_BUCKET_TOKEN secret exists
+    # (fine-grained PAT, contents:write on Positronick/scoop-bucket).
+    skip_upload: '{{ if envOrDefault "SCOOP_BUCKET_TOKEN" "" }}false{{ else }}true{{ end }}'
+
+# Opens a PR against microsoft/winget-pkgs from the Positronick/winget-pkgs fork.
+# Needs the WINGET_GITHUB_TOKEN secret (classic PAT, public_repo scope) and the
+# fork to exist; the first PR goes through winget's human moderation queue.
+winget:
+  - name: positronick
+    publisher: Positronick
+    package_identifier: Positronick.Positronick
+    short_description: CLI for the Positronick Soul Hub — search, read and install agent souls and registry tooling
+    license: Apache-2.0
+    license_url: https://github.com/Positronick/cli/blob/main/LICENSE
+    homepage: https://positronick.com
+    repository:
+      owner: Positronick
+      name: winget-pkgs
+      branch: 'positronick-{{ .Version }}'
+      token: '{{ .Env.WINGET_GITHUB_TOKEN }}'
+      pull_request:
+        enabled: true
+        base:
+          owner: microsoft
+          name: winget-pkgs
+          branch: master
+    skip_upload: '{{ if envOrDefault "WINGET_GITHUB_TOKEN" "" }}false{{ else }}true{{ end }}'
+
+aurs:
+  - name: positronick-bin
+    ids:
+      - positronick
+    homepage: https://positronick.com
+    description: CLI for the Positronick Soul Hub — search, read and install agent souls and registry tooling
+    license: Apache-2.0
+    maintainers:
+      - 'Nicholas Sollazzo <nick@muso.ai>'
+    git_url: ssh://aur@aur.archlinux.org/positronick-bin.git
+    private_key: '{{ .Env.AUR_SSH_KEY }}'
+    # Disabled until the AUR_SSH_KEY secret exists (AUR account + the
+    # positronick-bin package base registered, passphrase-less SSH key).
+    disable: '{{ if envOrDefault "AUR_SSH_KEY" "" }}false{{ else }}true{{ end }}'
+    package: |-
+      install -Dm755 "./positronick" "${pkgdir}/usr/bin/positronick"
+      ln -s positronick "${pkgdir}/usr/bin/pck"
+      install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/positronick-bin/LICENSE"
 
 changelog:
   use: github

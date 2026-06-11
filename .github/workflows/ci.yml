@@ -63,8 +63,10 @@ jobs:
       - name: govulncheck
         # Keep the version in sync with GOVULNCHECK in the Makefile.
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.3.0 ./...
-      - name: shellcheck install.sh
-        run: shellcheck install.sh
+      - name: shellcheck
+        run: shellcheck install.sh scripts/*.sh
+      - name: npm packaging script test
+        run: ./scripts/test-build-npm-packages.sh
       - name: actionlint
         # Keep the version in sync with ACTIONLINT in the Makefile.
         run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.7

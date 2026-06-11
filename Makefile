@@ -6,7 +6,7 @@ GOLANGCI         := go run github.com/golangci/golangci-lint/v2/cmd/golangci-lin
 GOVULNCHECK      := go run golang.org/x/vuln/cmd/govulncheck@v1.3.0
 ACTIONLINT       := go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.7
 
-.PHONY: help test test-race lint fmt fmt-check vuln tidy-check shellcheck actionlint e2e contract build-all check
+.PHONY: help test test-race lint fmt fmt-check vuln tidy-check shellcheck npm-pkg-test actionlint e2e contract build-all check
 
 help: ## list targets
 	@awk -F':.*## ' '/^[a-z0-9-]+:.*## / { printf "  %-12s %s\n", $$1, $$2 }' Makefile
@@ -32,9 +32,12 @@ vuln: ## govulncheck against the Go vulnerability database
 tidy-check: ## fail on go.mod/go.sum drift, no writes
 	go mod tidy -diff
 
-shellcheck: ## lint install.sh (needs shellcheck: brew install shellcheck)
+shellcheck: ## lint install.sh and scripts/ (needs shellcheck: brew install shellcheck)
 	@command -v shellcheck >/dev/null || { echo "shellcheck not installed (brew install shellcheck)"; exit 1; }
-	shellcheck install.sh
+	shellcheck install.sh scripts/*.sh
+
+npm-pkg-test: ## smoke-test the npm package build script against fake archives
+	./scripts/test-build-npm-packages.sh
 
 actionlint: ## lint GitHub workflow files
 	$(ACTIONLINT)
@@ -52,4 +55,4 @@ build-all: ## cross-compile the same matrix as CI
 		GOOS=$$os GOARCH=$$arch CGO_ENABLED=0 go build -o /dev/null ./cmd/positronick || exit 1; \
 	done; done
 
-check: tidy-check fmt-check lint vuln shellcheck actionlint test-race build-all ## everything CI runs (fmt-check is local-only, stricter than CI)
+check: tidy-check fmt-check lint vuln shellcheck npm-pkg-test actionlint test-race build-all ## everything CI runs (fmt-check is local-only, stricter than CI)
