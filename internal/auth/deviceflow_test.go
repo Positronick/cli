@@ -158,6 +158,15 @@ func (s *scriptedTokens) handler(t *testing.T) http.HandlerFunc {
 		s.responses = s.responses[1:]
 		s.mu.Unlock()
 
+		if after, ok := strings.CutPrefix(resp, "429:"); ok {
+			// Better Auth's rate-limit shape: 429 + X-Retry-After, body without "error".
+			if after != "0" {
+				w.Header().Set("X-Retry-After", after)
+			}
+			w.WriteHeader(http.StatusTooManyRequests)
+			fmt.Fprint(w, `{"message":"Too many requests. Please try again later."}`)
+			return
+		}
 		if strings.Contains(resp, `"error"`) {
 			w.WriteHeader(http.StatusBadRequest)
 		}
@@ -314,5 +323,65 @@ func TestPollUnknownError(t *testing.T) {
 	_, err := Poll(context.Background(), srv.URL, "dev-1", 5*time.Second, 30*time.Minute, nil)
 	if err == nil || !strings.Contains(err.Error(), "invalid_grant") {
 		t.Errorf("error = %v, want one naming invalid_grant", err)
+	}
+}
+
+// A rate-limited poll (HTTP 429 — a proxy, CDN, or the server's IP limiter)
+// must back off and keep polling, honoring X-Retry-After; it is never fatal.
+// Found live: production 429'd a 5s-cadence poll and login died mid-flow.
+func TestPollRetriesOn429HonoringRetryAfter(t *testing.T) {
+	clk := installClock(t)
+	script := &scriptedTokens{responses: []string{
+		"429:17",
+		`{"access_token":"tok-9","token_type":"Bearer","expires_in":604799,"scope":""}`,
+	}}
+	srv := httptest.NewServer(script.handler(t))
+	defer srv.Close()
+
+	tok, err := Poll(context.Background(), srv.URL, "dev-1", 5*time.Second, 30*time.Minute, nil)
+	if err != nil {
+		t.Fatalf("Poll after 429: %v", err)
+	}
+	if tok.AccessToken != "tok-9" {
+		t.Errorf("AccessToken = %q, want tok-9", tok.AccessToken)
+	}
+	// Base-interval wait first, then the 429's X-Retry-After (17s > 5s) wins once.
+	wantSleeps := []time.Duration{5 * time.Second, 17 * time.Second}
+	gotSleeps := clk.all()
+	if len(gotSleeps) != len(wantSleeps) {
+		t.Fatalf("sleeps = %v, want %v", gotSleeps, wantSleeps)
+	}
+	for i, want := range wantSleeps {
+		if gotSleeps[i] != want {
+			t.Errorf("sleep[%d] = %v, want %v", i, gotSleeps[i], want)
+		}
+	}
+}
+
+// A 429 without a usable Retry-After still backs off (the slow_down step) and
+// the flow recovers; the wait returns to the base interval afterwards.
+func TestPollRetriesOn429WithoutHeader(t *testing.T) {
+	clk := installClock(t)
+	script := &scriptedTokens{responses: []string{
+		"429:0",
+		`{"error":"authorization_pending"}`,
+		`{"access_token":"tok-10","token_type":"Bearer","expires_in":604799,"scope":""}`,
+	}}
+	srv := httptest.NewServer(script.handler(t))
+	defer srv.Close()
+
+	if _, err := Poll(context.Background(), srv.URL, "dev-1", 5*time.Second, 30*time.Minute, nil); err != nil {
+		t.Fatalf("Poll after headerless 429: %v", err)
+	}
+	// 5s base, then 10s backoff for the 429, then back to the 5s base.
+	wantSleeps := []time.Duration{5 * time.Second, 10 * time.Second, 5 * time.Second}
+	gotSleeps := clk.all()
+	if len(gotSleeps) != len(wantSleeps) {
+		t.Fatalf("sleeps = %v, want %v", gotSleeps, wantSleeps)
+	}
+	for i, want := range wantSleeps {
+		if gotSleeps[i] != want {
+			t.Errorf("sleep[%d] = %v, want %v", i, gotSleeps[i], want)
+		}
 	}
 }
