@@ -16,6 +16,20 @@ Or with Go:
 go install github.com/positronick/cli/cmd/positronick@latest
 ```
 
+### Package managers
+
+Rolling out alongside v0.1.0 (each channel goes live as its publishing
+credentials land — see `.goreleaser.yaml` and `packages/npm/README.md`):
+
+```sh
+brew install positronick/tap/positronick          # macOS (cask; not Linux)
+npm install -g positronick                        # macOS & Linux — or: npx positronick
+scoop bucket add positronick https://github.com/Positronick/scoop-bucket
+scoop install positronick                         # Windows
+winget install Positronick.Positronick            # Windows
+yay -S positronick-bin                            # Arch (AUR)
+```
+
 ## Usage
 
 | Command | Description | Status |
