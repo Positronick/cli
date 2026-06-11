@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **MCP usage instructions**: the `mcp serve` initialize response now carries usage guidance for the client's model — every connected MCP client teaches its agent the soul/listing workflow with no install step.
+- **Agent skill**: `skills/positronick/SKILL.md` teaches agents the full search → show → install workflow and the CLI's `--json`/exit-code contract; to be published on the registry itself as the `positronick` skill listing, with a contract test pinning its target/type enumerations to their Go sources.
 - **Package managers**: Homebrew cask (macOS & Linux, Homebrew ≥ 4.5), npm (`npm install -g positronick`, macOS & Linux), Scoop and Winget (Windows), and AUR (`positronick-bin`) publishing channels; each goes live as its publishing credentials land.
 - **SECURITY.md**: private vulnerability reporting policy and release verification instructions (`gh attestation verify` + `checksums.txt`).
 
