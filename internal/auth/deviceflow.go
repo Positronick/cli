@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/positronick/cli/internal/output"
@@ -90,7 +91,7 @@ type oauthError struct {
 
 // Start begins a device authorization: POST {base}/api/auth/device/code.
 func Start(ctx context.Context, baseURL string) (*DeviceAuth, error) {
-	status, body, err := postJSON(ctx, baseURL+"/api/auth/device/code",
+	status, body, _, err := postJSON(ctx, baseURL+"/api/auth/device/code",
 		map[string]string{"client_id": clientID})
 	if err != nil {
 		return nil, fmt.Errorf("starting device authorization: %w", err)
@@ -121,11 +122,14 @@ func Start(ctx context.Context, baseURL string) (*DeviceAuth, error) {
 func Poll(ctx context.Context, baseURL, deviceCode string, interval, expiresIn time.Duration,
 	onWait func()) (*Token, error) {
 	deadline := now().Add(expiresIn)
+	// wait is the next sleep; it resets to the base interval each loop so a 429's
+	// Retry-After stretches exactly one wait instead of slowing the whole flow.
+	wait := interval
 	for {
 		if onWait != nil {
 			onWait()
 		}
-		if err := sleep(ctx, interval); err != nil {
+		if err := sleep(ctx, wait); err != nil {
 			return nil, err
 		}
 		if now().After(deadline) {
@@ -133,13 +137,25 @@ func Poll(ctx context.Context, baseURL, deviceCode string, interval, expiresIn t
 				"device authorization expired before approval", "run positronick login again")
 		}
 
-		status, body, err := postJSON(ctx, baseURL+"/api/auth/device/token", map[string]string{
+		status, body, headers, err := postJSON(ctx, baseURL+"/api/auth/device/token", map[string]string{
 			"grant_type":  "urn:ietf:params:oauth:grant-type:device_code",
 			"device_code": deviceCode,
 			"client_id":   clientID,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("polling for approval: %w", err)
+		}
+
+		// Throttled (a proxy, CDN, or the server's IP limiter): back off and keep
+		// polling — never fatal. Honor the Retry-After hint when it exceeds the
+		// base interval; otherwise apply the RFC's slow_down step once.
+		if status == http.StatusTooManyRequests {
+			if ra := retryAfter(headers); ra > interval {
+				wait = ra
+			} else {
+				wait = interval + slowDownStep
+			}
+			continue
 		}
 
 		if status == http.StatusOK {
@@ -168,32 +184,48 @@ func Poll(ctx context.Context, baseURL, deviceCode string, interval, expiresIn t
 		default:
 			return nil, fmt.Errorf("polling for approval: %s", oauthFailure(status, body))
 		}
+		// Default next wait; slow_down grows `interval` itself (RFC: permanent),
+		// while a 429's Retry-After stretched exactly one wait via `continue` above.
+		wait = interval
 	}
 }
 
-// postJSON sends one JSON POST and returns the status and raw body; the
-// callers map status/body to flow outcomes.
-func postJSON(ctx context.Context, url string, in any) (int, []byte, error) {
+// postJSON sends one JSON POST and returns the status, raw body, and response
+// headers; the callers map them to flow outcomes (Poll reads X-Retry-After).
+func postJSON(ctx context.Context, url string, in any) (int, []byte, http.Header, error) {
 	payload, err := json.Marshal(in)
 	if err != nil {
-		return 0, nil, fmt.Errorf("encoding request: %w", err)
+		return 0, nil, nil, fmt.Errorf("encoding request: %w", err)
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(payload))
 	if err != nil {
-		return 0, nil, fmt.Errorf("building request: %w", err)
+		return 0, nil, nil, fmt.Errorf("building request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return 0, nil, err
+		return 0, nil, nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return 0, nil, fmt.Errorf("reading response: %w", err)
+		return 0, nil, nil, fmt.Errorf("reading response: %w", err)
 	}
-	return resp.StatusCode, body, nil
+	return resp.StatusCode, body, resp.Header, nil
+}
+
+// retryAfter parses the throttle hint from X-Retry-After (Better Auth) or the
+// standard Retry-After, in seconds; 0 when absent or unparsable.
+func retryAfter(h http.Header) time.Duration {
+	for _, key := range []string{"X-Retry-After", "Retry-After"} {
+		if v := h.Get(key); v != "" {
+			if secs, err := strconv.Atoi(v); err == nil && secs > 0 {
+				return time.Duration(secs) * time.Second
+			}
+		}
+	}
+	return 0
 }
 
 // oauthFailure renders an unexpected device-endpoint failure: the OAuth error
