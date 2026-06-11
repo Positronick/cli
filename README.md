@@ -22,7 +22,7 @@ Rolling out alongside v0.1.0 (each channel goes live as its publishing
 credentials land — see `.goreleaser.yaml` and `packages/npm/README.md`):
 
 ```sh
-brew install positronick/tap/positronick          # macOS (cask; not Linux)
+brew install positronick/tap/positronick          # macOS & Linux (Homebrew ≥ 4.5)
 npm install -g positronick                        # macOS & Linux — or: npx positronick
 scoop bucket add positronick https://github.com/Positronick/scoop-bucket
 scoop install positronick                         # Windows
