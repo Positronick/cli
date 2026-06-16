@@ -101,6 +101,38 @@ The CLI is designed to be driven by coding agents:
 - **MCP server**: `positronick mcp serve` speaks MCP over stdio (`claude mcp add positronick -- positronick mcp serve`). The initialize response carries usage instructions for the client's model.
 - **Agent skill**: [`skills/positronick/SKILL.md`](skills/positronick/SKILL.md) teaches agents the full search → show → install workflow; it is published on the registry itself as the `positronick` skill listing once released.
 
+## Use with Hermes
+
+Hermes treats `positronick` as a first-class harness target (it is the default
+when no harness is specified). After [installing](#install) the binary, wire it
+into a Hermes agent one of two ways. Both work with anonymous reads; see
+[Authentication](#authentication) for installs and publishing.
+
+**As an MCP server (recommended)** — gives the agent the five Positronick tools
+natively (`soul_search`, `soul_show`, `soul_install`, `listing_search`,
+`listing_show`):
+
+```sh
+hermes mcp add positronick --command positronick --args mcp serve
+hermes mcp test positronick   # ✓ Connected — 5 tools
+```
+
+Start a new agent session to pick up the tools. To install or publish from
+inside the agent, add `--env POSITRONICK_API_KEY=posi_...` to the command above
+so the stdio server inherits the token.
+
+**As a skill** — so the agent drives the `positronick` CLI through its terminal
+tool. Hermes fetches, security-scans, and enables the bundled skill:
+
+```sh
+hermes skills install https://raw.githubusercontent.com/positronick/cli/main/skills/positronick/SKILL.md --yes
+hermes skills list   # positronick → enabled
+```
+
+Offline or working from a clone, copy the file into any category folder under
+your active profile instead:
+`cp skills/positronick/SKILL.md ~/.hermes/profiles/<profile>/skills/agent-tooling/positronick/SKILL.md`.
+
 ## Verifying releases
 
 Release archives ship with `checksums.txt` (SHA-256) and sigstore-backed build

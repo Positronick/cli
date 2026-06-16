@@ -38,3 +38,10 @@ match CI.
 - `internal/mockapi` — frozen API fixture served over httptest for golden + e2e tests; changing a fixture value is a contract-test change. Read tests use `Handler()` (418 on `.md`); install tests opt into `InstallHandler()`.
 - `internal/output` — exit codes, error envelope, environment/TTY detection, printer, tables.
 - `internal/version` — build metadata injected via ldflags.
+
+## Harness integration (Hermes)
+
+`hermes` is positronick's default harness target (`internal/install`). Two integration surfaces — both end-user steps live in the README's "Use with Hermes"; the code behind them is here:
+
+- **MCP** — `hermes mcp add positronick --command positronick --args mcp serve` loads the five tools from `internal/mcpserver` over stdio. Keep `mcp-tools-list.json` golden in sync (it is the registered tool contract).
+- **Skill** — the bundled [`skills/positronick/SKILL.md`](skills/positronick/SKILL.md) drops into a Hermes profile's `skills/` dir and is auto-discovered; the agent then drives the CLI. Its drift guard is `skill_contract_test.go` (see the repo-root-artifacts rule above).
