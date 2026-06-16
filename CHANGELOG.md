@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Agent skill**: `skills/positronick/SKILL.md` teaches agents the full search → show → install workflow and the CLI's `--json`/exit-code contract; to be published on the registry itself as the `positronick` skill listing, with a contract test pinning its target/type enumerations to their Go sources.
 - **Package managers**: Homebrew cask (macOS & Linux, Homebrew ≥ 4.5), npm (`npm install -g positronick`, macOS & Linux), Scoop and Winget (Windows), and AUR (`positronick-bin`) publishing channels; each goes live as its publishing credentials land.
 - **SECURITY.md**: private vulnerability reporting policy and release verification instructions (`gh attestation verify` + `checksums.txt`).
+- **Hermes integration guide**: a README "Use with Hermes" section and an AGENTS.md note covering both ways to wire the CLI into a Hermes agent — registering the embedded MCP server (`hermes mcp add --command positronick --args mcp serve`) or installing the bundled skill (`hermes skills install`); every command validated against a live Hermes agent.
 
 #### Internal
 <!-- internal -->
