@@ -49,6 +49,7 @@ func registerAdminCommands(root *cobra.Command) {
 		loop.AddCommand(newLoopCreateCmd())
 	}
 	root.AddCommand(newListingCmd())
+	root.AddCommand(newProfileCmd())
 	revealAdminCommands(root)
 }
 

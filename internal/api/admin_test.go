@@ -171,6 +171,51 @@ func TestAdminListingMethods(t *testing.T) {
 	})
 }
 
+// Profile equivalents follow the same wire contract under /api/admin/profiles:
+// create POSTs the field map and decodes the created profile (with source);
+// list GETs every profile.
+func TestAdminProfileMethods(t *testing.T) {
+	t.Run("create", func(t *testing.T) {
+		e := &adminEcho{status: http.StatusCreated,
+			answer: `{"profile":{"id":"01P","handle":"shadcn","name":"shadcn","kind":"person","source":"api"}}`}
+		c := adminClient(t, e)
+		profile, err := c.CreateProfile(context.Background(), map[string]any{"handle": "shadcn", "name": "shadcn"})
+		if err != nil {
+			t.Fatalf("CreateProfile: %v", err)
+		}
+		if e.method != http.MethodPost || e.path != "/api/admin/profiles" {
+			t.Errorf("request = %s %s, want POST /api/admin/profiles", e.method, e.path)
+		}
+		var sent map[string]any
+		if err := json.Unmarshal(e.body, &sent); err != nil {
+			t.Fatalf("request body is not JSON: %v (%q)", err, e.body)
+		}
+		if sent["handle"] != "shadcn" || sent["name"] != "shadcn" {
+			t.Errorf("sent body = %v, want the field map verbatim", sent)
+		}
+		if profile.Handle != "shadcn" || profile.Source != "api" {
+			t.Errorf("profile = %+v, want the decoded created profile with source", profile)
+		}
+	})
+
+	t.Run("list", func(t *testing.T) {
+		e := &adminEcho{status: http.StatusOK,
+			answer: `{"profiles":[{"id":"01P","handle":"anthropic","name":"Anthropic","source":"seed"},` +
+				`{"id":"01Q","handle":"shadcn","name":"shadcn","source":"api"}]}`}
+		c := adminClient(t, e)
+		profiles, err := c.Profiles(context.Background())
+		if err != nil {
+			t.Fatalf("Profiles: %v", err)
+		}
+		if e.method != http.MethodGet || e.path != "/api/admin/profiles" {
+			t.Errorf("request = %s %s, want GET /api/admin/profiles", e.method, e.path)
+		}
+		if len(profiles) != 2 || profiles[0].Handle != "anthropic" || profiles[1].Source != "api" {
+			t.Errorf("profiles = %+v, want the two decoded profiles with source", profiles)
+		}
+	})
+}
+
 // A non-2xx admin response must surface as the typed *APIError carrying the
 // server's envelope verbatim — the CLI prints validator messages raw.
 func TestAdminErrorPassthrough(t *testing.T) {

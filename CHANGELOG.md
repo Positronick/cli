@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Package managers**: Homebrew cask (macOS & Linux, Homebrew ≥ 4.5), npm (`npm install -g positronick`, macOS & Linux), Scoop and Winget (Windows), and AUR (`positronick-bin`) publishing channels; each goes live as its publishing credentials land.
 - **SECURITY.md**: private vulnerability reporting policy and release verification instructions (`gh attestation verify` + `checksums.txt`).
 - **Hermes integration guide**: a README "Use with Hermes" section and an AGENTS.md note covering both ways to wire the CLI into a Hermes agent — registering the embedded MCP server (`hermes mcp add --command positronick --args mcp serve`) or installing the bundled skill (`hermes skills install`); every command validated against a live Hermes agent.
+- **`positronick profile` (admin)**: create and list registry authoring profiles — `profile create --handle <h> --name <n>` (`--kind`, `--avatar-url` defaulting to `https://github.com/<handle>.png`, `--verified`/`--official`) and `profile list`. Lets an admin author a listing under a brand-new profile instead of requiring it be git-curated first. Backed by the new `POST`/`GET /api/admin/profiles` API.
 
 #### Internal
 <!-- internal -->

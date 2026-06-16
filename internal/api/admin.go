@@ -27,6 +27,13 @@ type AdminListing struct {
 	Source string `json:"source"`
 }
 
+// AdminProfile is a profile as the admin API returns it, plus Source (same
+// semantics as AdminSoul.Source: "seed" = git-curated, "api" = admin-created).
+type AdminProfile struct {
+	Profile
+	Source string `json:"source"`
+}
+
 // CreateSoul creates a soul: POST /api/admin/souls. fields is sent verbatim
 // as the JSON body — the server validates with the seed's own validator and
 // answers 422 with the validator message, 409 on a slug conflict. The id is
@@ -108,4 +115,32 @@ func (c *Client) UpdateListing(ctx context.Context, id string, patch map[string]
 		return nil, false, err
 	}
 	return &out.Listing, out.TookOwnership, nil
+}
+
+// CreateProfile creates a registry profile: POST /api/admin/profiles. fields is
+// sent verbatim as the JSON body — the server validates it and answers 422 on a
+// bad field, 409 when the handle is already taken. The id and source are
+// server-assigned (source becomes "api"); verified/official default false.
+// Profiles were historically git-curated only; this is the admin write path.
+func (c *Client) CreateProfile(ctx context.Context, fields map[string]any) (*AdminProfile, error) {
+	var out struct {
+		Profile AdminProfile `json:"profile"`
+	}
+	if err := c.do(ctx, http.MethodPost, "/api/admin/profiles", nil, fields, &out); err != nil {
+		return nil, err
+	}
+	return &out.Profile, nil
+}
+
+// Profiles lists every profile (any source): GET /api/admin/profiles. Admin
+// only — the server answers 401/403 for non-admins. Useful for discovering
+// which handles already exist before authoring a listing.
+func (c *Client) Profiles(ctx context.Context) ([]AdminProfile, error) {
+	var out struct {
+		Profiles []AdminProfile `json:"profiles"`
+	}
+	if err := c.do(ctx, http.MethodGet, "/api/admin/profiles", nil, nil, &out); err != nil {
+		return nil, err
+	}
+	return out.Profiles, nil
 }
