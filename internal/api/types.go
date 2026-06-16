@@ -121,6 +121,32 @@ func (l *Listing) LoopData() (LoopData, error) {
 	return ld, nil
 }
 
+// Profile is a verified person or org that authors registry tooling. Mirrors
+// Profile in src/lib/types.ts. Nullable TS fields (string | null) are pointers
+// so null round-trips as null in --json output.
+type Profile struct {
+	// ID is the stable, immutable id (ULID).
+	ID string `json:"id"`
+	// Handle is the human-facing handle: /profiles/[handle].
+	Handle string `json:"handle"`
+	Name   string `json:"name"`
+	// Kind is person | org.
+	Kind string `json:"kind"`
+	// Verified is the white seal (team-curated or claimed); Official is the red seal.
+	Verified  bool    `json:"verified"`
+	Official  bool    `json:"official"`
+	Website   *string `json:"website"`
+	GithubURL *string `json:"githubUrl"`
+	// GithubUserID is the immutable GitHub numeric id (person profiles).
+	GithubUserID *string `json:"githubUserId"`
+	AvatarURL    *string `json:"avatarUrl"`
+	Bio          *string `json:"bio"`
+	// Socials are public http(s) URLs.
+	Socials   []string `json:"socials"`
+	CreatedAt string   `json:"createdAt"`
+	UpdatedAt string   `json:"updatedAt"`
+}
+
 // LoopData is the type-specific extras for a `loop` listing, stored in
 // Listing.Data. Mirrors LoopData in src/lib/types.ts.
 type LoopData struct {

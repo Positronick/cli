@@ -162,6 +162,9 @@ var adminCommandPaths = [][]string{
 	{"listing", "create"},
 	{"listing", "update"},
 	{"loop", "create"},
+	{"profile"},
+	{"profile", "create"},
+	{"profile", "list"},
 }
 
 // The admin commands are hidden by default and flip visible from the CACHED
@@ -242,6 +245,7 @@ func TestRevealAdminCommands(t *testing.T) {
 		for _, want := range []string{
 			"positronick soul create", "positronick soul update",
 			"positronick listing create", "positronick loop create",
+			"positronick profile create", "positronick profile list",
 		} {
 			if !strings.Contains(stdout, "## "+want) {
 				t.Errorf("agent-docs for an admin must document %q", want)

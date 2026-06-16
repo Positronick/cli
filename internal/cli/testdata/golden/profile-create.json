@@ -1,0 +1,20 @@
+{
+  "profile": {
+    "id": "01PCREATED0000000000000001",
+    "handle": "shadcn",
+    "name": "shadcn",
+    "kind": "person",
+    "verified": false,
+    "official": false,
+    "website": null,
+    "githubUrl": null,
+    "githubUserId": null,
+    "avatarUrl": "https://github.com/shadcn.png",
+    "bio": null,
+    "socials": [],
+    "createdAt": "2026-06-09T09:00:00.000Z",
+    "updatedAt": "2026-06-09T09:00:00.000Z",
+    "source": "api"
+  },
+  "created": true
+}

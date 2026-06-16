@@ -1,0 +1,6 @@
+HANDLE     NAME               KIND  SEAL      SOURCE
+anthropic  Anthropic          org   verified  seed
+github     GitHub             org   verified  seed
+grafana    Grafana Labs       org   verified  seed
+nsollazzo  Nicholas Sollazzo  org   verified  seed
+obra       Jesse Vincent      org   verified  seed
