@@ -1,0 +1,33 @@
+{
+  "post": {
+    "id": "01POSTCLIRELEASE000000000X",
+    "slug": "positronick-cli-v0-1-0",
+    "slugHistory": [],
+    "kind": "release",
+    "title": "Positronick CLI v0.1.0",
+    "excerpt": "Now with admin write commands.",
+    "description": null,
+    "contentHash": "2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb",
+    "version": "1.0.0",
+    "category": "Releases",
+    "tags": [
+      "cli",
+      "release"
+    ],
+    "authorHandle": "nsollazzo",
+    "authorName": "Nicholas Sollazzo",
+    "authorAvatar": null,
+    "authorTier": "verified",
+    "listingSlug": "positronick-cli",
+    "listingName": "Positronick CLI",
+    "canonicalUrl": "https://github.com/positronick/cli/releases/tag/v0.1.0",
+    "status": "published",
+    "viewCount": 42,
+    "publishedAt": "2026-06-01T09:00:00.000Z",
+    "createdAt": "2026-06-01T09:00:00.000Z",
+    "updatedAt": "2026-06-09T10:00:00.000Z",
+    "content": "# Positronick CLI v0.1.0\n\nThe first public release of the command-line client.\n",
+    "source": "api"
+  },
+  "tookOwnership": true
+}

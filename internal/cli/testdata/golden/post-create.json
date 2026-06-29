@@ -1,0 +1,33 @@
+{
+  "post": {
+    "id": "01BCREATED0000000000000001",
+    "slug": "the-positronick-manifesto",
+    "slugHistory": [],
+    "kind": "article",
+    "title": "The Positronick Manifesto",
+    "excerpt": "Why we built a provider- and framework-agnostic marketplace for everything AI.",
+    "description": null,
+    "contentHash": "98f4a115d808889e77d8aba32252a72ebe95f8f15aa97a6d4faa5471c0874a3e",
+    "version": "1.0.0",
+    "category": "Announcements",
+    "tags": [
+      "manifesto",
+      "launch"
+    ],
+    "authorHandle": null,
+    "authorName": null,
+    "authorAvatar": null,
+    "authorTier": null,
+    "listingSlug": null,
+    "listingName": null,
+    "canonicalUrl": null,
+    "status": "draft",
+    "viewCount": 0,
+    "publishedAt": null,
+    "createdAt": "2026-06-09T09:00:00.000Z",
+    "updatedAt": "2026-06-09T09:00:00.000Z",
+    "content": "# The Positronick Manifesto\n\nPublish once — discover and use anywhere.",
+    "source": "api"
+  },
+  "created": true
+}

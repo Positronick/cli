@@ -36,6 +36,17 @@ type AdminProfile struct {
 	Source string `json:"source"`
 }
 
+// AdminPost is a blog post as the admin API returns it: the full public Post
+// (markdown body included) plus Source, the ownership marker. For posts the
+// values are "feed" (mirrored from a feed source by the ingestor, which keeps
+// it fresh) and "api" (authored or edited through the write API, which the
+// ingestor leaves alone). Editing a feed-owned post flips it to api, reported
+// as tookOwnership.
+type AdminPost struct {
+	Post
+	Source string `json:"source"`
+}
+
 // CreateSoul creates a soul: POST /api/admin/souls. fields is sent verbatim
 // as the JSON body — the server validates with the seed's own validator and
 // answers 422 with the validator message, 409 on a slug conflict. The id is
@@ -230,4 +241,61 @@ func (c *Client) SyncFeed(ctx context.Context, id string) (*FeedSyncSummary, err
 		}
 	}
 	return nil, err
+}
+
+// CreatePost creates a blog post: POST /api/admin/posts. fields is sent
+// verbatim as the JSON body — the server validates it and answers 422 with the
+// validator message, 409 on a slug conflict. The id is server-assigned (the
+// server rejects a client-supplied one) and status defaults to "draft": an
+// agent-authored post cannot self-publish, it must be promoted deliberately.
+func (c *Client) CreatePost(ctx context.Context, fields map[string]any) (*AdminPost, error) {
+	var out struct {
+		Post AdminPost `json:"post"`
+	}
+	if err := c.do(ctx, http.MethodPost, "/api/admin/posts", nil, fields, &out); err != nil {
+		return nil, err
+	}
+	return &out.Post, nil
+}
+
+// AdminPost fetches one post by id, any status: GET /api/admin/posts/{id}.
+func (c *Client) AdminPost(ctx context.Context, id string) (*AdminPost, error) {
+	var out struct {
+		Post AdminPost `json:"post"`
+	}
+	path := "/api/admin/posts/" + url.PathEscape(id)
+	if err := c.do(ctx, http.MethodGet, path, nil, nil, &out); err != nil {
+		return nil, err
+	}
+	return &out.Post, nil
+}
+
+// AdminPosts lists every post (any status, source included): GET
+// /api/admin/posts. Admin only — the server answers 401/403 for non-admins.
+// Named AdminPosts (not Posts) to leave the public, published-only blog gallery
+// reader Posts(ctx, kind) untouched.
+func (c *Client) AdminPosts(ctx context.Context) ([]AdminPost, error) {
+	var out struct {
+		Posts []AdminPost `json:"posts"`
+	}
+	if err := c.do(ctx, http.MethodGet, "/api/admin/posts", nil, nil, &out); err != nil {
+		return nil, err
+	}
+	return out.Posts, nil
+}
+
+// UpdatePost patches a post: PATCH /api/admin/posts/{id}. patch carries only
+// the fields to change — {"status":"draft"} unpublishes (there is no delete
+// verb). tookOwnership is true when the row was feed-owned and this edit flipped
+// it to api-owned: the ingestor will no longer refresh it from its source.
+func (c *Client) UpdatePost(ctx context.Context, id string, patch map[string]any) (*AdminPost, bool, error) {
+	var out struct {
+		Post          AdminPost `json:"post"`
+		TookOwnership bool      `json:"tookOwnership"`
+	}
+	path := "/api/admin/posts/" + url.PathEscape(id)
+	if err := c.do(ctx, http.MethodPatch, path, nil, patch, &out); err != nil {
+		return nil, false, err
+	}
+	return &out.Post, out.TookOwnership, nil
 }

@@ -51,6 +51,7 @@ func registerAdminCommands(root *cobra.Command) {
 	root.AddCommand(newListingCmd())
 	root.AddCommand(newProfileCmd())
 	root.AddCommand(newFeedCmd())
+	root.AddCommand(newPostCmd())
 	revealAdminCommands(root)
 }
 
