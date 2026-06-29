@@ -40,12 +40,15 @@ var goldenCases = []struct {
 	{"research.json", []string{"research", "--json"}},
 	{"research-kind.json", []string{"research", "--kind", "release", "--json"}},
 	{"research-since.json", []string{"research", "--since", "2026-06-01T09:00:00.000Z", "--json"}},
+	{"blog-list.json", []string{"blog", "list", "--json"}},
+	{"blog-show.json", []string{"blog", "show", "positronick-cli-v0-1-0", "--json"}},
 	{"agent-docs.json", []string{"agent-docs", "--json"}},
 	// human layout
 	{"soul-list.txt", []string{"soul", "list"}},
 	{"soul-show.txt", []string{"soul", "show", "sherlock"}},
 	{"loop-show.txt", []string{"loop", "show", "pr-to-green"}},
 	{"research.txt", []string{"research"}},
+	{"blog-show.txt", []string{"blog", "show", "positronick-cli-v0-1-0"}},
 	{"agent-docs.txt", []string{"agent-docs"}},
 }
 

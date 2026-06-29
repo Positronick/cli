@@ -38,6 +38,7 @@ func NewRootCmd() *cobra.Command {
 	}
 	root.AddCommand(newLoginCmd(), newLogoutCmd(), newAuthCmd())
 	root.AddCommand(newResearchCmd())
+	root.AddCommand(newBlogCmd())
 	root.AddCommand(newAgentDocsCmd())
 	attachInstallCommands(root)
 	registerAdminCommands(root) // hidden write commands; revealed for cached admins
