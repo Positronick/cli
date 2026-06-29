@@ -633,6 +633,43 @@
       "flags": []
     },
     {
+      "path": "positronick research",
+      "use": "positronick research [query] [flags]",
+      "description": "List what's new on positronick.com (articles, releases, links)",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only posts in this category",
+          "default": ""
+        },
+        {
+          "name": "kind",
+          "shorthand": "",
+          "usage": "only this post kind: article, release or link",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results (1–100)",
+          "default": "20"
+        },
+        {
+          "name": "since",
+          "shorthand": "",
+          "usage": "only posts published after this ISO-8601 instant (poll the delta)",
+          "default": ""
+        },
+        {
+          "name": "tag",
+          "shorthand": "",
+          "usage": "only posts carrying this tag",
+          "default": ""
+        }
+      ]
+    },
+    {
       "path": "positronick self",
       "use": "positronick self [flags]",
       "description": "Manage this positronick installation",

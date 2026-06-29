@@ -37,11 +37,15 @@ var goldenCases = []struct {
 	{"agent-search.json", []string{"agent", "search", "zzz", "--json"}},
 	{"loop-list.json", []string{"loop", "list", "--json"}},
 	{"loop-show.json", []string{"loop", "show", "pr-to-green", "--json"}},
+	{"research.json", []string{"research", "--json"}},
+	{"research-kind.json", []string{"research", "--kind", "release", "--json"}},
+	{"research-since.json", []string{"research", "--since", "2026-06-01T09:00:00.000Z", "--json"}},
 	{"agent-docs.json", []string{"agent-docs", "--json"}},
 	// human layout
 	{"soul-list.txt", []string{"soul", "list"}},
 	{"soul-show.txt", []string{"soul", "show", "sherlock"}},
 	{"loop-show.txt", []string{"loop", "show", "pr-to-green"}},
+	{"research.txt", []string{"research"}},
 	{"agent-docs.txt", []string{"agent-docs"}},
 }
 

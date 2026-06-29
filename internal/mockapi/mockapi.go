@@ -1,8 +1,8 @@
 // Package mockapi serves a fixed positronick.com API fixture over
 // net/http/httptest-compatible handlers, implementing the read contract
 // (GET /api/souls, /api/souls/{slug}, /api/listings(?type=),
-// /api/listings/{slug}) and the auth contract (device flow, /api/me,
-// api-key/create) for the CLI's golden and e2e tests. The dataset is
+// /api/listings/{slug}, /api/research) and the auth contract (device flow,
+// /api/me, api-key/create) for the CLI's golden and e2e tests. The dataset is
 // deliberately frozen: golden files pin command output byte-for-byte against
 // it, so changing a fixture value is a contract-test change.
 package mockapi
@@ -11,6 +11,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"sort"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -292,6 +295,53 @@ var Listings = []api.Listing{
 	},
 }
 
+// ResearchPosts is the fixture "what's new" feed: one of each post kind
+// (article, release, link) with deliberately different publish dates,
+// categories and tags so --since/--kind/--category/--tag and the `latest`
+// high-water mark each have something to disagree about. Ordered oldest-first;
+// the handler sorts newest-first like the server.
+var ResearchPosts = []api.ResearchItem{
+	{
+		Slug:         "shipping-the-cli",
+		Title:        "Shipping the Positronick CLI",
+		Excerpt:      "Install souls and browse the registry from your terminal.",
+		Kind:         "article",
+		Category:     "Engineering",
+		Tags:         []string{"cli", "launch"},
+		URL:          "https://positronick.com/blog/shipping-the-cli",
+		MdURL:        "https://positronick.com/api/blog/shipping-the-cli.md",
+		CanonicalURL: nil,
+		ContentHash:  "dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444",
+		PublishedAt:  ptr("2026-05-20T12:00:00.000Z"),
+	},
+	{
+		Slug:         "hermes-v2-1-0",
+		Title:        "Hermes v2.1.0",
+		Excerpt:      "Tool-calling fixes and a faster device flow.",
+		Kind:         "release",
+		Category:     "Releases",
+		Tags:         []string{"hermes"},
+		URL:          "https://positronick.com/blog/hermes-v2-1-0",
+		MdURL:        "https://positronick.com/api/blog/hermes-v2-1-0.md",
+		CanonicalURL: ptr("https://github.com/NousResearch/hermes/releases/tag/v2.1.0"),
+		ContentHash:  "eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555",
+		PublishedAt:  ptr("2026-06-01T09:00:00.000Z"),
+	},
+	{
+		Slug:         "openclaw-launch",
+		Title:        "OpenClaw launches its agent harness",
+		Excerpt:      "A new open-source harness joins the registry.",
+		Kind:         "link",
+		Category:     "Community",
+		Tags:         []string{"openclaw", "news"},
+		URL:          "https://positronick.com/blog/openclaw-launch",
+		MdURL:        "https://positronick.com/api/blog/openclaw-launch.md",
+		CanonicalURL: ptr("https://example.com/openclaw-launch"),
+		ContentHash:  "ffff6666ffff6666ffff6666ffff6666ffff6666ffff6666ffff6666ffff6666",
+		PublishedAt:  ptr("2026-06-10T08:00:00.000Z"),
+	},
+}
+
 // Handler returns an http.Handler implementing the read API over the fixture
 // data, including the server's JSON error envelope on 404 and on an unknown
 // ?type=. Requests to /api/souls/{slug}.md are answered with 418 — the .md
@@ -350,6 +400,10 @@ func Handler() http.Handler {
 			}
 		}
 		writeError(w, http.StatusNotFound, "not_found", "Listing not found")
+	})
+
+	mux.HandleFunc("GET /api/research", func(w http.ResponseWriter, r *http.Request) {
+		serveResearch(w, r.URL.Query())
 	})
 
 	mux.HandleFunc("POST /api/auth/device/code", func(w http.ResponseWriter, r *http.Request) {
@@ -465,6 +519,75 @@ func InstallHandler() http.Handler {
 		}
 		inner.ServeHTTP(w, r)
 	})
+}
+
+// serveResearch implements GET /api/research over ResearchPosts: it filters by
+// kind/category/tag/q, computes `latest` (the newest publishedAt within that
+// filter, before `since`), then applies `since` and `limit` to the newest-first
+// results — the same semantics the server documents, so golden output pins them.
+func serveResearch(w http.ResponseWriter, sp url.Values) {
+	kind, category, tag := sp.Get("kind"), sp.Get("category"), sp.Get("tag")
+	q := strings.ToLower(sp.Get("q"))
+
+	filtered := make([]api.ResearchItem, 0, len(ResearchPosts))
+	for _, it := range ResearchPosts {
+		if kind != "" && !strings.EqualFold(it.Kind, kind) {
+			continue
+		}
+		if category != "" && !strings.EqualFold(it.Category, category) {
+			continue
+		}
+		if tag != "" && !containsFoldStr(it.Tags, tag) {
+			continue
+		}
+		if q != "" && !strings.Contains(strings.ToLower(it.Title), q) &&
+			!strings.Contains(strings.ToLower(it.Excerpt), q) {
+			continue
+		}
+		filtered = append(filtered, it)
+	}
+
+	var latest *string
+	for _, it := range filtered {
+		if it.PublishedAt != nil && (latest == nil || *it.PublishedAt > *latest) {
+			latest = it.PublishedAt
+		}
+	}
+
+	since := sp.Get("since")
+	results := make([]api.ResearchItem, 0, len(filtered))
+	for _, it := range filtered {
+		if since != "" && (it.PublishedAt == nil || *it.PublishedAt <= since) {
+			continue
+		}
+		results = append(results, it)
+	}
+	sort.SliceStable(results, func(i, j int) bool {
+		return derefStr(results[i].PublishedAt) > derefStr(results[j].PublishedAt)
+	})
+	if n, err := strconv.Atoi(sp.Get("limit")); err == nil && n >= 0 && n < len(results) {
+		results = results[:n]
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"results": results, "latest": latest})
+}
+
+// containsFoldStr reports whether vals contains want, case-insensitively.
+func containsFoldStr(vals []string, want string) bool {
+	for _, v := range vals {
+		if strings.EqualFold(v, want) {
+			return true
+		}
+	}
+	return false
+}
+
+// derefStr maps a nil *string to "" for ordering.
+func derefStr(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 // authorized reports whether the request carries the fixture session token or
