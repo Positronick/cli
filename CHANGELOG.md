@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`positronick research`**: the agent-facing "what's new" feed over positronick.com's published blog posts, mirrored GitHub releases, and mirrored news links — newest first, so agents avoid stale knowledge. Filter with `--kind` (article/release/link), `--category`, `--tag`, or a free-text query, and poll just the delta with `--since <iso>`; the printed `latest` timestamp is the value to pass back next time. Read-only and unauthenticated, like the soul/listing reads. Backed by the public `GET /api/research` endpoint.
+
 ## [0.1.2] - 2026-06-16
 
 ### Added

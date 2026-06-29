@@ -1,6 +1,6 @@
 # positronick — agent manual
 
-`positronick` is the command-line client for positronick.com. It discovers agent capabilities: souls (installable SOUL.md personality files) and a registry of official tooling (harnesses, CLIs, MCP servers, agents, skills, plugins, loops). It is built to be driven by coding agents — pass `--json` to any command for stable machine-readable JSON on stdout, read progress and errors from stderr, and branch on the exit code. Read commands never prompt. Hidden admin commands (create/update for souls and listings, plus create/list for profiles) exist and appear in help and in these docs after logging in with an admin account.
+`positronick` is the command-line client for positronick.com. It discovers agent capabilities: souls (installable SOUL.md personality files), a registry of official tooling (harnesses, CLIs, MCP servers, agents, skills, plugins, loops), and a `research` feed of what's new (articles, releases, links) so agents avoid stale knowledge. It is built to be driven by coding agents — pass `--json` to any command for stable machine-readable JSON on stdout, read progress and errors from stderr, and branch on the exit code. Read commands never prompt. Hidden admin commands (create/update for souls and listings, plus create/list for profiles) exist and appear in help and in these docs after logging in with an admin account.
 
 Exit codes:
 
@@ -423,6 +423,20 @@ Flags:
 Usage: `positronick plugin show <slug> [flags]`
 
 Show one plugin listing in full
+
+## positronick research
+
+Usage: `positronick research [query] [flags]`
+
+List what's new on positronick.com (articles, releases, links)
+
+Flags:
+
+- `--category` (default ``): only posts in this category
+- `--kind` (default ``): only this post kind: article, release or link
+- `--limit` (default `20`): maximum number of results (1–100)
+- `--since` (default ``): only posts published after this ISO-8601 instant (poll the delta)
+- `--tag` (default ``): only posts carrying this tag
 
 ## positronick self
 

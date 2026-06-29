@@ -1,0 +1,53 @@
+{
+  "count": 3,
+  "latest": "2026-06-10T08:00:00.000Z",
+  "results": [
+    {
+      "slug": "openclaw-launch",
+      "title": "OpenClaw launches its agent harness",
+      "excerpt": "A new open-source harness joins the registry.",
+      "kind": "link",
+      "category": "Community",
+      "tags": [
+        "openclaw",
+        "news"
+      ],
+      "url": "https://positronick.com/blog/openclaw-launch",
+      "mdUrl": "https://positronick.com/api/blog/openclaw-launch.md",
+      "canonicalUrl": "https://example.com/openclaw-launch",
+      "contentHash": "ffff6666ffff6666ffff6666ffff6666ffff6666ffff6666ffff6666ffff6666",
+      "publishedAt": "2026-06-10T08:00:00.000Z"
+    },
+    {
+      "slug": "hermes-v2-1-0",
+      "title": "Hermes v2.1.0",
+      "excerpt": "Tool-calling fixes and a faster device flow.",
+      "kind": "release",
+      "category": "Releases",
+      "tags": [
+        "hermes"
+      ],
+      "url": "https://positronick.com/blog/hermes-v2-1-0",
+      "mdUrl": "https://positronick.com/api/blog/hermes-v2-1-0.md",
+      "canonicalUrl": "https://github.com/NousResearch/hermes/releases/tag/v2.1.0",
+      "contentHash": "eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555",
+      "publishedAt": "2026-06-01T09:00:00.000Z"
+    },
+    {
+      "slug": "shipping-the-cli",
+      "title": "Shipping the Positronick CLI",
+      "excerpt": "Install souls and browse the registry from your terminal.",
+      "kind": "article",
+      "category": "Engineering",
+      "tags": [
+        "cli",
+        "launch"
+      ],
+      "url": "https://positronick.com/blog/shipping-the-cli",
+      "mdUrl": "https://positronick.com/api/blog/shipping-the-cli.md",
+      "canonicalUrl": null,
+      "contentHash": "dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444dddd4444",
+      "publishedAt": "2026-05-20T12:00:00.000Z"
+    }
+  ]
+}
