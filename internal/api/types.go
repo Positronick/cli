@@ -21,6 +21,14 @@ import (
 // Mirrors LISTING_TYPES in src/lib/types.ts.
 var ListingTypes = []string{"harness", "cli", "mcp", "agent", "skill", "plugin", "loop"}
 
+// FeedKinds are the kinds of blog feed source the ingestor mirrors. Mirrors
+// FEED_KINDS in src/lib/server/feedFields.ts.
+var FeedKinds = []string{"github_release", "rss"}
+
+// BlogCategories are the categories a mirrored post (and a feed source's
+// defaultCategory) may use. Mirrors BLOG_CATEGORIES in src/lib/types.ts.
+var BlogCategories = []string{"Releases", "Announcements", "Tutorials", "Guides", "Engineering", "Community"}
+
 // SoulCard is the lightweight list/gallery view of a soul — everything needed
 // to render a card or detail header, deliberately excluding the heavy
 // markdown body. Mirrors SoulCard (= SoulMeta) in src/lib/types.ts.
@@ -162,4 +170,59 @@ type LoopData struct {
 	CompatibleTools []string `json:"compatibleTools,omitempty"`
 	// Kickoff is the prompt a user copies to start the loop.
 	Kickoff string `json:"kickoff,omitempty"`
+}
+
+// FeedSource is a subscribed blog feed source the ingestor mirrors into posts
+// (GitHub releases or RSS). Admin-only — never returned from a public route.
+// Mirrors FeedSource in src/lib/server/feeds.ts. Nullable TS fields are
+// pointers so null round-trips as null in --json output. There is deliberately
+// no `source` field on the wire: feed sources are always api-owned (never
+// git-seeded), so they carry no seed/api ownership marker.
+type FeedSource struct {
+	// ID is the stable, immutable id (ULID).
+	ID    string `json:"id"`
+	Label string `json:"label"`
+	// FeedURL is the github_release repo URL or the rss feed URL.
+	FeedURL string `json:"feedUrl"`
+	// Kind is one of FeedKinds: github_release | rss.
+	Kind string `json:"kind"`
+	// AuthorProfileID/AuthorHandle are the default byline stamped on mirrored
+	// posts; the handle is left-joined for display. Null when unattributed.
+	AuthorProfileID *string `json:"authorProfileId"`
+	AuthorHandle    *string `json:"authorHandle"`
+	// ListingID/ListingSlug are the related tool stamped on mirrored posts; the
+	// slug is left-joined for display. Null when none.
+	ListingID   *string `json:"listingId"`
+	ListingSlug *string `json:"listingSlug"`
+	// DefaultCategory is one of BlogCategories.
+	DefaultCategory string   `json:"defaultCategory"`
+	DefaultTags     []string `json:"defaultTags"`
+	// AutoPublish publishes mirrored posts immediately instead of as drafts.
+	AutoPublish bool `json:"autoPublish"`
+	// Enabled is the on/off switch; false pauses the feed (there is no delete).
+	Enabled bool `json:"enabled"`
+	// LastFetchedAt/LastStatus record the last ingest run — null until the
+	// first run; LastStatus is "ok" or the last error message (fail-loud).
+	LastFetchedAt *string `json:"lastFetchedAt"`
+	LastStatus    *string `json:"lastStatus"`
+	CreatedAt     string  `json:"createdAt"`
+	UpdatedAt     string  `json:"updatedAt"`
+}
+
+// FeedSyncSummary is the per-feed ingest outcome from a sync. Mirrors
+// IngestSummary in src/lib/server/feedIngest.ts. A non-empty Error means the
+// fetch/parse failed and no items were processed — the sync endpoint answers
+// 502 in that case, with this same summary as the body.
+type FeedSyncSummary struct {
+	FeedID  string `json:"feedId"`
+	Label   string `json:"label"`
+	Fetched int    `json:"fetched"`
+	Created int    `json:"created"`
+	Updated int    `json:"updated"`
+	Skipped int    `json:"skipped"`
+	// ItemErrors holds per-item failures on an otherwise-successful run; each
+	// such item is counted in Skipped.
+	ItemErrors []string `json:"itemErrors"`
+	// Error is the fetch/parse failure reason; empty on success.
+	Error string `json:"error,omitempty"`
 }

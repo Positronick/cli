@@ -216,6 +216,128 @@ func TestAdminProfileMethods(t *testing.T) {
 	})
 }
 
+// Feed equivalents follow the same wire contract under /api/admin/feeds: the
+// list/create/get/patch responses wrap the feed in {"feed"|"feeds"}.
+func TestAdminFeedMethods(t *testing.T) {
+	t.Run("list", func(t *testing.T) {
+		e := &adminEcho{status: http.StatusOK,
+			answer: `{"feeds":[{"id":"01F","label":"Releases","feedUrl":"https://github.com/o/r","kind":"github_release","enabled":true}]}`}
+		c := adminClient(t, e)
+		feeds, err := c.Feeds(context.Background())
+		if err != nil {
+			t.Fatalf("Feeds: %v", err)
+		}
+		if e.method != http.MethodGet || e.path != "/api/admin/feeds" {
+			t.Errorf("request = %s %s, want GET /api/admin/feeds", e.method, e.path)
+		}
+		if len(feeds) != 1 || feeds[0].Label != "Releases" || feeds[0].Kind != "github_release" {
+			t.Errorf("feeds = %+v, want the one decoded feed", feeds)
+		}
+	})
+
+	t.Run("create", func(t *testing.T) {
+		e := &adminEcho{status: http.StatusCreated,
+			answer: `{"feed":{"id":"01F","label":"Releases","kind":"rss","defaultCategory":"Releases","enabled":true}}`}
+		c := adminClient(t, e)
+		feed, err := c.CreateFeed(context.Background(), map[string]any{"label": "Releases", "kind": "rss"})
+		if err != nil {
+			t.Fatalf("CreateFeed: %v", err)
+		}
+		if e.method != http.MethodPost || e.path != "/api/admin/feeds" {
+			t.Errorf("request = %s %s, want POST /api/admin/feeds", e.method, e.path)
+		}
+		var sent map[string]any
+		if err := json.Unmarshal(e.body, &sent); err != nil {
+			t.Fatalf("request body is not JSON: %v (%q)", err, e.body)
+		}
+		if sent["label"] != "Releases" || sent["kind"] != "rss" {
+			t.Errorf("sent body = %v, want the field map verbatim", sent)
+		}
+		if feed.ID != "01F" || feed.Kind != "rss" {
+			t.Errorf("feed = %+v, want the decoded created feed", feed)
+		}
+	})
+
+	t.Run("get", func(t *testing.T) {
+		e := &adminEcho{status: http.StatusOK,
+			answer: `{"feed":{"id":"01F","label":"Releases","enabled":false}}`}
+		c := adminClient(t, e)
+		feed, err := c.AdminFeed(context.Background(), "01F")
+		if err != nil {
+			t.Fatalf("AdminFeed: %v", err)
+		}
+		if e.method != http.MethodGet || e.path != "/api/admin/feeds/01F" {
+			t.Errorf("request = %s %s, want GET /api/admin/feeds/01F", e.method, e.path)
+		}
+		if feed.Enabled {
+			t.Errorf("feed = %+v, want the paused feed", feed)
+		}
+	})
+
+	t.Run("update patches only provided fields", func(t *testing.T) {
+		e := &adminEcho{status: http.StatusOK,
+			answer: `{"feed":{"id":"01F","label":"Releases","enabled":false}}`}
+		c := adminClient(t, e)
+		feed, err := c.UpdateFeed(context.Background(), "01F", map[string]any{"enabled": false})
+		if err != nil {
+			t.Fatalf("UpdateFeed: %v", err)
+		}
+		if e.method != http.MethodPatch || e.path != "/api/admin/feeds/01F" {
+			t.Errorf("request = %s %s, want PATCH /api/admin/feeds/01F", e.method, e.path)
+		}
+		if string(e.body) != `{"enabled":false}` {
+			t.Errorf("sent body = %s, want only the patched field", e.body)
+		}
+		if feed.Enabled {
+			t.Errorf("feed = %+v, want the paused feed", feed)
+		}
+	})
+}
+
+// SyncFeed returns the summary on a clean 200, and — critically — recovers the
+// summary (with its Error reason) from the 502 fetch/parse-failure body, which
+// is {"summary"} rather than the error envelope. A 404 stays a typed *APIError.
+func TestSyncFeed(t *testing.T) {
+	t.Run("200 success", func(t *testing.T) {
+		e := &adminEcho{status: http.StatusOK,
+			answer: `{"summary":{"feedId":"01F","label":"Releases","fetched":3,"created":2,"updated":1,"skipped":0,"itemErrors":[]}}`}
+		c := adminClient(t, e)
+		summary, err := c.SyncFeed(context.Background(), "01F")
+		if err != nil {
+			t.Fatalf("SyncFeed: %v", err)
+		}
+		if e.method != http.MethodPost || e.path != "/api/admin/feeds/01F/sync" {
+			t.Errorf("request = %s %s, want POST /api/admin/feeds/01F/sync", e.method, e.path)
+		}
+		if summary.Fetched != 3 || summary.Created != 2 || summary.Error != "" {
+			t.Errorf("summary = %+v, want the decoded success summary", summary)
+		}
+	})
+
+	t.Run("502 recovers the summary error", func(t *testing.T) {
+		e := &adminEcho{status: http.StatusBadGateway,
+			answer: `{"summary":{"feedId":"01F","label":"Releases","fetched":0,"itemErrors":[],"error":"feed returned 503"}}`}
+		c := adminClient(t, e)
+		summary, err := c.SyncFeed(context.Background(), "01F")
+		if err != nil {
+			t.Fatalf("SyncFeed on 502 should return the summary, not an error: %v", err)
+		}
+		if summary.Error != "feed returned 503" {
+			t.Errorf("summary.Error = %q, want the reason recovered from the 502 body", summary.Error)
+		}
+	})
+
+	t.Run("404 stays a typed error", func(t *testing.T) {
+		e := &adminEcho{status: http.StatusNotFound,
+			answer: `{"error":{"code":"not_found","message":"feed source \"01F\" not found"}}`}
+		c := adminClient(t, e)
+		_, err := c.SyncFeed(context.Background(), "01F")
+		if !IsNotFound(err) {
+			t.Fatalf("err = %v, want a 404 not-found error", err)
+		}
+	})
+}
+
 // A non-2xx admin response must surface as the typed *APIError carrying the
 // server's envelope verbatim — the CLI prints validator messages raw.
 func TestAdminErrorPassthrough(t *testing.T) {
