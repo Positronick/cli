@@ -1,8 +1,9 @@
 // Package mockapi serves a fixed positronick.com API fixture over
 // net/http/httptest-compatible handlers, implementing the read contract
 // (GET /api/souls, /api/souls/{slug}, /api/listings(?type=),
-// /api/listings/{slug}, /api/research) and the auth contract (device flow,
-// /api/me, api-key/create) for the CLI's golden and e2e tests. The dataset is
+// /api/listings/{slug}, /api/research, /api/blog(?kind=), /api/blog/{slug},
+// /api/blog/{slug}.md) and the auth contract (device flow, /api/me,
+// api-key/create) for the CLI's golden and e2e tests. The dataset is
 // deliberately frozen: golden files pin command output byte-for-byte against
 // it, so changing a fixture value is a contract-test change.
 package mockapi
@@ -313,6 +314,109 @@ var ResearchPosts = []api.ResearchItem{
 	},
 }
 
+// Posts is the fixture blog: one post of each kind (article, release, link)
+// with deliberately different publish dates, authors and nullable fields so
+// --kind filtering, newest-first ordering, the did-you-mean hint and the
+// null-field rendering each have something to disagree about. Ordered
+// oldest-first; the handler sorts newest-first like the server. Content is the
+// body only (no frontmatter) — the JSON detail's `content`; the .md endpoint
+// wraps it in frontmatter via PostMarkdown.
+var Posts = []api.Post{
+	{
+		PostCard: api.PostCard{
+			ID:           "01POSTINTRO0000000000000XX",
+			Slug:         "introducing-positronick",
+			SlugHistory:  []string{},
+			Kind:         "article",
+			Title:        "Introducing Positronick",
+			Excerpt:      "Publish once, discover and use anywhere — the marketplace for everything AI.",
+			Description:  ptr("Why we built a provider- and framework-agnostic registry for souls, MCP servers, CLIs, agents, skills and more."),
+			ContentHash:  "1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa1111aaaa",
+			Version:      "1.0.0",
+			Category:     "Announcements",
+			Tags:         []string{"launch", "registry"},
+			AuthorHandle: ptr("positronick"),
+			AuthorName:   ptr("Positronick"),
+			AuthorAvatar: ptr("https://example.com/positronick.png"),
+			AuthorTier:   ptr("official"),
+			ListingSlug:  nil,
+			ListingName:  nil,
+			CanonicalURL: nil,
+			Status:       "published",
+			ViewCount:    128,
+			PublishedAt:  ptr("2026-05-20T12:00:00.000Z"),
+			CreatedAt:    "2026-05-20T12:00:00.000Z",
+			UpdatedAt:    "2026-05-21T09:00:00.000Z",
+		},
+		Content: "# Introducing Positronick\n\nPublish once — discover and use anywhere.\n",
+	},
+	{
+		PostCard: api.PostCard{
+			ID:           "01POSTCLIRELEASE000000000X",
+			Slug:         "positronick-cli-v0-1-0",
+			SlugHistory:  []string{},
+			Kind:         "release",
+			Title:        "Positronick CLI v0.1.0",
+			Excerpt:      "Install souls and browse the registry from your terminal.",
+			Description:  nil,
+			ContentHash:  "2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb2222bbbb",
+			Version:      "1.0.0",
+			Category:     "Releases",
+			Tags:         []string{"cli", "release"},
+			AuthorHandle: ptr("nsollazzo"),
+			AuthorName:   ptr("Nicholas Sollazzo"),
+			AuthorAvatar: nil,
+			AuthorTier:   ptr("verified"),
+			ListingSlug:  ptr("positronick-cli"),
+			ListingName:  ptr("Positronick CLI"),
+			CanonicalURL: ptr("https://github.com/positronick/cli/releases/tag/v0.1.0"),
+			Status:       "published",
+			ViewCount:    42,
+			PublishedAt:  ptr("2026-06-01T09:00:00.000Z"),
+			CreatedAt:    "2026-06-01T09:00:00.000Z",
+			UpdatedAt:    "2026-06-01T09:00:00.000Z",
+		},
+		Content: "# Positronick CLI v0.1.0\n\nThe first public release of the command-line client.\n",
+	},
+	{
+		PostCard: api.PostCard{
+			ID:           "01POSTOPENCLAWLINK0000000X",
+			Slug:         "openclaw-joins-the-registry",
+			SlugHistory:  []string{},
+			Kind:         "link",
+			Title:        "OpenClaw joins the registry",
+			Excerpt:      "A new open-source agent harness is now listed on Positronick.",
+			Description:  nil,
+			ContentHash:  "3333cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333cccc3333cccc",
+			Version:      "1.0.0",
+			Category:     "Community",
+			Tags:         []string{"openclaw", "news"},
+			AuthorHandle: nil,
+			AuthorName:   nil,
+			AuthorAvatar: nil,
+			AuthorTier:   nil,
+			ListingSlug:  nil,
+			ListingName:  nil,
+			CanonicalURL: ptr("https://example.com/openclaw-joins"),
+			Status:       "published",
+			ViewCount:    9,
+			PublishedAt:  ptr("2026-06-10T08:00:00.000Z"),
+			CreatedAt:    "2026-06-10T08:00:00.000Z",
+			UpdatedAt:    "2026-06-10T08:00:00.000Z",
+		},
+		Content: "OpenClaw, an open-source agent harness, is now listed on Positronick.\n",
+	},
+}
+
+// PostMarkdown renders a fixture post as the raw markdown file the .md endpoint
+// serves: a minimal frontmatter block plus the body. It is deliberately
+// distinct from the JSON detail's body-only `content`, so a test can prove
+// `blog show --raw` read the .md endpoint. Shared by the handler and the CLI
+// raw-output test.
+func PostMarkdown(p api.Post) string {
+	return fmt.Sprintf("---\ntitle: %s\nslug: %s\nkind: %s\n---\n\n%s", p.Title, p.Slug, p.Kind, p.Content)
+}
+
 // Handler returns an http.Handler implementing the read API over the fixture
 // data, including the server's JSON error envelope on 404 and on an unknown
 // ?type=. Requests to /api/souls/{slug}.md are answered with 418 — the .md
@@ -375,6 +479,36 @@ func Handler() http.Handler {
 
 	mux.HandleFunc("GET /api/research", func(w http.ResponseWriter, r *http.Request) {
 		serveResearch(w, r.URL.Query())
+	})
+
+	mux.HandleFunc("GET /api/blog", func(w http.ResponseWriter, r *http.Request) {
+		serveBlogList(w, r.URL.Query().Get("kind"))
+	})
+
+	// One pattern serves both the JSON detail and the raw .md (the {slug}
+	// wildcard can't carry a literal suffix), mirroring the souls route — but the
+	// blog .md endpoint never bumps a counter, so it answers the body instead of
+	// a 418.
+	mux.HandleFunc("GET /api/blog/{slug}", func(w http.ResponseWriter, r *http.Request) {
+		if slug, isMD := strings.CutSuffix(r.PathValue("slug"), ".md"); isMD {
+			for _, p := range Posts {
+				if p.Slug == slug {
+					w.Header().Set("Content-Type", "text/markdown; charset=utf-8")
+					_, _ = w.Write([]byte(PostMarkdown(p)))
+					return
+				}
+			}
+			writeError(w, http.StatusNotFound, "not_found", "Post not found")
+			return
+		}
+		slug := r.PathValue("slug")
+		for _, p := range Posts {
+			if p.Slug == slug {
+				writeJSON(w, http.StatusOK, map[string]any{"post": p})
+				return
+			}
+		}
+		writeError(w, http.StatusNotFound, "not_found", "Post not found")
 	})
 
 	mux.HandleFunc("POST /api/auth/device/code", func(w http.ResponseWriter, r *http.Request) {
@@ -541,6 +675,23 @@ func serveResearch(w http.ResponseWriter, sp url.Values) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{"results": results, "latest": latest})
+}
+
+// serveBlogList implements GET /api/blog over Posts: an optional ?kind= filter,
+// then newest-first by publishedAt (the order the server returns) over the
+// lightweight PostCard projection — no markdown body on the list.
+func serveBlogList(w http.ResponseWriter, kind string) {
+	cards := make([]api.PostCard, 0, len(Posts))
+	for _, p := range Posts {
+		if kind != "" && !strings.EqualFold(p.Kind, kind) {
+			continue
+		}
+		cards = append(cards, p.PostCard)
+	}
+	sort.SliceStable(cards, func(i, j int) bool {
+		return derefStr(cards[i].PublishedAt) > derefStr(cards[j].PublishedAt)
+	})
+	writeJSON(w, http.StatusOK, map[string]any{"posts": cards})
 }
 
 // containsFoldStr reports whether vals contains want, case-insensitively.

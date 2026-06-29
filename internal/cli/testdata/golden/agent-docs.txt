@@ -115,6 +115,32 @@ Flags:
 - `--expires-days` (default `0`): key lifetime in days, 1-365 (0 = server default, 90)
 - `--name` (default `positronick-cli`): name for the new key
 
+## positronick blog
+
+Usage: `positronick blog [flags]`
+
+Read the positronick.com blog (articles, releases, links)
+
+## positronick blog list
+
+Usage: `positronick blog list [flags]`
+
+List published blog posts, newest first
+
+Flags:
+
+- `--kind` (default ``): only this post kind: article, release or link
+
+## positronick blog show
+
+Usage: `positronick blog show <slug> [flags]`
+
+Show one blog post in full
+
+Flags:
+
+- `--raw` (default `false`): print only the markdown body verbatim (overrides --json)
+
 ## positronick cli
 
 Usage: `positronick cli [flags]`

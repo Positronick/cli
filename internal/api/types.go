@@ -169,6 +169,62 @@ type LoopData struct {
 // POST_KINDS in src/lib/types.ts.
 var PostKinds = []string{"article", "release", "link"}
 
+// PostCard is the lightweight list/gallery view of a blog post — the scalar
+// metadata needed to render a card or detail header, deliberately excluding the
+// heavy markdown body. Mirrors PostCard (= PostMeta) in src/lib/types.ts.
+//
+// Nullable fields in the TS contract (string | null, Date | null) are pointers
+// so that null round-trips as null in --json output. Dates stay ISO-8601
+// strings, like every other date in this file.
+type PostCard struct {
+	// ID is the stable, immutable id (ULID).
+	ID string `json:"id"`
+	// Slug is the human-facing url segment: /blog/[slug].
+	Slug string `json:"slug"`
+	// SlugHistory holds previous slugs; the server 301s them to the current slug.
+	SlugHistory []string `json:"slugHistory"`
+	// Kind is one of PostKinds: article | release | link.
+	Kind  string `json:"kind"`
+	Title string `json:"title"`
+	// Excerpt is the short summary shown on cards and in the RSS feed.
+	Excerpt string `json:"excerpt"`
+	// Description is an optional longer SEO description.
+	Description *string `json:"description"`
+	// ContentHash is the sha256 of the normalized markdown body — the citation/dedup anchor.
+	ContentHash string `json:"contentHash"`
+	// Version is semver.
+	Version  string   `json:"version"`
+	Category string   `json:"category"`
+	Tags     []string `json:"tags"`
+	// AuthorHandle/AuthorName denormalize the authoring profile for cards; null when authorless.
+	AuthorHandle *string `json:"authorHandle"`
+	AuthorName   *string `json:"authorName"`
+	// AuthorAvatar is the author's avatar URL; null falls back to the brand mark.
+	AuthorAvatar *string `json:"authorAvatar"`
+	// AuthorTier is the author's seal — "official" | "verified" | null.
+	AuthorTier *string `json:"authorTier"`
+	// ListingSlug/ListingName link a post about a registry tool to that listing; null otherwise.
+	ListingSlug *string `json:"listingSlug"`
+	ListingName *string `json:"listingName"`
+	// CanonicalURL backlinks to the original GitHub release / RSS item; null for native posts.
+	CanonicalURL *string `json:"canonicalUrl"`
+	// Status is draft | pending | published.
+	Status string `json:"status"`
+	// ViewCount is the running page-view count.
+	ViewCount int `json:"viewCount"`
+	// PublishedAt is the canonical publish instant; null while unpublished.
+	PublishedAt *string `json:"publishedAt"`
+	CreatedAt   string  `json:"createdAt"`
+	UpdatedAt   string  `json:"updatedAt"`
+}
+
+// Post is a full blog post, including the raw markdown body. Mirrors Post in
+// src/lib/types.ts (PostMeta + content).
+type Post struct {
+	PostCard
+	Content string `json:"content"`
+}
+
 // ResearchItem is one compact "what's new" record returned by GET /api/research
 // — the payload the CLI surfaces (positronick research) so agents avoid stale
 // knowledge. Mirrors ResearchItem in src/lib/types.ts. ContentHash lets a caller
