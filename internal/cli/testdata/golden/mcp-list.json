@@ -6,6 +6,7 @@
       "slug": "grafana-mcp",
       "profileHandle": "grafana",
       "profileName": "Grafana Labs",
+      "profileTier": "official",
       "name": "Grafana MCP",
       "type": "mcp",
       "tagline": "Dashboards, alerts and incidents as agent tools",
@@ -19,9 +20,13 @@
       "repoUrl": null,
       "installCmd": null,
       "data": {},
+      "hasAsset": false,
+      "assetVersion": null,
+      "assetContentHash": null,
       "confidence": "official",
       "status": "published",
       "downloadCount": 31,
+      "chargeCount": 2,
       "createdAt": "2026-03-15T09:00:00.000Z",
       "updatedAt": "2026-03-15T09:00:00.000Z"
     }

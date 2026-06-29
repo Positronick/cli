@@ -4,6 +4,7 @@
     "slug": "docs-to-green",
     "profileHandle": "nsollazzo",
     "profileName": "Nicholas Sollazzo",
+    "profileTier": null,
     "name": "Docs to Green",
     "type": "loop",
     "tagline": "Every doc page builds without warnings",
@@ -21,9 +22,13 @@
       "kickoff": "Run the docs-to-green loop until the build is clean.",
       "maxIterations": 20
     },
+    "hasAsset": false,
+    "assetVersion": null,
+    "assetContentHash": null,
     "confidence": "high",
     "status": "published",
     "downloadCount": 0,
+    "chargeCount": 0,
     "createdAt": "2026-06-09T09:00:00.000Z",
     "updatedAt": "2026-06-09T09:00:00.000Z",
     "source": "api"

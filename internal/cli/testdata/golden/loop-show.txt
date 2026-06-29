@@ -11,6 +11,7 @@ SOURCE            https://example.com/pr-to-green
 CONFIDENCE        official
 STATUS            published
 DOWNLOADS         12
+CHARGES           3
 CREATED           2026-05-01T09:00:00.000Z
 UPDATED           2026-05-02T09:00:00.000Z
 GOAL              The PR has a fresh approval, green CI, and is mergeable
@@ -18,6 +19,7 @@ CHECK COMMAND     gh pr checks --json state
 EXIT CONDITION    All checks pass and the latest review is APPROVED
 MAX ITERATIONS    20
 COMPATIBLE TOOLS  claude-code, codex
+BUNDLES           superpowers
 
 KICKOFF
 Run the pr-to-green loop on the open PR:

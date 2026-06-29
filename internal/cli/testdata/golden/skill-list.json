@@ -6,6 +6,7 @@
       "slug": "superpowers",
       "profileHandle": "obra",
       "profileName": "Jesse Vincent",
+      "profileTier": "verified",
       "name": "Superpowers",
       "type": "skill",
       "tagline": "A methodology pack that upgrades your coding agent",
@@ -19,10 +20,18 @@
       "sourceUrl": "https://example.com/superpowers",
       "repoUrl": "https://example.com/obra/superpowers",
       "installCmd": null,
-      "data": {},
+      "data": {
+        "bundles": [
+          "pr-to-green"
+        ]
+      },
+      "hasAsset": true,
+      "assetVersion": "1.0.0",
+      "assetContentHash": "11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa",
       "confidence": "official",
       "status": "published",
       "downloadCount": 18,
+      "chargeCount": 6,
       "createdAt": "2026-04-01T09:00:00.000Z",
       "updatedAt": "2026-04-02T09:00:00.000Z"
     }
