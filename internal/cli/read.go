@@ -116,6 +116,25 @@ func applyLimit[T any](items []T, limit int) []T {
 	return items
 }
 
+// notFoundWithSuggestion builds the exit-3 error for a slug the detail endpoint
+// 404'd on, shared by `soul show` and `listing show`. When the catalog list
+// holds a plausible neighbor it appends a did-you-mean hint; when the list
+// holds the exact slug, the detail miss means the server is older than this CLI
+// (no JSON detail endpoint yet), so it says that instead of suggesting the input
+// back. A failing catalog fetch (fetchErr != nil) is ignored so it never masks
+// the original not-found — the caller passes the fetch result verbatim.
+func notFoundWithSuggestion(noun, slug string, catalog []string, fetchErr error) error {
+	hint := fmt.Sprintf("Run: positronick %s list", noun)
+	if fetchErr == nil {
+		if match := closestSlug(slug, catalog); match == slug {
+			hint = "the server lists this " + noun + " but could not return its details — positronick.com may be running an older API"
+		} else if match != "" {
+			hint = fmt.Sprintf("did you mean %q? %s", match, hint)
+		}
+	}
+	return output.NotFoundError(fmt.Sprintf("%s %q not found", noun, slug), hint)
+}
+
 // truncateCell shortens s to at most width runes for table cells, marking the
 // cut with an ellipsis.
 func truncateCell(s string, width int) string {

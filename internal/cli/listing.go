@@ -195,24 +195,14 @@ func newListingShowCmd(listingType string) *cobra.Command {
 }
 
 // listingNotFound builds the exit-3 error for a missing slug, suggesting the
-// closest slug of the same type. A failing suggestion fetch never masks the
-// original not-found.
+// closest slug of the same type. See notFoundWithSuggestion.
 func listingNotFound(ctx context.Context, client *api.Client, listingType, slug string) error {
-	hint := fmt.Sprintf("Run: positronick %s list", listingType)
-	if listings, err := client.Listings(ctx, listingType); err == nil {
-		slugs := make([]string, len(listings))
-		for i, l := range listings {
-			slugs[i] = l.Slug
-		}
-		if match := closestSlug(slug, slugs); match == slug {
-			// Same self-suggestion guard as souls: list/detail disagreement means
-			// an older server, not a typo.
-			hint = "the server lists this " + listingType + " but could not return its details — positronick.com may be running an older API"
-		} else if match != "" {
-			hint = fmt.Sprintf("did you mean %q? %s", match, hint)
-		}
+	listings, err := client.Listings(ctx, listingType)
+	slugs := make([]string, len(listings))
+	for i, l := range listings {
+		slugs[i] = l.Slug
 	}
-	return output.NotFoundError(fmt.Sprintf("%s %q not found", listingType, slug), hint)
+	return notFoundWithSuggestion(listingType, slug, slugs, err)
 }
 
 // renderListingDetail prints the human field view. For loops it also renders
