@@ -123,22 +123,19 @@ func listingShowHandler(opts Options) mcp.ToolHandlerFor[listingShowIn, listingS
 }
 
 // listingNotFoundErr builds the tool-error text for a missing listing slug,
-// suggesting the closest slug across the whole registry. A failing
-// suggestion fetch never masks the original not-found.
+// suggesting the closest slug across the whole registry.
 func listingNotFoundErr(ctx context.Context, opts Options, slug string) error {
-	msg := fmt.Sprintf("listing %q not found", slug)
-	if opts.Suggest != nil {
-		if listings, err := opts.Client.Listings(ctx, ""); err == nil {
-			slugs := make([]string, len(listings))
-			for i, l := range listings {
-				slugs[i] = l.Slug
-			}
-			if match := opts.Suggest(slug, slugs); match != "" {
-				return fmt.Errorf("%s — did you mean %q? (browse with listing_search)", msg, match)
-			}
+	return notFoundErr(ctx, opts, slug, "listing", func(ctx context.Context) ([]string, error) {
+		listings, err := opts.Client.Listings(ctx, "")
+		if err != nil {
+			return nil, err
 		}
-	}
-	return fmt.Errorf("%s (browse with listing_search)", msg)
+		slugs := make([]string, len(listings))
+		for i, l := range listings {
+			slugs[i] = l.Slug
+		}
+		return slugs, nil
+	})
 }
 
 // renderListingSearch is the compact markdown half of a listing_search

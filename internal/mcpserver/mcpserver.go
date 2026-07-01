@@ -139,3 +139,20 @@ func deref(s *string) string {
 	}
 	return *s
 }
+
+// notFoundErr builds the tool-error text for a missing slug: `<noun> "slug"
+// not found`, upgraded to a did-you-mean when opts.Suggest finds a plausible
+// neighbor among the slugs fetchSlugs returns. A failing suggestion fetch
+// never masks the original not-found. noun doubles as the search tool's name
+// (`<noun>_search`) in the browse hint.
+func notFoundErr(ctx context.Context, opts Options, slug, noun string, fetchSlugs func(context.Context) ([]string, error)) error {
+	msg := fmt.Sprintf("%s %q not found", noun, slug)
+	if opts.Suggest != nil {
+		if slugs, err := fetchSlugs(ctx); err == nil {
+			if match := opts.Suggest(slug, slugs); match != "" {
+				return fmt.Errorf("%s — did you mean %q? (browse with %s_search)", msg, match, noun)
+			}
+		}
+	}
+	return fmt.Errorf("%s (browse with %s_search)", msg, noun)
+}
