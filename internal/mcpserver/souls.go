@@ -229,22 +229,19 @@ func soulInstallHandler(opts Options) mcp.ToolHandlerFor[soulInstallIn, soulInst
 }
 
 // soulNotFoundErr builds the tool-error text for a missing soul slug, with
-// the same did-you-mean machinery the CLI uses. A failing suggestion fetch
-// never masks the original not-found.
+// the same did-you-mean machinery the CLI uses.
 func soulNotFoundErr(ctx context.Context, opts Options, slug string) error {
-	msg := fmt.Sprintf("soul %q not found", slug)
-	if opts.Suggest != nil {
-		if souls, err := opts.Client.Souls(ctx); err == nil {
-			slugs := make([]string, len(souls))
-			for i, s := range souls {
-				slugs[i] = s.Slug
-			}
-			if match := opts.Suggest(slug, slugs); match != "" {
-				return fmt.Errorf("%s — did you mean %q? (browse with soul_search)", msg, match)
-			}
+	return notFoundErr(ctx, opts, slug, "soul", func(ctx context.Context) ([]string, error) {
+		souls, err := opts.Client.Souls(ctx)
+		if err != nil {
+			return nil, err
 		}
-	}
-	return fmt.Errorf("%s (browse with soul_search)", msg)
+		slugs := make([]string, len(souls))
+		for i, s := range souls {
+			slugs[i] = s.Slug
+		}
+		return slugs, nil
+	})
 }
 
 // safeInstallPath resolves a caller-supplied install path. An absolute path
