@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -183,26 +182,15 @@ func newSoulShowCmd() *cobra.Command {
 	return cmd
 }
 
-// soulNotFound builds the exit-3 error for a missing slug, with a
-// did-you-mean hint when the gallery has a plausible neighbor. A failing
-// suggestion fetch never masks the original not-found.
+// soulNotFound builds the exit-3 error for a missing slug, with a did-you-mean
+// hint when the gallery has a plausible neighbor. See notFoundWithSuggestion.
 func soulNotFound(ctx context.Context, client *api.Client, slug string) error {
-	hint := "Run: positronick soul list"
-	if souls, err := client.Souls(ctx); err == nil {
-		slugs := make([]string, len(souls))
-		for i, s := range souls {
-			slugs[i] = s.Slug
-		}
-		if match := closestSlug(slug, slugs); match == slug {
-			// The list knows the slug but the detail fetch 404'd: the server is
-			// older than this CLI (no JSON detail endpoint yet) — say so instead
-			// of suggesting the input back to the user.
-			hint = "the server lists this soul but could not return its details — positronick.com may be running an older API"
-		} else if match != "" {
-			hint = fmt.Sprintf("did you mean %q? %s", match, hint)
-		}
+	souls, err := client.Souls(ctx)
+	slugs := make([]string, len(souls))
+	for i, s := range souls {
+		slugs[i] = s.Slug
 	}
-	return output.NotFoundError(fmt.Sprintf("soul %q not found", slug), hint)
+	return notFoundWithSuggestion("soul", slug, slugs, err)
 }
 
 func renderSoulDetail(p *output.Printer, s *api.Soul) {
