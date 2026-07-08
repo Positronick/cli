@@ -156,6 +156,38 @@
       ]
     },
     {
+      "path": "positronick blog",
+      "use": "positronick blog [flags]",
+      "description": "Read the positronick.com blog (articles, releases, links)",
+      "flags": []
+    },
+    {
+      "path": "positronick blog list",
+      "use": "positronick blog list [flags]",
+      "description": "List published blog posts, newest first",
+      "flags": [
+        {
+          "name": "kind",
+          "shorthand": "",
+          "usage": "only this post kind: article, release or link",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "path": "positronick blog show",
+      "use": "positronick blog show \u003cslug\u003e [flags]",
+      "description": "Show one blog post in full",
+      "flags": [
+        {
+          "name": "raw",
+          "shorthand": "",
+          "usage": "print only the markdown body verbatim (overrides --json)",
+          "default": "false"
+        }
+      ]
+    },
+    {
       "path": "positronick cli",
       "use": "positronick cli [flags]",
       "description": "Discover official CLI tools in the registry",
