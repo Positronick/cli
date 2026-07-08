@@ -18,6 +18,11 @@ type APIError struct {
 	Code string
 	// Message is human-readable; never empty.
 	Message string
+	// Body is the raw response body, retained so a caller can read a
+	// non-envelope payload the generic decoder ignores — e.g. the feed-sync
+	// 502 answers with {"summary":{...}} (carrying the failure reason) rather
+	// than the error envelope. Nil when the response had no body.
+	Body []byte
 }
 
 // Error implements the error interface.
@@ -54,7 +59,7 @@ type errorEnvelope struct {
 // the JSON envelope (or an envelope with an empty message) falls back to the
 // HTTP status text so the error is always useful.
 func decodeAPIError(status int, body []byte) *APIError {
-	apiErr := &APIError{Status: status, Message: http.StatusText(status)}
+	apiErr := &APIError{Status: status, Message: http.StatusText(status), Body: body}
 	var env errorEnvelope
 	if err := json.Unmarshal(body, &env); err == nil {
 		apiErr.Code = env.Error.Code

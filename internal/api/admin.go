@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"net/http"
 	"net/url"
 )
@@ -143,4 +145,89 @@ func (c *Client) Profiles(ctx context.Context) ([]AdminProfile, error) {
 		return nil, err
 	}
 	return out.Profiles, nil
+}
+
+// Feeds lists every blog feed source, newest first: GET /api/admin/feeds.
+// Admin only — the server answers 401/403 for non-admins.
+func (c *Client) Feeds(ctx context.Context) ([]FeedSource, error) {
+	var out struct {
+		Feeds []FeedSource `json:"feeds"`
+	}
+	if err := c.do(ctx, http.MethodGet, "/api/admin/feeds", nil, nil, &out); err != nil {
+		return nil, err
+	}
+	return out.Feeds, nil
+}
+
+// CreateFeed creates a blog feed source: POST /api/admin/feeds. fields is sent
+// verbatim as the JSON body — the server validates it and answers 422 with the
+// validator message, 422 unknown_profile when authorHandle resolves to no
+// profile, or 422 invalid_input when listingSlug resolves to no listing. The id
+// and source are server-assigned (source is always "api").
+func (c *Client) CreateFeed(ctx context.Context, fields map[string]any) (*FeedSource, error) {
+	var out struct {
+		Feed FeedSource `json:"feed"`
+	}
+	if err := c.do(ctx, http.MethodPost, "/api/admin/feeds", nil, fields, &out); err != nil {
+		return nil, err
+	}
+	return &out.Feed, nil
+}
+
+// AdminFeed fetches one feed source by id: GET /api/admin/feeds/{id}.
+func (c *Client) AdminFeed(ctx context.Context, id string) (*FeedSource, error) {
+	var out struct {
+		Feed FeedSource `json:"feed"`
+	}
+	path := "/api/admin/feeds/" + url.PathEscape(id)
+	if err := c.do(ctx, http.MethodGet, path, nil, nil, &out); err != nil {
+		return nil, err
+	}
+	return &out.Feed, nil
+}
+
+// UpdateFeed patches a feed source: PATCH /api/admin/feeds/{id}. patch carries
+// only the fields to change — {"enabled":false} pauses a feed (there is no
+// delete verb). Feed sources carry no seed/api ownership flip, so unlike soul
+// and listing updates there is no tookOwnership signal.
+func (c *Client) UpdateFeed(ctx context.Context, id string, patch map[string]any) (*FeedSource, error) {
+	var out struct {
+		Feed FeedSource `json:"feed"`
+	}
+	path := "/api/admin/feeds/" + url.PathEscape(id)
+	if err := c.do(ctx, http.MethodPatch, path, nil, patch, &out); err != nil {
+		return nil, err
+	}
+	return &out.Feed, nil
+}
+
+// SyncFeed ingests one feed now: POST /api/admin/feeds/{id}/sync. It returns
+// the ingest summary on success AND on a fetch/parse failure: the server
+// answers 502 with the same {"summary":{...}} body (not the error envelope)
+// when the fetch/parse failed, and that summary's Error field carries the
+// reason. The caller surfaces a non-empty Error as a clear failure. A missing
+// feed is the usual 404 *APIError.
+func (c *Client) SyncFeed(ctx context.Context, id string) (*FeedSyncSummary, error) {
+	var out struct {
+		Summary FeedSyncSummary `json:"summary"`
+	}
+	path := "/api/admin/feeds/" + url.PathEscape(id) + "/sync"
+	err := c.do(ctx, http.MethodPost, path, nil, nil, &out)
+	if err == nil {
+		return &out.Summary, nil
+	}
+	// The 502 fetch/parse-failure response is {"summary":{...}}, not the error
+	// envelope, so do() turned it into a bare *APIError — recover the summary
+	// (with its Error reason) from the captured body so the caller can surface
+	// why the fetch failed instead of a generic "Bad Gateway".
+	var apiErr *APIError
+	if errors.As(err, &apiErr) && apiErr.Status == http.StatusBadGateway {
+		var body struct {
+			Summary FeedSyncSummary `json:"summary"`
+		}
+		if json.Unmarshal(apiErr.Body, &body) == nil && body.Summary.Error != "" {
+			return &body.Summary, nil
+		}
+	}
+	return nil, err
 }

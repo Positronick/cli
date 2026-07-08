@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`positronick feed` (admin)**: manage the blog feed sources (GitHub release / RSS mirroring) the ingestor polls — `feed list`, `feed create --label <l> --feed-url <u> --kind github_release|rss --category <c>` (`--author`/`--listing` attribution, repeatable `--tag`, `--auto-publish`, `--enabled`), `feed update <id>` (`--enabled=false` pauses a feed — there is no delete verb), and `feed sync <id>` (ingest one feed now, surfacing the fetch summary; a fetch/parse failure maps the API's 502 to a clear error). Backed by the `/api/admin/feeds` API. Ingesting every feed on a schedule stays the cron's job — no CLI subcommand carries that admin key.
+
 ## [0.1.2] - 2026-06-16
 
 ### Added

@@ -1,0 +1,24 @@
+{
+  "feed": {
+    "id": "01FEEDCREATED0000000000001",
+    "label": "Vite Releases",
+    "feedUrl": "https://github.com/vitejs/vite",
+    "kind": "github_release",
+    "authorProfileId": "01PROFILE00000000000000004",
+    "authorHandle": "nsollazzo",
+    "listingId": null,
+    "listingSlug": null,
+    "defaultCategory": "Releases",
+    "defaultTags": [
+      "release",
+      "frontend"
+    ],
+    "autoPublish": false,
+    "enabled": true,
+    "lastFetchedAt": null,
+    "lastStatus": null,
+    "createdAt": "2026-06-09T09:00:00.000Z",
+    "updatedAt": "2026-06-09T09:00:00.000Z"
+  },
+  "created": true
+}

@@ -1,0 +1,3 @@
+LABEL                 KIND            CATEGORY       STATE    AUTHOR     LAST STATUS
+Anthropic News        rss             Announcements  paused              —
+Claude Code Releases  github_release  Releases       enabled  anthropic  —
