@@ -111,8 +111,23 @@
         "listing": {
           "additionalProperties": false,
           "properties": {
+            "assetContentHash": {
+              "type": [
+                "null",
+                "string"
+              ]
+            },
+            "assetVersion": {
+              "type": [
+                "null",
+                "string"
+              ]
+            },
             "category": {
               "type": "string"
+            },
+            "chargeCount": {
+              "type": "integer"
             },
             "confidence": {
               "type": "string"
@@ -132,6 +147,9 @@
             },
             "downloadCount": {
               "type": "integer"
+            },
+            "hasAsset": {
+              "type": "boolean"
             },
             "id": {
               "type": "string"
@@ -153,6 +171,12 @@
             },
             "profileName": {
               "type": "string"
+            },
+            "profileTier": {
+              "type": [
+                "null",
+                "string"
+              ]
             },
             "repoUrl": {
               "type": [
@@ -193,6 +217,7 @@
             "slug",
             "profileHandle",
             "profileName",
+            "profileTier",
             "name",
             "type",
             "tagline",
@@ -204,9 +229,13 @@
             "repoUrl",
             "installCmd",
             "data",
+            "hasAsset",
+            "assetVersion",
+            "assetContentHash",
             "confidence",
             "status",
             "downloadCount",
+            "chargeCount",
             "createdAt",
             "updatedAt"
           ],
@@ -421,6 +450,9 @@
             "category": {
               "type": "string"
             },
+            "chargeCount": {
+              "type": "integer"
+            },
             "content": {
               "type": "string"
             },
@@ -535,6 +567,7 @@
             "contentHash",
             "status",
             "downloadCount",
+            "chargeCount",
             "ratingAvg",
             "ratingCount",
             "arenaRank",

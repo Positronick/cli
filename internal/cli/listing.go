@@ -227,9 +227,11 @@ func renderListingDetail(p *output.Printer, l *api.Listing) error {
 		"SOURCE", l.SourceURL,
 		"REPO", deref(l.RepoURL),
 		"INSTALL", deref(l.InstallCmd),
+		"ASSET VERSION", deref(l.AssetVersion),
 		"CONFIDENCE", l.Confidence,
 		"STATUS", l.Status,
 		"DOWNLOADS", strconv.Itoa(l.DownloadCount),
+		"CHARGES", strconv.Itoa(l.ChargeCount),
 		"CREATED", l.CreatedAt,
 		"UPDATED", l.UpdatedAt,
 	)
@@ -250,7 +252,16 @@ func renderListingDetail(p *output.Printer, l *api.Listing) error {
 			"EXIT CONDITION", loop.ExitCondition,
 			"MAX ITERATIONS", maxIterations,
 			"COMPATIBLE TOOLS", strings.Join(loop.CompatibleTools, ", "),
+			"BUNDLES", strings.Join(loop.Bundles, ", "),
 		)...)
+	}
+
+	if l.Type == "skill" {
+		skill, err := l.SkillData()
+		if err != nil {
+			return err
+		}
+		rows = append(rows, fieldRows("BUNDLES", strings.Join(skill.Bundles, ", "))...)
 	}
 
 	output.RenderFields(p.Out, rows)

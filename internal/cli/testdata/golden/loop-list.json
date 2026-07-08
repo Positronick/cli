@@ -6,6 +6,7 @@
       "slug": "pr-to-green",
       "profileHandle": "nsollazzo",
       "profileName": "Nicholas Sollazzo",
+      "profileTier": "official",
       "name": "PR to Green",
       "type": "loop",
       "tagline": "Drive a pull request until CI is green and review approves",
@@ -20,6 +21,9 @@
       "repoUrl": null,
       "installCmd": null,
       "data": {
+        "bundles": [
+          "superpowers"
+        ],
         "checkCommand": "gh pr checks --json state",
         "compatibleTools": [
           "claude-code",
@@ -30,9 +34,13 @@
         "kickoff": "Run the pr-to-green loop on the open PR:\n1. Read every review finding.\n2. Fix the valid ones, push back on the invalid.\n3. Push and re-check until green.",
         "maxIterations": 20
       },
+      "hasAsset": false,
+      "assetVersion": null,
+      "assetContentHash": null,
       "confidence": "official",
       "status": "published",
       "downloadCount": 12,
+      "chargeCount": 3,
       "createdAt": "2026-05-01T09:00:00.000Z",
       "updatedAt": "2026-05-02T09:00:00.000Z"
     }

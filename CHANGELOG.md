@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **`positronick feed` (admin)**: manage the blog feed sources (GitHub release / RSS mirroring) the ingestor polls — `feed list`, `feed create --label <l> --feed-url <u> --kind github_release|rss --category <c>` (`--author`/`--listing` attribution, repeatable `--tag`, `--auto-publish`, `--enabled`), `feed update <id>` (`--enabled=false` pauses a feed — there is no delete verb), and `feed sync <id>` (ingest one feed now, surfacing the fetch summary; a fetch/parse failure maps the API's 502 to a clear error). Backed by the `/api/admin/feeds` API. Ingesting every feed on a schedule stays the cron's job — no CLI subcommand carries that admin key.
+- **API type sync**: the wire types now mirror the latest `src/lib/types.ts` field-for-field, so `--json` no longer silently drops fields the server sends. Souls and listings gain `chargeCount` (the "energy boost" count); listings also gain `profileTier` (the author's seal), `hasAsset`/`assetVersion`/`assetContentHash` (hosted SKILL.md asset metadata — lets a client skip identical re-downloads), and `LoopData`/`SkillData` gain `bundles`. Human detail views surface `CHARGES`, a skill's `ASSET VERSION`, and loop/skill `BUNDLES`.
 
 ## [0.1.2] - 2026-06-16
 

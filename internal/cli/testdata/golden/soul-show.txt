@@ -11,6 +11,7 @@ VERSION      1.2.0
 LICENSE      MIT
 REPO         https://example.com/souls/sherlock
 DOWNLOADS    42
+CHARGES      5
 STATUS       published
 CREATED      2026-01-05T09:00:00.000Z
 UPDATED      2026-01-06T09:00:00.000Z

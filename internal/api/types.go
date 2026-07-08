@@ -62,13 +62,15 @@ type SoulCard struct {
 	// ContentHash is the sha256 of the normalized SOUL.md body.
 	ContentHash string `json:"contentHash"`
 	// Status is draft | pending | published.
-	Status        string   `json:"status"`
-	DownloadCount int      `json:"downloadCount"`
-	RatingAvg     *float64 `json:"ratingAvg"`
-	RatingCount   int      `json:"ratingCount"`
-	ArenaRank     *int     `json:"arenaRank"`
-	CreatedAt     string   `json:"createdAt"`
-	UpdatedAt     string   `json:"updatedAt"`
+	Status        string `json:"status"`
+	DownloadCount int    `json:"downloadCount"`
+	// ChargeCount is the running count of user "charges" (the energy boost).
+	ChargeCount int      `json:"chargeCount"`
+	RatingAvg   *float64 `json:"ratingAvg"`
+	RatingCount int      `json:"ratingCount"`
+	ArenaRank   *int     `json:"arenaRank"`
+	CreatedAt   string   `json:"createdAt"`
+	UpdatedAt   string   `json:"updatedAt"`
 }
 
 // Soul is a full soul, including the raw SOUL.md markdown body. Mirrors Soul
@@ -88,7 +90,9 @@ type Listing struct {
 	// ProfileHandle/ProfileName denormalize the authoring profile for cards.
 	ProfileHandle string `json:"profileHandle"`
 	ProfileName   string `json:"profileName"`
-	Name          string `json:"name"`
+	// ProfileTier is the author's seal — "official" | "verified" | null.
+	ProfileTier *string `json:"profileTier"`
+	Name        string  `json:"name"`
 	// Type is one of ListingTypes.
 	Type string `json:"type"`
 	// Tagline is the short one-liner shown on cards.
@@ -103,13 +107,23 @@ type Listing struct {
 	RepoURL   *string `json:"repoUrl"`
 	// InstallCmd is the canonical official install/run command, if any.
 	InstallCmd *string `json:"installCmd"`
-	// Data holds type-specific extras (e.g. LoopData for loops); {} when none.
-	Data          map[string]any `json:"data"`
-	Confidence    string         `json:"confidence"`
-	Status        string         `json:"status"`
-	DownloadCount int            `json:"downloadCount"`
-	CreatedAt     string         `json:"createdAt"`
-	UpdatedAt     string         `json:"updatedAt"`
+	// Data holds type-specific extras (e.g. LoopData for loops, SkillData for
+	// skills); {} when none.
+	Data map[string]any `json:"data"`
+	// HasAsset is true when a hosted SKILL.md asset exists for this (skill) listing.
+	HasAsset bool `json:"hasAsset"`
+	// AssetVersion is the hosted asset's semver, or null when HasAsset is false.
+	AssetVersion *string `json:"assetVersion"`
+	// AssetContentHash is the sha256 of the hosted asset body, or null — lets
+	// clients skip identical re-downloads.
+	AssetContentHash *string `json:"assetContentHash"`
+	Confidence       string  `json:"confidence"`
+	Status           string  `json:"status"`
+	DownloadCount    int     `json:"downloadCount"`
+	// ChargeCount is the running count of user "charges" (the energy boost).
+	ChargeCount int    `json:"chargeCount"`
+	CreatedAt   string `json:"createdAt"`
+	UpdatedAt   string `json:"updatedAt"`
 }
 
 // LoopData decodes the untyped Data payload into LoopData. Empty or nil Data
@@ -127,6 +141,23 @@ func (l *Listing) LoopData() (LoopData, error) {
 		return ld, fmt.Errorf("decoding loop data for %q: %w", l.Slug, err)
 	}
 	return ld, nil
+}
+
+// SkillData decodes the untyped Data payload into SkillData. Empty or nil Data
+// yields the zero value; a wrong-typed field is an error, never a silent zero.
+func (l *Listing) SkillData() (SkillData, error) {
+	var sd SkillData
+	if len(l.Data) == 0 {
+		return sd, nil
+	}
+	b, err := json.Marshal(l.Data)
+	if err != nil {
+		return sd, fmt.Errorf("encoding listing data: %w", err)
+	}
+	if err := json.Unmarshal(b, &sd); err != nil {
+		return sd, fmt.Errorf("decoding skill data for %q: %w", l.Slug, err)
+	}
+	return sd, nil
 }
 
 // Profile is a verified person or org that authors registry tooling. Mirrors
@@ -170,6 +201,17 @@ type LoopData struct {
 	CompatibleTools []string `json:"compatibleTools,omitempty"`
 	// Kickoff is the prompt a user copies to start the loop.
 	Kickoff string `json:"kickoff,omitempty"`
+	// Bundles are slugs of listings this loop depends on (a loop usually drives
+	// several skills).
+	Bundles []string `json:"bundles,omitempty"`
+}
+
+// SkillData is the type-specific extras for a `skill` listing, stored in
+// Listing.Data. A skill with Bundles is a meta-skill: installing it pulls in
+// every bundled listing. Mirrors SkillData in src/lib/types.ts.
+type SkillData struct {
+	// Bundles are slugs of listings this skill bundles — its install-time deps.
+	Bundles []string `json:"bundles,omitempty"`
 }
 
 // FeedSource is a subscribed blog feed source the ingestor mirrors into posts

@@ -209,6 +209,7 @@ func renderSoulDetail(p *output.Printer, s *api.Soul) {
 		"LICENSE", s.License,
 		"REPO", deref(s.RepoURL),
 		"DOWNLOADS", strconv.Itoa(s.DownloadCount),
+		"CHARGES", strconv.Itoa(s.ChargeCount),
 		"STATUS", s.Status,
 		"CREATED", s.CreatedAt,
 		"UPDATED", s.UpdatedAt,
