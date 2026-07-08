@@ -74,10 +74,6 @@ type Client struct {
 // Option customizes a Client.
 type Option func(*Client)
 
-// WithHTTPClient replaces the underlying *http.Client (e.g. for a custom
-// transport). The caller owns the timeout configuration.
-func WithHTTPClient(h *http.Client) Option { return func(c *Client) { c.http = h } }
-
 // WithSleep replaces the backoff sleep function — a test seam so retry tests
 // assert waits instead of serving them.
 func WithSleep(fn func(time.Duration)) Option { return func(c *Client) { c.sleep = fn } }
