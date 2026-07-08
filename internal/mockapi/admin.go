@@ -65,6 +65,13 @@ var (
 	// defaultCategory; patch validates only the keys present).
 	feedFields = []string{"label", "feedUrl", "kind", "authorHandle", "listingSlug",
 		"defaultCategory", "defaultTags", "autoPublish", "enabled"}
+	// postPatchFields mirrors POST_PATCH_FIELDS in the product repo; create
+	// accepts the same minus "source". The derived/denormalized columns
+	// (contentHash, viewCount, author*/listingName) are server-owned and not
+	// patchable.
+	postPatchFields = []string{"slug", "slugHistory", "kind", "title", "excerpt",
+		"description", "category", "tags", "version", "authorHandle", "listingSlug",
+		"canonicalUrl", "publishedAt", "content", "status", "source"}
 )
 
 // Seeded feed source ids — stable so the feed list/sync/update golden + tests
@@ -82,10 +89,12 @@ type adminState struct {
 	listings   []listingRow
 	profiles   []profileRow
 	feeds      []api.FeedSource
+	posts      []postRow
 	soulSeq    int
 	listingSeq int
 	profileSeq int
 	feedSeq    int
+	postSeq    int
 }
 
 type soulRow struct {
@@ -103,6 +112,11 @@ type profileRow struct {
 	Source string
 }
 
+type postRow struct {
+	api.Post
+	Source string
+}
+
 // registerAdmin mounts the admin write API on mux with a fresh copy of the
 // fixtures.
 func registerAdmin(mux *http.ServeMux) {
@@ -115,6 +129,17 @@ func registerAdmin(mux *http.ServeMux) {
 	}
 	st.profiles = seedProfiles()
 	st.feeds = seedFeeds()
+	// Posts seed from the public blog fixtures. A mirrored post (one with a
+	// canonical backlink to a release/item) is feed-owned, exactly like a post
+	// the ingestor produced; a native editorial post is api-owned — so the first
+	// edit of a mirrored post flips ownership just like production.
+	for _, p := range Posts {
+		source := "api"
+		if p.CanonicalURL != nil {
+			source = "feed"
+		}
+		st.posts = append(st.posts, postRow{Post: p, Source: source})
+	}
 
 	mux.HandleFunc("POST /api/admin/souls", st.createSoul)
 	mux.HandleFunc("GET /api/admin/souls/{id}", st.getSoul)
@@ -129,6 +154,10 @@ func registerAdmin(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/admin/feeds/{id}", st.getFeed)
 	mux.HandleFunc("PATCH /api/admin/feeds/{id}", st.patchFeed)
 	mux.HandleFunc("POST /api/admin/feeds/{id}/sync", st.syncFeed)
+	mux.HandleFunc("POST /api/admin/posts", st.createPost)
+	mux.HandleFunc("GET /api/admin/posts", st.listPosts)
+	mux.HandleFunc("GET /api/admin/posts/{id}", st.getPost)
+	mux.HandleFunc("PATCH /api/admin/posts/{id}", st.patchPost)
 }
 
 // seedProfiles builds the fixture's curated authors from the listing handles
@@ -1261,4 +1290,310 @@ func isGitHubRepoURL(u string) bool {
 	}
 	parts := strings.Split(strings.Trim(strings.TrimPrefix(u, prefix), "/"), "/")
 	return len(parts) >= 2 && parts[0] != "" && parts[1] != ""
+}
+
+// ── Posts ────────────────────────────────────────────────────────────────────
+
+func (st *adminState) createPost(w http.ResponseWriter, r *http.Request) {
+	if adminDenied(w, r) {
+		return
+	}
+	body := readBody(w, r)
+	if body == nil {
+		return
+	}
+	if _, ok := body["id"]; ok {
+		invalid(w, `ids are server-assigned — omit "id"`)
+		return
+	}
+	const ctx = "admin post create"
+	if key, ok := unknownKey(body, without(postPatchFields, "source")); ok {
+		invalid(w, fmt.Sprintf("%s: unknown field %q", ctx, key))
+		return
+	}
+	if msg, ok := validatePostPatch(ctx, body); !ok {
+		invalid(w, msg)
+		return
+	}
+	for _, key := range []string{"slug", "title", "excerpt", "category"} {
+		if blank(body[key]) {
+			invalid(w, fmt.Sprintf("%s: missing required field %q", ctx, key))
+			return
+		}
+	}
+	if normalizeBody(toStr(body["content"])) == "" {
+		invalid(w, ctx+": post body is empty")
+		return
+	}
+
+	st.mu.Lock()
+	defer st.mu.Unlock()
+	slug := toStr(body["slug"])
+	if st.postBySlug(slug) != nil {
+		writeError(w, http.StatusConflict, "conflict", fmt.Sprintf("slug %q is already taken", slug))
+		return
+	}
+	st.postSeq++
+	content := normalizeBody(toStr(body["content"]))
+	// status defaults to draft so an agent post cannot self-publish; kind and
+	// version take the server's defaults when omitted.
+	status := "draft"
+	if v, ok := body["status"]; ok {
+		status = toStr(v)
+	}
+	kind := "article"
+	if v, ok := body["kind"]; ok && !blank(v) {
+		kind = toStr(v)
+	}
+	version := "1.0.0"
+	if v, ok := body["version"]; ok && !blank(v) {
+		version = toStr(v)
+	}
+	authorHandle, authorName, authorAvatar, authorTier := st.denormAuthor(body["authorHandle"])
+	listingSlug, listingName := st.denormListing(body["listingSlug"])
+	row := postRow{
+		Post: api.Post{
+			PostCard: api.PostCard{
+				ID:           fmt.Sprintf("01BCREATED%016d", st.postSeq),
+				Slug:         slug,
+				SlugHistory:  toStrSlice(body["slugHistory"]),
+				Kind:         kind,
+				Title:        toStr(body["title"]),
+				Excerpt:      toStr(body["excerpt"]),
+				Description:  toStrPtr(body["description"]),
+				ContentHash:  bodyHash(content),
+				Version:      version,
+				Category:     toStr(body["category"]),
+				Tags:         toStrSlice(body["tags"]),
+				AuthorHandle: authorHandle,
+				AuthorName:   authorName,
+				AuthorAvatar: authorAvatar,
+				AuthorTier:   authorTier,
+				ListingSlug:  listingSlug,
+				ListingName:  listingName,
+				CanonicalURL: toStrPtr(body["canonicalUrl"]),
+				Status:       status,
+				ViewCount:    0,
+				PublishedAt:  toStrPtr(body["publishedAt"]),
+				CreatedAt:    createdStamp,
+				UpdatedAt:    createdStamp,
+			},
+			Content: content,
+		},
+		Source: "api",
+	}
+	st.posts = append(st.posts, row)
+	writeJSON(w, http.StatusCreated, map[string]any{"post": adminPostJSON(row)})
+}
+
+func (st *adminState) listPosts(w http.ResponseWriter, r *http.Request) {
+	if adminDenied(w, r) {
+		return
+	}
+	st.mu.Lock()
+	defer st.mu.Unlock()
+	out := make([]map[string]any, len(st.posts))
+	for i := range st.posts {
+		out[i] = adminPostJSON(st.posts[i])
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"posts": out})
+}
+
+func (st *adminState) getPost(w http.ResponseWriter, r *http.Request) {
+	if adminDenied(w, r) {
+		return
+	}
+	st.mu.Lock()
+	defer st.mu.Unlock()
+	id := r.PathValue("id")
+	for i := range st.posts {
+		if st.posts[i].ID == id {
+			writeJSON(w, http.StatusOK, map[string]any{"post": adminPostJSON(st.posts[i])})
+			return
+		}
+	}
+	writeError(w, http.StatusNotFound, "not_found", fmt.Sprintf("post id %q not found", id))
+}
+
+func (st *adminState) patchPost(w http.ResponseWriter, r *http.Request) {
+	if adminDenied(w, r) {
+		return
+	}
+	body := readBody(w, r)
+	if body == nil {
+		return
+	}
+	const ctx = "admin post update"
+	if key, ok := unknownKey(body, postPatchFields); ok {
+		invalid(w, fmt.Sprintf("%s: unknown field %q", ctx, key))
+		return
+	}
+
+	st.mu.Lock()
+	defer st.mu.Unlock()
+	id := r.PathValue("id")
+	var row *postRow
+	for i := range st.posts {
+		if st.posts[i].ID == id {
+			row = &st.posts[i]
+			break
+		}
+	}
+	if row == nil {
+		writeError(w, http.StatusNotFound, "not_found", fmt.Sprintf("post id %q not found", id))
+		return
+	}
+	if msg, ok := validatePostPatch(ctx, body); !ok {
+		invalid(w, msg)
+		return
+	}
+	source, took, ok := resolvePostSource(w, ctx, row.Source, body)
+	if !ok {
+		return
+	}
+	for _, key := range []string{"slug", "title", "excerpt", "category", "content"} {
+		if v, present := body[key]; present && blank(v) {
+			invalid(w, fmt.Sprintf("%s: missing required field %q", ctx, key))
+			return
+		}
+	}
+
+	if v, ok := body["slug"]; ok {
+		slug := toStr(v)
+		if slug != row.Slug {
+			if st.postBySlug(slug) != nil {
+				writeError(w, http.StatusConflict, "conflict", fmt.Sprintf("slug %q is already taken", slug))
+				return
+			}
+			if _, explicit := body["slugHistory"]; !explicit {
+				row.SlugHistory = append(slices.Clone(row.SlugHistory), row.Slug)
+			}
+			row.Slug = slug
+		}
+	}
+	if v, ok := body["slugHistory"]; ok {
+		row.SlugHistory = toStrSlice(v)
+	}
+	setStr := func(key string, dst *string) {
+		if v, ok := body[key]; ok {
+			*dst = toStr(v)
+		}
+	}
+	setPtr := func(key string, dst **string) {
+		if v, ok := body[key]; ok {
+			*dst = toStrPtr(v)
+		}
+	}
+	setStr("kind", &row.Kind)
+	setStr("title", &row.Title)
+	setStr("excerpt", &row.Excerpt)
+	setPtr("description", &row.Description)
+	setStr("category", &row.Category)
+	setStr("version", &row.Version)
+	setStr("status", &row.Status)
+	setPtr("canonicalUrl", &row.CanonicalURL)
+	setPtr("publishedAt", &row.PublishedAt)
+	if v, ok := body["tags"]; ok {
+		row.Tags = toStrSlice(v)
+	}
+	// authorHandle and listingSlug re-denormalize their derived columns; an
+	// explicit blank clears the attribution.
+	if v, ok := body["authorHandle"]; ok {
+		row.AuthorHandle, row.AuthorName, row.AuthorAvatar, row.AuthorTier = st.denormAuthor(v)
+	}
+	if v, ok := body["listingSlug"]; ok {
+		row.ListingSlug, row.ListingName = st.denormListing(v)
+	}
+	if v, ok := body["content"]; ok {
+		row.Content = normalizeBody(toStr(v))
+		row.ContentHash = bodyHash(row.Content)
+	}
+	row.Source = source
+	row.UpdatedAt = updatedStamp
+	writeJSON(w, http.StatusOK, map[string]any{"post": adminPostJSON(*row), "tookOwnership": took})
+}
+
+// validatePostPatch checks the enum-valued post fields present in body. Post
+// categories are free-form (unlike souls/listings), so only kind and status
+// are constrained.
+func validatePostPatch(ctx string, body map[string]any) (string, bool) {
+	if v, ok := body["status"]; ok && !slices.Contains(statuses, toStr(v)) {
+		return fmt.Sprintf("%s: invalid status %q (expected one of: %s)",
+			ctx, toStr(v), strings.Join(statuses, ", ")), false
+	}
+	if v, ok := body["kind"]; ok && !blank(v) && !slices.Contains(api.PostKinds, toStr(v)) {
+		return fmt.Sprintf("%s: invalid kind %q (expected one of: %s)",
+			ctx, toStr(v), strings.Join(api.PostKinds, ", ")), false
+	}
+	return "", true
+}
+
+// resolvePostSource applies the post ownership rules: an explicit source wins
+// (and must be "feed" or "api"); otherwise any change takes "api" ownership. A
+// feed→api flip is the tookOwnership signal.
+func resolvePostSource(w http.ResponseWriter, ctx, existing string, body map[string]any) (source string, tookOwnership, ok bool) {
+	source = "api"
+	if v, present := body["source"]; present {
+		source = toStr(v)
+		if source != "feed" && source != "api" {
+			invalid(w, fmt.Sprintf(`%s: invalid source %q (expected "feed" or "api")`, ctx, source))
+			return "", false, false
+		}
+	}
+	return source, existing == "feed" && source == "api", true
+}
+
+// denormAuthor resolves the denormalized author columns from an authorHandle
+// JSON value: a blank value is authorless (all nil); a handle that resolves to
+// a profile stamps its name/avatar/tier, an unknown one keeps just the handle.
+func (st *adminState) denormAuthor(v any) (handle, name, avatar, tier *string) {
+	if blank(v) {
+		return nil, nil, nil, nil
+	}
+	h := toStr(v)
+	if pr := st.profileByHandle(h); pr != nil {
+		return ptr(h), ptr(pr.Name), pr.AvatarURL, postAuthorTier(pr)
+	}
+	return ptr(h), nil, nil, nil
+}
+
+// denormListing resolves the denormalized listing columns from a listingSlug
+// JSON value: a blank value clears the link; a slug that resolves to a listing
+// stamps its name, an unknown one keeps just the slug.
+func (st *adminState) denormListing(v any) (slug, name *string) {
+	if blank(v) {
+		return nil, nil
+	}
+	s := toStr(v)
+	if l := st.listingBySlug(s); l != nil {
+		return ptr(s), ptr(l.Name)
+	}
+	return ptr(s), nil
+}
+
+// postAuthorTier maps a profile's seal to the post's denormalized authorTier.
+func postAuthorTier(pr *profileRow) *string {
+	switch {
+	case pr.Official:
+		return ptr("official")
+	case pr.Verified:
+		return ptr("verified")
+	default:
+		return nil
+	}
+}
+
+func (st *adminState) postBySlug(slug string) *postRow {
+	for i := range st.posts {
+		if st.posts[i].Slug == slug {
+			return &st.posts[i]
+		}
+	}
+	return nil
+}
+
+// adminPostJSON renders a row the way the admin API does: the public post shape
+// plus source.
+func adminPostJSON(row postRow) map[string]any {
+	return withSource(row.Post, row.Source)
 }

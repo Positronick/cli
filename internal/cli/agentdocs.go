@@ -48,8 +48,8 @@ const agentDocsIntro = "`positronick` is the command-line client for positronick
 	"driven by coding agents — pass `--json` to any command for stable machine-readable JSON on " +
 	"stdout, read progress and errors from stderr, and branch on the exit code. Read commands " +
 	"never prompt. Hidden admin commands (create/update for souls and listings, create/list for " +
-	"profiles, and list/create/update/sync for blog feed sources) exist and appear in help and " +
-	"in these docs after logging in with an admin account."
+	"profiles, list/create/update/sync for blog feed sources, and create/update/list for blog " +
+	"posts) exist and appear in help and in these docs after logging in with an admin account."
 
 func newAgentDocsCmd() *cobra.Command {
 	return &cobra.Command{
