@@ -268,3 +268,32 @@ type FeedSyncSummary struct {
 	// Error is the fetch/parse failure reason; empty on success.
 	Error string `json:"error,omitempty"`
 }
+
+// PostKinds are the kinds of blog post the registry serves: an editorial
+// article, a mirrored GitHub release, or a mirrored RSS/news link. Mirrors
+// POST_KINDS in src/lib/types.ts.
+var PostKinds = []string{"article", "release", "link"}
+
+// ResearchItem is one compact "what's new" record returned by GET /api/research
+// — the payload the CLI surfaces (positronick research) so agents avoid stale
+// knowledge. Mirrors ResearchItem in src/lib/types.ts. ContentHash lets a caller
+// dedup and detect silent edits; CanonicalURL traces a mirrored release/link
+// back to its source; MdURL points at the raw markdown.
+//
+// PublishedAt and CanonicalURL are nullable in the TS contract and so are
+// pointers, so null round-trips as null in --json output.
+type ResearchItem struct {
+	Slug     string   `json:"slug"`
+	Title    string   `json:"title"`
+	Excerpt  string   `json:"excerpt"`
+	Kind     string   `json:"kind"`
+	Category string   `json:"category"`
+	Tags     []string `json:"tags"`
+	// URL is the absolute permalink: /blog/[slug].
+	URL string `json:"url"`
+	// MdURL is the absolute raw-markdown endpoint: /api/blog/[slug].md.
+	MdURL        string  `json:"mdUrl"`
+	CanonicalURL *string `json:"canonicalUrl"`
+	ContentHash  string  `json:"contentHash"`
+	PublishedAt  *string `json:"publishedAt"`
+}

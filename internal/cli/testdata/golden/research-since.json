@@ -1,0 +1,22 @@
+{
+  "count": 1,
+  "latest": "2026-06-10T08:00:00.000Z",
+  "results": [
+    {
+      "slug": "openclaw-launch",
+      "title": "OpenClaw launches its agent harness",
+      "excerpt": "A new open-source harness joins the registry.",
+      "kind": "link",
+      "category": "Community",
+      "tags": [
+        "openclaw",
+        "news"
+      ],
+      "url": "https://positronick.com/blog/openclaw-launch",
+      "mdUrl": "https://positronick.com/api/blog/openclaw-launch.md",
+      "canonicalUrl": "https://example.com/openclaw-launch",
+      "contentHash": "ffff6666ffff6666ffff6666ffff6666ffff6666ffff6666ffff6666ffff6666",
+      "publishedAt": "2026-06-10T08:00:00.000Z"
+    }
+  ]
+}

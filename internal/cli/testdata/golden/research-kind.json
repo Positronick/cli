@@ -1,0 +1,21 @@
+{
+  "count": 1,
+  "latest": "2026-06-01T09:00:00.000Z",
+  "results": [
+    {
+      "slug": "hermes-v2-1-0",
+      "title": "Hermes v2.1.0",
+      "excerpt": "Tool-calling fixes and a faster device flow.",
+      "kind": "release",
+      "category": "Releases",
+      "tags": [
+        "hermes"
+      ],
+      "url": "https://positronick.com/blog/hermes-v2-1-0",
+      "mdUrl": "https://positronick.com/api/blog/hermes-v2-1-0.md",
+      "canonicalUrl": "https://github.com/NousResearch/hermes/releases/tag/v2.1.0",
+      "contentHash": "eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555eeee5555",
+      "publishedAt": "2026-06-01T09:00:00.000Z"
+    }
+  ]
+}
