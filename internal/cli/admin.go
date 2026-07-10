@@ -235,18 +235,34 @@ func addSoulFieldFlags(cmd *cobra.Command) {
 	f.String("license", "", "SPDX license id (overrides frontmatter)")
 }
 
-// applySoulFieldFlags copies every explicitly set field flag over fields —
-// flags always beat frontmatter.
-func applySoulFieldFlags(cmd *cobra.Command, fields map[string]any) error {
-	for _, pair := range soulFieldFlagMap {
-		if !cmd.Flags().Changed(pair[0]) {
-			continue
-		}
-		v, err := cmd.Flags().GetString(pair[0])
+// applyStringFieldFlags copies the mapped string flags into fields. When
+// omitEmpty is true (create) only non-empty values are sent, so empty optionals
+// fall through to the server defaults; when false (update) every explicitly set
+// flag is sent, so an explicit empty value clears that field. The mapping is an
+// ordered slice so the wire body stays deterministic.
+func applyStringFieldFlags(cmd *cobra.Command, mapping [][2]string, fields map[string]any, omitEmpty bool) error {
+	for _, pair := range mapping {
+		flag, key := pair[0], pair[1]
+		v, err := cmd.Flags().GetString(flag)
 		if err != nil {
 			return err
 		}
-		fields[pair[1]] = v
+		if omitEmpty {
+			if v != "" {
+				fields[key] = v
+			}
+		} else if cmd.Flags().Changed(flag) {
+			fields[key] = v
+		}
+	}
+	return nil
+}
+
+// applySoulFieldFlags copies every explicitly set field flag over fields —
+// flags always beat frontmatter.
+func applySoulFieldFlags(cmd *cobra.Command, fields map[string]any) error {
+	if err := applyStringFieldFlags(cmd, soulFieldFlagMap, fields, false); err != nil {
+		return err
 	}
 	if cmd.Flags().Changed("framework") {
 		v, err := cmd.Flags().GetStringArray("framework")

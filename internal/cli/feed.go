@@ -84,21 +84,7 @@ func addFeedFieldFlags(cmd *cobra.Command) {
 // applies its defaults); on update only the flags explicitly set are sent, so
 // an explicit empty --author/--listing clears that attribution.
 func applyFeedStringFlags(cmd *cobra.Command, fields map[string]any, forCreate bool) error {
-	for _, pair := range feedStringFlagMap {
-		flag, key := pair[0], pair[1]
-		v, err := cmd.Flags().GetString(flag)
-		if err != nil {
-			return err
-		}
-		if forCreate {
-			if v != "" {
-				fields[key] = v
-			}
-		} else if cmd.Flags().Changed(flag) {
-			fields[key] = v
-		}
-	}
-	return nil
+	return applyStringFieldFlags(cmd, feedStringFlagMap, fields, forCreate)
 }
 
 // applyFeedTagsFlag copies --tag into defaultTags when explicitly set.
