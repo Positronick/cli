@@ -61,7 +61,7 @@ func newProfileCreateCmd() *cobra.Command {
 			// omitted so the server applies its defaults (e.g. the GitHub avatar) and
 			// never sees an empty string where it expects a URL. An ordered slice (not
 			// a map) keeps the wire body deterministic, like soulFieldFlagMap.
-			for _, fk := range [][2]string{
+			if err := applyStringFieldFlags(cmd, [][2]string{
 				{"handle", "handle"},
 				{"name", "name"},
 				{"kind", "kind"},
@@ -69,14 +69,8 @@ func newProfileCreateCmd() *cobra.Command {
 				{"github-url", "githubUrl"},
 				{"website", "website"},
 				{"bio", "bio"},
-			} {
-				v, gerr := cmd.Flags().GetString(fk[0])
-				if gerr != nil {
-					return gerr
-				}
-				if v != "" {
-					fields[fk[1]] = v
-				}
+			}, fields, true); err != nil {
+				return err
 			}
 			// Bools are always sent (false is meaningful); granting a seal is opt-in.
 			verified, gerr := cmd.Flags().GetBool("verified")

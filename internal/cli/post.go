@@ -92,15 +92,8 @@ func addPostFieldFlags(cmd *cobra.Command) {
 // applyPostFieldFlags copies every explicitly set field flag over fields —
 // flags always beat frontmatter.
 func applyPostFieldFlags(cmd *cobra.Command, fields map[string]any) error {
-	for _, pair := range postFieldFlagMap {
-		if !cmd.Flags().Changed(pair[0]) {
-			continue
-		}
-		v, err := cmd.Flags().GetString(pair[0])
-		if err != nil {
-			return err
-		}
-		fields[pair[1]] = v
+	if err := applyStringFieldFlags(cmd, postFieldFlagMap, fields, false); err != nil {
+		return err
 	}
 	if cmd.Flags().Changed("tag") {
 		v, err := cmd.Flags().GetStringArray("tag")
