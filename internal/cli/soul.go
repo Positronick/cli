@@ -190,7 +190,7 @@ func soulNotFound(ctx context.Context, client *api.Client, slug string) error {
 	for i, s := range souls {
 		slugs[i] = s.Slug
 	}
-	return notFoundWithSuggestion("soul", slug, slugs, err)
+	return notFoundWithSuggestion("soul", "soul", slug, slugs, err)
 }
 
 func renderSoulDetail(p *output.Printer, s *api.Soul) {

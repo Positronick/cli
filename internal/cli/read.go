@@ -117,14 +117,17 @@ func applyLimit[T any](items []T, limit int) []T {
 }
 
 // notFoundWithSuggestion builds the exit-3 error for a slug the detail endpoint
-// 404'd on, shared by `soul show` and `listing show`. When the catalog list
-// holds a plausible neighbor it appends a did-you-mean hint; when the list
-// holds the exact slug, the detail miss means the server is older than this CLI
-// (no JSON detail endpoint yet), so it says that instead of suggesting the input
-// back. A failing catalog fetch (fetchErr != nil) is ignored so it never masks
-// the original not-found — the caller passes the fetch result verbatim.
-func notFoundWithSuggestion(noun, slug string, catalog []string, fetchErr error) error {
-	hint := fmt.Sprintf("Run: positronick %s list", noun)
+// 404'd on, shared by `soul show`, `listing show`, and `blog show`. noun names
+// the entity in the message ("soul"/"post"); listCmd is the subcommand in the
+// "Run: positronick <cmd> list" hint — usually equal to noun, but `blog show`
+// lists "post" entities under the `blog` command. When the catalog list holds a
+// plausible neighbor it appends a did-you-mean hint; when the list holds the
+// exact slug, the detail miss means the server is older than this CLI (no JSON
+// detail endpoint yet), so it says that instead of suggesting the input back. A
+// failing catalog fetch (fetchErr != nil) is ignored so it never masks the
+// original not-found — the caller passes the fetch result verbatim.
+func notFoundWithSuggestion(noun, listCmd, slug string, catalog []string, fetchErr error) error {
+	hint := fmt.Sprintf("Run: positronick %s list", listCmd)
 	if fetchErr == nil {
 		if match := closestSlug(slug, catalog); match == slug {
 			hint = "the server lists this " + noun + " but could not return its details — positronick.com may be running an older API"

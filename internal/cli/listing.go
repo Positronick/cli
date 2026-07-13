@@ -202,7 +202,7 @@ func listingNotFound(ctx context.Context, client *api.Client, listingType, slug 
 	for i, l := range listings {
 		slugs[i] = l.Slug
 	}
-	return notFoundWithSuggestion(listingType, slug, slugs, err)
+	return notFoundWithSuggestion(listingType, listingType, slug, slugs, err)
 }
 
 // renderListingDetail prints the human field view. For loops it also renders
