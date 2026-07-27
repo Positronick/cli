@@ -144,3 +144,104 @@ func (c *Client) Profiles(ctx context.Context) ([]AdminProfile, error) {
 	}
 	return out.Profiles, nil
 }
+
+// AdminFeed is a subscribed feed source as the admin API returns it
+// (GET/POST/PATCH /api/admin/feeds). authorHandle and listingSlug are joined
+// display labels; the server stores profile/listing ids after resolving those
+// handles. There is no DELETE verb — pause with enabled=false.
+type AdminFeed struct {
+	ID              string   `json:"id"`
+	Label           string   `json:"label"`
+	FeedURL         string   `json:"feedUrl"`
+	Kind            string   `json:"kind"` // github_release | rss
+	AuthorProfileID *string  `json:"authorProfileId"`
+	AuthorHandle    *string  `json:"authorHandle"`
+	ListingID       *string  `json:"listingId"`
+	ListingSlug     *string  `json:"listingSlug"`
+	DefaultCategory string   `json:"defaultCategory"`
+	DefaultTags     []string `json:"defaultTags"`
+	AutoPublish     bool     `json:"autoPublish"`
+	Enabled         bool     `json:"enabled"`
+	LastFetchedAt   *string  `json:"lastFetchedAt"`
+	LastStatus      *string  `json:"lastStatus"`
+	CreatedAt       string   `json:"createdAt"`
+	UpdatedAt       string   `json:"updatedAt"`
+}
+
+// FeedSyncSummary is the result of POST /api/admin/feeds/{id}/sync (or one
+// entry of the bulk ingest run). Error is non-empty when the fetch/parse failed.
+type FeedSyncSummary struct {
+	FeedID     string   `json:"feedId"`
+	Label      string   `json:"label"`
+	Fetched    int      `json:"fetched"`
+	Created    int      `json:"created"`
+	Updated    int      `json:"updated"`
+	Skipped    int      `json:"skipped"`
+	ItemErrors []string `json:"itemErrors"`
+	Error      string   `json:"error,omitempty"`
+}
+
+// Feeds lists every feed source: GET /api/admin/feeds. Admin only.
+func (c *Client) Feeds(ctx context.Context) ([]AdminFeed, error) {
+	var out struct {
+		Feeds []AdminFeed `json:"feeds"`
+	}
+	if err := c.do(ctx, http.MethodGet, "/api/admin/feeds", nil, nil, &out); err != nil {
+		return nil, err
+	}
+	return out.Feeds, nil
+}
+
+// AdminFeed fetches one feed source by id: GET /api/admin/feeds/{id}.
+func (c *Client) AdminFeed(ctx context.Context, id string) (*AdminFeed, error) {
+	var out struct {
+		Feed AdminFeed `json:"feed"`
+	}
+	path := "/api/admin/feeds/" + url.PathEscape(id)
+	if err := c.do(ctx, http.MethodGet, path, nil, nil, &out); err != nil {
+		return nil, err
+	}
+	return &out.Feed, nil
+}
+
+// CreateFeed creates a feed source: POST /api/admin/feeds. fields is sent
+// verbatim — the server validates kind/defaultCategory and resolves
+// authorHandle/listingSlug to ids (422 unknown_profile / invalid_input when
+// missing). The id is server-assigned.
+func (c *Client) CreateFeed(ctx context.Context, fields map[string]any) (*AdminFeed, error) {
+	var out struct {
+		Feed AdminFeed `json:"feed"`
+	}
+	if err := c.do(ctx, http.MethodPost, "/api/admin/feeds", nil, fields, &out); err != nil {
+		return nil, err
+	}
+	return &out.Feed, nil
+}
+
+// UpdateFeed patches a feed source: PATCH /api/admin/feeds/{id}. No DELETE —
+// pause with {"enabled":false}. authorHandle/listingSlug are re-resolved
+// server-side when present; empty string clears the attribution.
+func (c *Client) UpdateFeed(ctx context.Context, id string, patch map[string]any) (*AdminFeed, error) {
+	var out struct {
+		Feed AdminFeed `json:"feed"`
+	}
+	path := "/api/admin/feeds/" + url.PathEscape(id)
+	if err := c.do(ctx, http.MethodPatch, path, nil, patch, &out); err != nil {
+		return nil, err
+	}
+	return &out.Feed, nil
+}
+
+// SyncFeed ingests one feed now: POST /api/admin/feeds/{id}/sync. A failed
+// fetch/parse is a 502 carrying the summary — the typed *APIError still
+// surfaces; callers that need the summary on success use this path.
+func (c *Client) SyncFeed(ctx context.Context, id string) (*FeedSyncSummary, error) {
+	var out struct {
+		Summary FeedSyncSummary `json:"summary"`
+	}
+	path := "/api/admin/feeds/" + url.PathEscape(id) + "/sync"
+	if err := c.do(ctx, http.MethodPost, path, nil, nil, &out); err != nil {
+		return nil, err
+	}
+	return &out.Summary, nil
+}

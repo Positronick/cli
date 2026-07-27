@@ -1,0 +1,21 @@
+{
+  "feed": {
+    "id": "01FCREATED0000000000000001",
+    "label": "Claude Code",
+    "feedUrl": "https://github.com/anthropics/claude-code",
+    "kind": "github_release",
+    "authorProfileId": "01PROFILE00000000000000001",
+    "authorHandle": "anthropic",
+    "listingId": "01LSTCLAUDECODE000000000XX",
+    "listingSlug": "claude-code",
+    "defaultCategory": "Releases",
+    "defaultTags": [],
+    "autoPublish": false,
+    "enabled": true,
+    "lastFetchedAt": null,
+    "lastStatus": null,
+    "createdAt": "2026-06-09T09:00:00.000Z",
+    "updatedAt": "2026-06-09T09:00:00.000Z"
+  },
+  "created": true
+}

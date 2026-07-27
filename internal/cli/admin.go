@@ -39,8 +39,8 @@ const defaultLoopSourceURL = "https://positronick.com/registry/loop"
 
 // registerAdminCommands attaches the hidden admin commands to the existing
 // tree by lookup — soul create/update under the soul noun, loop create under
-// the loop noun, plus a hidden `listing` parent for the type-agnostic
-// create/update — then reveals them all if the cached login is an admin.
+// the loop noun, plus hidden `listing`/`profile`/`feed` parents — then
+// reveals them all if the cached login is an admin.
 func registerAdminCommands(root *cobra.Command) {
 	if soul := findCommand(root, "soul"); soul != nil {
 		soul.AddCommand(newSoulCreateCmd(), newSoulUpdateCmd())
@@ -50,6 +50,7 @@ func registerAdminCommands(root *cobra.Command) {
 	}
 	root.AddCommand(newListingCmd())
 	root.AddCommand(newProfileCmd())
+	root.AddCommand(newFeedCmd())
 	revealAdminCommands(root)
 }
 

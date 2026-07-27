@@ -216,6 +216,104 @@ func TestAdminProfileMethods(t *testing.T) {
 	})
 }
 
+// Feed equivalents follow the same wire contract under /api/admin/feeds:
+// list GETs every feed source; create POSTs the field map; get/update use the
+// id path; sync is POST …/sync and decodes the summary.
+func TestAdminFeedMethods(t *testing.T) {
+	t.Run("list", func(t *testing.T) {
+		e := &adminEcho{status: http.StatusOK,
+			answer: `{"feeds":[{"id":"01F","label":"Buzz","feedUrl":"https://github.com/block/buzz","kind":"github_release","defaultCategory":"Releases","defaultTags":["buzz"],"autoPublish":true,"enabled":true,"createdAt":"t","updatedAt":"t"}]}`}
+		c := adminClient(t, e)
+		feeds, err := c.Feeds(context.Background())
+		if err != nil {
+			t.Fatalf("Feeds: %v", err)
+		}
+		if e.method != http.MethodGet || e.path != "/api/admin/feeds" {
+			t.Errorf("request = %s %s, want GET /api/admin/feeds", e.method, e.path)
+		}
+		if len(feeds) != 1 || feeds[0].Label != "Buzz" {
+			t.Errorf("feeds = %+v, want the decoded feed list", feeds)
+		}
+	})
+
+	t.Run("create", func(t *testing.T) {
+		e := &adminEcho{status: http.StatusCreated,
+			answer: `{"feed":{"id":"01F","label":"Buzz","feedUrl":"https://github.com/block/buzz","kind":"github_release","defaultCategory":"Releases","defaultTags":[],"autoPublish":true,"enabled":true,"createdAt":"t","updatedAt":"t"}}`}
+		c := adminClient(t, e)
+		feed, err := c.CreateFeed(context.Background(), map[string]any{
+			"label": "Buzz", "feedUrl": "https://github.com/block/buzz",
+			"kind": "github_release", "defaultCategory": "Releases", "autoPublish": true,
+		})
+		if err != nil {
+			t.Fatalf("CreateFeed: %v", err)
+		}
+		if e.method != http.MethodPost || e.path != "/api/admin/feeds" {
+			t.Errorf("request = %s %s, want POST /api/admin/feeds", e.method, e.path)
+		}
+		var sent map[string]any
+		if err := json.Unmarshal(e.body, &sent); err != nil {
+			t.Fatalf("request body is not JSON: %v (%q)", err, e.body)
+		}
+		if sent["label"] != "Buzz" || sent["autoPublish"] != true {
+			t.Errorf("sent body = %v, want the field map verbatim", sent)
+		}
+		if feed.ID != "01F" || feed.Label != "Buzz" {
+			t.Errorf("feed = %+v, want the decoded created feed", feed)
+		}
+	})
+
+	t.Run("get", func(t *testing.T) {
+		e := &adminEcho{status: http.StatusOK,
+			answer: `{"feed":{"id":"01F","label":"Buzz","feedUrl":"u","kind":"github_release","defaultCategory":"Releases","defaultTags":[],"autoPublish":false,"enabled":true,"createdAt":"t","updatedAt":"t"}}`}
+		c := adminClient(t, e)
+		feed, err := c.AdminFeed(context.Background(), "01F")
+		if err != nil {
+			t.Fatalf("AdminFeed: %v", err)
+		}
+		if e.method != http.MethodGet || e.path != "/api/admin/feeds/01F" {
+			t.Errorf("request = %s %s, want GET /api/admin/feeds/01F", e.method, e.path)
+		}
+		if feed.Label != "Buzz" {
+			t.Errorf("feed = %+v, want the decoded feed", feed)
+		}
+	})
+
+	t.Run("update", func(t *testing.T) {
+		e := &adminEcho{status: http.StatusOK,
+			answer: `{"feed":{"id":"01F","label":"Buzz","feedUrl":"u","kind":"github_release","defaultCategory":"Releases","defaultTags":[],"autoPublish":true,"enabled":false,"createdAt":"t","updatedAt":"t"}}`}
+		c := adminClient(t, e)
+		feed, err := c.UpdateFeed(context.Background(), "01F", map[string]any{"enabled": false})
+		if err != nil {
+			t.Fatalf("UpdateFeed: %v", err)
+		}
+		if e.method != http.MethodPatch || e.path != "/api/admin/feeds/01F" {
+			t.Errorf("request = %s %s, want PATCH /api/admin/feeds/01F", e.method, e.path)
+		}
+		if string(e.body) != `{"enabled":false}` {
+			t.Errorf("sent body = %s, want only the patched field", e.body)
+		}
+		if feed.Enabled {
+			t.Errorf("feed.Enabled = true, want false")
+		}
+	})
+
+	t.Run("sync", func(t *testing.T) {
+		e := &adminEcho{status: http.StatusOK,
+			answer: `{"summary":{"feedId":"01F","label":"Buzz","fetched":2,"created":2,"updated":0,"skipped":0,"itemErrors":[]}}`}
+		c := adminClient(t, e)
+		sum, err := c.SyncFeed(context.Background(), "01F")
+		if err != nil {
+			t.Fatalf("SyncFeed: %v", err)
+		}
+		if e.method != http.MethodPost || e.path != "/api/admin/feeds/01F/sync" {
+			t.Errorf("request = %s %s, want POST /api/admin/feeds/01F/sync", e.method, e.path)
+		}
+		if sum.FeedID != "01F" || sum.Created != 2 {
+			t.Errorf("summary = %+v, want the decoded sync summary", sum)
+		}
+	})
+}
+
 // A non-2xx admin response must surface as the typed *APIError carrying the
 // server's envelope verbatim — the CLI prints validator messages raw.
 func TestAdminErrorPassthrough(t *testing.T) {

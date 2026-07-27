@@ -46,6 +46,9 @@ var (
 	soulFrameworks    = []string{"hermes", "openclaw", "claude-code", "cursor"}
 	listingCategories = []string{"AI/ML", "DevOps", "Cloud", "Web", "Data", "Security", "Technical", "Productivity"}
 	statuses          = []string{"draft", "pending", "published"}
+	// blogCategories mirrors BLOG_CATEGORIES — feed defaultCategory validation.
+	blogCategories = []string{"Releases", "Announcements", "Tutorials", "Guides", "Engineering", "Community"}
+	feedKinds      = []string{"github_release", "rss"}
 )
 
 // Patchable field sets, mirroring SOUL_PATCH_FIELDS / LISTING_PATCH_FIELDS in
@@ -60,6 +63,9 @@ var (
 	// profileCreateFields mirrors PROFILE_CREATE_FIELDS in the product repo.
 	profileCreateFields = []string{"handle", "name", "kind", "avatarUrl", "website",
 		"githubUrl", "githubUserId", "bio", "socials", "verified", "official"}
+	// feedCreateFields mirrors FEED_FIELDS in the product repo (feedFields.ts).
+	feedCreateFields = []string{"label", "feedUrl", "kind", "authorHandle", "listingSlug",
+		"defaultCategory", "defaultTags", "autoPublish", "enabled"}
 )
 
 // adminState is one Handler instance's mutable admin dataset.
@@ -68,9 +74,18 @@ type adminState struct {
 	souls      []soulRow
 	listings   []listingRow
 	profiles   []profileRow
+	feeds      []feedRow
 	soulSeq    int
 	listingSeq int
 	profileSeq int
+	feedSeq    int
+}
+
+// feedRow is the mock's in-memory feed source. Display handles/slugs are
+// stored alongside the resolved ids so list/get responses match production's
+// joined shape without a second lookup.
+type feedRow struct {
+	api.AdminFeed
 }
 
 type soulRow struct {
@@ -108,6 +123,11 @@ func registerAdmin(mux *http.ServeMux) {
 	mux.HandleFunc("PATCH /api/admin/listings/{id}", st.patchListing)
 	mux.HandleFunc("POST /api/admin/profiles", st.createProfile)
 	mux.HandleFunc("GET /api/admin/profiles", st.listProfiles)
+	mux.HandleFunc("GET /api/admin/feeds", st.listFeeds)
+	mux.HandleFunc("POST /api/admin/feeds", st.createFeed)
+	mux.HandleFunc("GET /api/admin/feeds/{id}", st.getFeed)
+	mux.HandleFunc("PATCH /api/admin/feeds/{id}", st.patchFeed)
+	mux.HandleFunc("POST /api/admin/feeds/{id}/sync", st.syncFeed)
 }
 
 // seedProfiles builds the fixture's curated authors from the listing handles
@@ -845,4 +865,282 @@ func (st *adminState) profileByHandle(handle string) *profileRow {
 		}
 	}
 	return nil
+}
+
+// ── Feeds ────────────────────────────────────────────────────────────────────
+
+// listFeeds returns every feed source. The mock starts empty (no seed) so
+// goldens pin an empty list; create populates the in-memory set.
+func (st *adminState) listFeeds(w http.ResponseWriter, r *http.Request) {
+	if adminDenied(w, r) {
+		return
+	}
+	st.mu.Lock()
+	defer st.mu.Unlock()
+	out := make([]api.AdminFeed, len(st.feeds))
+	for i := range st.feeds {
+		out[i] = st.feeds[i].AdminFeed
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"feeds": out})
+}
+
+func (st *adminState) createFeed(w http.ResponseWriter, r *http.Request) {
+	if adminDenied(w, r) {
+		return
+	}
+	body := readBody(w, r)
+	if body == nil {
+		return
+	}
+	const ctx = "admin feed create"
+	if _, ok := body["id"]; ok {
+		invalid(w, ctx+`: ids are server-assigned — omit "id"`)
+		return
+	}
+	if key, ok := unknownKey(body, feedCreateFields); ok {
+		invalid(w, fmt.Sprintf("%s: unknown field %q", ctx, key))
+		return
+	}
+	for _, key := range []string{"label", "feedUrl", "kind", "defaultCategory"} {
+		if blank(body[key]) {
+			invalid(w, fmt.Sprintf("%s: missing required field %q", ctx, key))
+			return
+		}
+	}
+	kind := toStr(body["kind"])
+	if !slices.Contains(feedKinds, kind) {
+		invalid(w, fmt.Sprintf("%s: invalid kind %q (expected one of: %s)",
+			ctx, kind, strings.Join(feedKinds, ", ")))
+		return
+	}
+	category := toStr(body["defaultCategory"])
+	if !slices.Contains(blogCategories, category) {
+		invalid(w, fmt.Sprintf("%s: invalid defaultCategory %q (expected one of: %s)",
+			ctx, category, strings.Join(blogCategories, ", ")))
+		return
+	}
+
+	st.mu.Lock()
+	defer st.mu.Unlock()
+
+	var authorProfileID, authorHandle *string
+	if v, ok := body["authorHandle"]; ok && !blank(v) {
+		handle := toStr(v)
+		profile := st.profileByHandle(handle)
+		if profile == nil {
+			writeError(w, http.StatusUnprocessableEntity, "unknown_profile",
+				fmt.Sprintf("profile %q does not exist", handle))
+			return
+		}
+		authorProfileID = ptr(profile.ID)
+		authorHandle = ptr(handle)
+	}
+
+	var listingID, listingSlug *string
+	if v, ok := body["listingSlug"]; ok && !blank(v) {
+		slug := toStr(v)
+		listing := st.listingBySlug(slug)
+		if listing == nil {
+			writeError(w, http.StatusUnprocessableEntity, "invalid_input",
+				fmt.Sprintf("listing %q does not exist", slug))
+			return
+		}
+		listingID = ptr(listing.ID)
+		listingSlug = ptr(slug)
+	}
+
+	tags := []string{}
+	if v, ok := body["defaultTags"]; ok {
+		tags = toStrSlice(v)
+	}
+	autoPublish := toBool(body["autoPublish"], false)
+	enabled := toBool(body["enabled"], true)
+
+	st.feedSeq++
+	row := feedRow{
+		AdminFeed: api.AdminFeed{
+			ID:              fmt.Sprintf("01FCREATED%016d", st.feedSeq),
+			Label:           toStr(body["label"]),
+			FeedURL:         toStr(body["feedUrl"]),
+			Kind:            kind,
+			AuthorProfileID: authorProfileID,
+			AuthorHandle:    authorHandle,
+			ListingID:       listingID,
+			ListingSlug:     listingSlug,
+			DefaultCategory: category,
+			DefaultTags:     tags,
+			AutoPublish:     autoPublish,
+			Enabled:         enabled,
+			CreatedAt:       createdStamp,
+			UpdatedAt:       createdStamp,
+		},
+	}
+	st.feeds = append(st.feeds, row)
+	writeJSON(w, http.StatusCreated, map[string]any{"feed": row.AdminFeed})
+}
+
+func (st *adminState) getFeed(w http.ResponseWriter, r *http.Request) {
+	if adminDenied(w, r) {
+		return
+	}
+	st.mu.Lock()
+	defer st.mu.Unlock()
+	id := r.PathValue("id")
+	if row := st.feedByID(id); row != nil {
+		writeJSON(w, http.StatusOK, map[string]any{"feed": row.AdminFeed})
+		return
+	}
+	writeError(w, http.StatusNotFound, "not_found", fmt.Sprintf("feed source %q not found", id))
+}
+
+func (st *adminState) patchFeed(w http.ResponseWriter, r *http.Request) {
+	if adminDenied(w, r) {
+		return
+	}
+	body := readBody(w, r)
+	if body == nil {
+		return
+	}
+	const ctx = "admin feed update"
+	if key, ok := unknownKey(body, feedCreateFields); ok {
+		invalid(w, fmt.Sprintf("%s: unknown field %q", ctx, key))
+		return
+	}
+
+	st.mu.Lock()
+	defer st.mu.Unlock()
+	id := r.PathValue("id")
+	row := st.feedByID(id)
+	if row == nil {
+		writeError(w, http.StatusNotFound, "not_found", fmt.Sprintf("feed source %q not found", id))
+		return
+	}
+
+	if v, ok := body["kind"]; ok {
+		kind := toStr(v)
+		if !slices.Contains(feedKinds, kind) {
+			invalid(w, fmt.Sprintf("%s: invalid kind %q (expected one of: %s)",
+				ctx, kind, strings.Join(feedKinds, ", ")))
+			return
+		}
+		row.Kind = kind
+	}
+	if v, ok := body["defaultCategory"]; ok {
+		category := toStr(v)
+		if !slices.Contains(blogCategories, category) {
+			invalid(w, fmt.Sprintf("%s: invalid defaultCategory %q (expected one of: %s)",
+				ctx, category, strings.Join(blogCategories, ", ")))
+			return
+		}
+		row.DefaultCategory = category
+	}
+	if v, ok := body["label"]; ok {
+		if blank(v) {
+			invalid(w, fmt.Sprintf("%s: missing required field %q", ctx, "label"))
+			return
+		}
+		row.Label = toStr(v)
+	}
+	if v, ok := body["feedUrl"]; ok {
+		if blank(v) {
+			invalid(w, fmt.Sprintf("%s: missing required field %q", ctx, "feedUrl"))
+			return
+		}
+		row.FeedURL = toStr(v)
+	}
+	if v, ok := body["defaultTags"]; ok {
+		row.DefaultTags = toStrSlice(v)
+	}
+	if v, ok := body["autoPublish"]; ok {
+		row.AutoPublish = toBool(v, row.AutoPublish)
+	}
+	if v, ok := body["enabled"]; ok {
+		row.Enabled = toBool(v, row.Enabled)
+	}
+	if v, present := body["authorHandle"]; present {
+		if blank(v) {
+			row.AuthorProfileID, row.AuthorHandle = nil, nil
+		} else {
+			handle := toStr(v)
+			profile := st.profileByHandle(handle)
+			if profile == nil {
+				writeError(w, http.StatusUnprocessableEntity, "unknown_profile",
+					fmt.Sprintf("profile %q does not exist", handle))
+				return
+			}
+			row.AuthorProfileID = ptr(profile.ID)
+			row.AuthorHandle = ptr(handle)
+		}
+	}
+	if v, present := body["listingSlug"]; present {
+		if blank(v) {
+			row.ListingID, row.ListingSlug = nil, nil
+		} else {
+			slug := toStr(v)
+			listing := st.listingBySlug(slug)
+			if listing == nil {
+				writeError(w, http.StatusUnprocessableEntity, "invalid_input",
+					fmt.Sprintf("listing %q does not exist", slug))
+				return
+			}
+			row.ListingID = ptr(listing.ID)
+			row.ListingSlug = ptr(slug)
+		}
+	}
+	row.UpdatedAt = updatedStamp
+	writeJSON(w, http.StatusOK, map[string]any{"feed": row.AdminFeed})
+}
+
+// syncFeed fakes a successful ingest with no network: stamps lastFetchedAt
+// and returns a deterministic summary so CLI goldens stay stable offline.
+func (st *adminState) syncFeed(w http.ResponseWriter, r *http.Request) {
+	if adminDenied(w, r) {
+		return
+	}
+	st.mu.Lock()
+	defer st.mu.Unlock()
+	id := r.PathValue("id")
+	row := st.feedByID(id)
+	if row == nil {
+		writeError(w, http.StatusNotFound, "not_found", fmt.Sprintf("feed source %q not found", id))
+		return
+	}
+	row.LastFetchedAt = ptr(updatedStamp)
+	row.LastStatus = ptr("ok")
+	row.UpdatedAt = updatedStamp
+	writeJSON(w, http.StatusOK, map[string]any{
+		"summary": api.FeedSyncSummary{
+			FeedID:     row.ID,
+			Label:      row.Label,
+			Fetched:    1,
+			Created:    1,
+			Updated:    0,
+			Skipped:    0,
+			ItemErrors: []string{},
+		},
+	})
+}
+
+func (st *adminState) feedByID(id string) *feedRow {
+	for i := range st.feeds {
+		if st.feeds[i].ID == id {
+			return &st.feeds[i]
+		}
+	}
+	return nil
+}
+
+// toBool coerces a JSON value to bool; nil/unknown fall back to defaultVal.
+func toBool(v any, defaultVal bool) bool {
+	if v == nil {
+		return defaultVal
+	}
+	switch t := v.(type) {
+	case bool:
+		return t
+	case string:
+		return t == "true"
+	default:
+		return defaultVal
+	}
 }
