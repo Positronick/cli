@@ -941,6 +941,7 @@ func (st *adminState) createFeed(w http.ResponseWriter, r *http.Request) {
 		slug := toStr(v)
 		listing := st.listingBySlug(slug)
 		if listing == nil {
+			// invalid_input (not unknown_listing): product feeds.ts uses invalid_input for unknown listing.
 			writeError(w, http.StatusUnprocessableEntity, "invalid_input",
 				fmt.Sprintf("listing %q does not exist", slug))
 			return
@@ -993,6 +994,9 @@ func (st *adminState) getFeed(w http.ResponseWriter, r *http.Request) {
 	writeError(w, http.StatusNotFound, "not_found", fmt.Sprintf("feed source %q not found", id))
 }
 
+// patchFeed validates every field (and resolves author/listing) into locals
+// first, then applies all row mutations once. Partial writes must not survive
+// a late 422 on author/listing — product feeds.ts is all-or-nothing too.
 func (st *adminState) patchFeed(w http.ResponseWriter, r *http.Request) {
 	if adminDenied(w, r) {
 		return
@@ -1016,51 +1020,67 @@ func (st *adminState) patchFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// ── Phase 1: validate + resolve into locals (no row writes) ───────────
+	var (
+		kind, category, label, feedURL *string
+		tags                           *[]string
+		autoPublish, enabled           *bool
+		setAuthor, setListing          bool
+		authorProfileID, authorHandle  *string
+		listingID, listingSlug         *string
+	)
+
 	if v, ok := body["kind"]; ok {
-		kind := toStr(v)
-		if !slices.Contains(feedKinds, kind) {
+		k := toStr(v)
+		if !slices.Contains(feedKinds, k) {
 			invalid(w, fmt.Sprintf("%s: invalid kind %q (expected one of: %s)",
-				ctx, kind, strings.Join(feedKinds, ", ")))
+				ctx, k, strings.Join(feedKinds, ", ")))
 			return
 		}
-		row.Kind = kind
+		kind = &k
 	}
 	if v, ok := body["defaultCategory"]; ok {
-		category := toStr(v)
-		if !slices.Contains(blogCategories, category) {
+		c := toStr(v)
+		if !slices.Contains(blogCategories, c) {
 			invalid(w, fmt.Sprintf("%s: invalid defaultCategory %q (expected one of: %s)",
-				ctx, category, strings.Join(blogCategories, ", ")))
+				ctx, c, strings.Join(blogCategories, ", ")))
 			return
 		}
-		row.DefaultCategory = category
+		category = &c
 	}
 	if v, ok := body["label"]; ok {
 		if blank(v) {
 			invalid(w, fmt.Sprintf("%s: missing required field %q", ctx, "label"))
 			return
 		}
-		row.Label = toStr(v)
+		s := toStr(v)
+		label = &s
 	}
 	if v, ok := body["feedUrl"]; ok {
 		if blank(v) {
 			invalid(w, fmt.Sprintf("%s: missing required field %q", ctx, "feedUrl"))
 			return
 		}
-		row.FeedURL = toStr(v)
+		s := toStr(v)
+		feedURL = &s
 	}
 	if v, ok := body["defaultTags"]; ok {
-		row.DefaultTags = toStrSlice(v)
+		t := toStrSlice(v)
+		tags = &t
 	}
 	if v, ok := body["autoPublish"]; ok {
-		row.AutoPublish = toBool(v, row.AutoPublish)
+		b := toBool(v, row.AutoPublish)
+		autoPublish = &b
 	}
 	if v, ok := body["enabled"]; ok {
-		row.Enabled = toBool(v, row.Enabled)
+		b := toBool(v, row.Enabled)
+		enabled = &b
 	}
+	// unknown author → unknown_profile; unknown listing → invalid_input
+	// (product feeds.ts intentional asymmetry — do not unify the codes).
 	if v, present := body["authorHandle"]; present {
-		if blank(v) {
-			row.AuthorProfileID, row.AuthorHandle = nil, nil
-		} else {
+		setAuthor = true
+		if !blank(v) {
 			handle := toStr(v)
 			profile := st.profileByHandle(handle)
 			if profile == nil {
@@ -1068,24 +1088,55 @@ func (st *adminState) patchFeed(w http.ResponseWriter, r *http.Request) {
 					fmt.Sprintf("profile %q does not exist", handle))
 				return
 			}
-			row.AuthorProfileID = ptr(profile.ID)
-			row.AuthorHandle = ptr(handle)
+			authorProfileID = ptr(profile.ID)
+			authorHandle = ptr(handle)
 		}
+		// blank clears attribution (both nil)
 	}
 	if v, present := body["listingSlug"]; present {
-		if blank(v) {
-			row.ListingID, row.ListingSlug = nil, nil
-		} else {
+		setListing = true
+		if !blank(v) {
 			slug := toStr(v)
 			listing := st.listingBySlug(slug)
 			if listing == nil {
+				// invalid_input (not unknown_listing): product feeds.ts uses invalid_input for unknown listing.
 				writeError(w, http.StatusUnprocessableEntity, "invalid_input",
 					fmt.Sprintf("listing %q does not exist", slug))
 				return
 			}
-			row.ListingID = ptr(listing.ID)
-			row.ListingSlug = ptr(slug)
+			listingID = ptr(listing.ID)
+			listingSlug = ptr(slug)
 		}
+		// blank clears attribution (both nil)
+	}
+
+	// ── Phase 2: apply all validated changes once ─────────────────────────
+	if kind != nil {
+		row.Kind = *kind
+	}
+	if category != nil {
+		row.DefaultCategory = *category
+	}
+	if label != nil {
+		row.Label = *label
+	}
+	if feedURL != nil {
+		row.FeedURL = *feedURL
+	}
+	if tags != nil {
+		row.DefaultTags = *tags
+	}
+	if autoPublish != nil {
+		row.AutoPublish = *autoPublish
+	}
+	if enabled != nil {
+		row.Enabled = *enabled
+	}
+	if setAuthor {
+		row.AuthorProfileID, row.AuthorHandle = authorProfileID, authorHandle
+	}
+	if setListing {
+		row.ListingID, row.ListingSlug = listingID, listingSlug
 	}
 	row.UpdatedAt = updatedStamp
 	writeJSON(w, http.StatusOK, map[string]any{"feed": row.AdminFeed})

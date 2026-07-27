@@ -15,6 +15,12 @@ import (
 // (revealed for cached admins) and map a 401/403 to exit 4 via adminAPIError.
 // There is no delete verb: pause with `feed update --disabled`.
 
+// feedAdminNote is the Long-help tail for feed commands. Feeds have no
+// --status draft unpublish path (adminNote would mislead), so they get their
+// own note pointing at --disabled.
+const feedAdminNote = "\n\nRequires an admin account (positronick login). Ids are server-assigned " +
+	"ULIDs — never supply one. There is no delete verb: pause with feed update --disabled."
+
 // feedListResult is the `feed list --json` contract.
 type feedListResult struct {
 	Count int             `json:"count"`
@@ -43,7 +49,7 @@ func newFeedCmd() *cobra.Command {
 		Short: "Subscribe and manage release/RSS feed sources (admin)",
 		Long: "Manage feed sources the blog ingestor mirrors into release/link posts. " +
 			"GitHub releases use kind=github_release with feedUrl=the repo URL; RSS uses the feed URL. " +
-			"No delete verb — pause with `feed update --disabled`." + adminNote,
+			"No delete verb — pause with `feed update --disabled`." + feedAdminNote,
 	})
 	cmd.AddCommand(
 		newFeedListCmd(),
@@ -86,7 +92,7 @@ func newFeedCreateCmd() *cobra.Command {
 		Long: "Create a feed source the blog ingestor will mirror. For GitHub releases, " +
 			"--url is the repository URL and --kind defaults to github_release. --author " +
 			"and --listing must already exist (same attribution rule as listings). " +
-			"--auto-publish defaults false; --disabled starts the feed paused." + adminNote,
+			"--auto-publish defaults false; --disabled starts the feed paused." + feedAdminNote,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			p, client, err := printerAndClient(cmd)
@@ -124,7 +130,7 @@ func newFeedUpdateCmd() *cobra.Command {
 		Short: "Update a feed source (admin)",
 		Long: "Patch a feed source in place: only the flags you provide change. Empty " +
 			"--author or --listing clears the attribution. --enabled / --disabled are " +
-			"mutually exclusive; there is no delete verb — pause with --disabled." + adminNote,
+			"mutually exclusive; there is no delete verb — pause with --disabled." + feedAdminNote,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			p, client, err := printerAndClient(cmd)
@@ -160,7 +166,7 @@ func newFeedSyncCmd() *cobra.Command {
 		Short: "Ingest one feed now (admin)",
 		Long: "Run the blog ingestor against a single feed source immediately and print " +
 			"the sync summary (fetched/created/updated/skipped). A failed fetch surfaces " +
-			"as a server error; there is no offline dry-run." + adminNote,
+			"as a server error; there is no offline dry-run." + feedAdminNote,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			p, client, err := printerAndClient(cmd)
