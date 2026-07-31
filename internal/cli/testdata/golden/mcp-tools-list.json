@@ -24,6 +24,7 @@
             "harness",
             "cli",
             "mcp",
+            "memory",
             "agent",
             "skill",
             "plugin",

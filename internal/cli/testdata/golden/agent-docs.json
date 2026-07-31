@@ -590,6 +590,68 @@
       "flags": []
     },
     {
+      "path": "positronick memory",
+      "use": "positronick memory [flags]",
+      "description": "Discover memory and context engines in the registry",
+      "flags": []
+    },
+    {
+      "path": "positronick memory list",
+      "use": "positronick memory list [flags]",
+      "description": "List all memory listings",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "name"
+        }
+      ]
+    },
+    {
+      "path": "positronick memory search",
+      "use": "positronick memory search \u003cquery\u003e [flags]",
+      "description": "Search memory listings by fuzzy relevance",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "relevance"
+        }
+      ]
+    },
+    {
+      "path": "positronick memory show",
+      "use": "positronick memory show \u003cslug\u003e [flags]",
+      "description": "Show one memory listing in full",
+      "flags": []
+    },
+    {
       "path": "positronick plugin",
       "use": "positronick plugin [flags]",
       "description": "Discover agent plugins in the registry",

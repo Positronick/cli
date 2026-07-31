@@ -33,23 +33,29 @@ type listingDetail struct {
 }
 
 // listingNounShorts gives each registry noun its own help line.
+// Keys mirror api.ListingTypes (harness, cli, mcp, memory, agent, skill, plugin, loop).
 var listingNounShorts = map[string]string{
 	"harness": "Discover agent harnesses in the registry",
 	"cli":     "Discover official CLI tools in the registry",
 	"mcp":     "Discover MCP servers in the registry",
+	"memory":  "Discover memory and context engines in the registry",
 	"agent":   "Discover agent SDKs and frameworks in the registry",
 	"skill":   "Discover agent skills in the registry",
 	"plugin":  "Discover agent plugins in the registry",
 	"loop":    "Discover reusable agent loops in the registry",
 }
 
-// newListingNounCmd builds one registry noun (harness, cli, mcp, agent,
-// skill, plugin, loop) with the shared search/list/show verbs, each scoped to
-// its listing type via ?type= on the API.
+// newListingNounCmd builds one registry noun from api.ListingTypes with the
+// shared search/list/show verbs, each scoped to its listing type via ?type=
+// on the API.
 func newListingNounCmd(listingType string) *cobra.Command {
+	short := listingNounShorts[listingType]
+	if short == "" {
+		short = fmt.Sprintf("Discover %s listings in the registry", listingType)
+	}
 	cmd := &cobra.Command{
 		Use:   listingType,
-		Short: listingNounShorts[listingType],
+		Short: short,
 	}
 	cmd.AddCommand(
 		newListingSearchCmd(listingType),

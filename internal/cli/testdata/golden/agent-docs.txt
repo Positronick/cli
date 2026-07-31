@@ -404,6 +404,42 @@ Usage: `positronick mcp show <slug> [flags]`
 
 Show one mcp listing in full
 
+## positronick memory
+
+Usage: `positronick memory [flags]`
+
+Discover memory and context engines in the registry
+
+## positronick memory list
+
+Usage: `positronick memory list [flags]`
+
+List all memory listings
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `name`): sort order: relevance, name, downloads or newest
+
+## positronick memory search
+
+Usage: `positronick memory search <query> [flags]`
+
+Search memory listings by fuzzy relevance
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `relevance`): sort order: relevance, name, downloads or newest
+
+## positronick memory show
+
+Usage: `positronick memory show <slug> [flags]`
+
+Show one memory listing in full
+
 ## positronick plugin
 
 Usage: `positronick plugin [flags]`
