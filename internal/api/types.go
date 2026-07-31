@@ -19,7 +19,14 @@ import (
 
 // ListingTypes are the kinds of official tooling the registry catalogs.
 // Mirrors LISTING_TYPES in src/lib/types.ts.
-var ListingTypes = []string{"harness", "cli", "mcp", "agent", "skill", "plugin", "loop"}
+var ListingTypes = []string{"harness", "cli", "mcp", "memory", "agent", "skill", "plugin", "loop"}
+
+// ListingCategories are the broad subject labels a listing may use.
+// Mirrors LISTING_CATEGORIES in src/lib/types.ts.
+var ListingCategories = []string{
+	"AI/ML", "Memory", "Observability", "DevOps", "Cloud", "Web",
+	"Data", "Security", "Technical", "Productivity",
+}
 
 // FeedKinds are the kinds of blog feed source the ingestor mirrors. Mirrors
 // FEED_KINDS in src/lib/server/feedFields.ts.

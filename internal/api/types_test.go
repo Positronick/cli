@@ -167,3 +167,25 @@ func TestNewWireFieldsRoundTrip(t *testing.T) {
 		t.Errorf("SoulCard.ChargeCount = %d, want 5", s.ChargeCount)
 	}
 }
+
+// Platform LISTING_TYPES order is a public contract: the CLI auto-registers one
+// cobra noun per entry, skill_contract pins the joined list, and MCP type enums
+// derive from it. Keep this in lockstep with src/lib/types.ts.
+func TestListingTypesMatchPlatformOrder(t *testing.T) {
+	want := []string{"harness", "cli", "mcp", "memory", "agent", "skill", "plugin", "loop"}
+	if !reflect.DeepEqual(ListingTypes, want) {
+		t.Fatalf("ListingTypes = %#v\nwant %#v", ListingTypes, want)
+	}
+}
+
+// Platform LISTING_CATEGORIES order is a public contract: mockadmin validation
+// and any future UI filters must accept exactly these labels.
+func TestListingCategoriesMatchPlatformOrder(t *testing.T) {
+	want := []string{
+		"AI/ML", "Memory", "Observability", "DevOps", "Cloud", "Web",
+		"Data", "Security", "Technical", "Productivity",
+	}
+	if !reflect.DeepEqual(ListingCategories, want) {
+		t.Fatalf("ListingCategories = %#v\nwant %#v", ListingCategories, want)
+	}
+}
