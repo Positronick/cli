@@ -27,7 +27,7 @@ func attachInstallCommands(root *cobra.Command) {
 			c.AddCommand(newSoulInstallCmd())
 		case "loop":
 			c.AddCommand(newLoopInstallCmd())
-		case "harness", "cli", "mcp", "agent", "skill", "plugin":
+		case "harness", "cli", "mcp", "memory", "agent", "skill", "plugin":
 			c.AddCommand(newListingInstallCmd(c.Name()))
 		}
 	}

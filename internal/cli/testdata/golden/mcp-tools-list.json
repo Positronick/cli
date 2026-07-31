@@ -1,6 +1,6 @@
 [
   {
-    "description": "Search positronick.com's registry of verified agent tooling — harnesses, CLIs, MCP servers, agent SDKs, skills, plugins and loops — ranked by fuzzy relevance. Follow up with listing_show for the full record.",
+    "description": "Search positronick.com's registry of verified agent tooling — harnesses, CLIs, MCP servers, memory, agent SDKs, skills, plugins and loops — ranked by fuzzy relevance. Follow up with listing_show for the full record.",
     "inputSchema": {
       "additionalProperties": false,
       "properties": {

@@ -1,6 +1,6 @@
 # positronick — agent manual
 
-`positronick` is the command-line client for positronick.com. It discovers agent capabilities: souls (installable SOUL.md personality files), a registry of official tooling (harnesses, CLIs, MCP servers, agents, skills, plugins, loops), and a `research` feed of what's new (articles, releases, links) so agents avoid stale knowledge. It is built to be driven by coding agents — pass `--json` to any command for stable machine-readable JSON on stdout, read progress and errors from stderr, and branch on the exit code. Read commands never prompt. Hidden admin commands (create/update for souls and listings, create/list for profiles, list/create/update/sync for blog feed sources, and create/update/list for blog posts) exist and appear in help and in these docs after logging in with an admin account.
+`positronick` is the command-line client for positronick.com. It discovers agent capabilities: souls (installable SOUL.md personality files), a registry of official tooling (harnesses, CLIs, MCP servers, memory, agents, skills, plugins, loops), and a `research` feed of what's new (articles, releases, links) so agents avoid stale knowledge. It is built to be driven by coding agents — pass `--json` to any command for stable machine-readable JSON on stdout, read progress and errors from stderr, and branch on the exit code. Read commands never prompt. Hidden admin commands (create/update for souls and listings, create/list for profiles, list/create/update/sync for blog feed sources, and create/update/list for blog posts) exist and appear in help and in these docs after logging in with an admin account.
 
 Exit codes:
 
@@ -409,6 +409,16 @@ Show one mcp listing in full
 Usage: `positronick memory [flags]`
 
 Discover memory and context engines in the registry
+
+## positronick memory install
+
+Usage: `positronick memory install <slug> [flags]`
+
+Print (or run with --run) the official install command for one memory
+
+Flags:
+
+- `--run` (default `false`): execute the install command via `sh -c` instead of printing it
 
 ## positronick memory list
 

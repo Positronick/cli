@@ -1,6 +1,6 @@
 # Positronick CLI
 
-`positronick` discovers and installs agent capabilities — souls, harnesses, CLIs, MCP servers, agents, skills, plugins, and loops — from [positronick.com](https://positronick.com).
+`positronick` discovers and installs agent capabilities — souls, harnesses, CLIs, MCP servers, memory, agents, skills, plugins, and loops — from [positronick.com](https://positronick.com).
 
 ## Install
 
@@ -38,6 +38,7 @@ yay -S positronick-bin                            # Arch (AUR)
 | `positronick harness search\|show\|list\|install` | Agent harnesses | available |
 | `positronick cli search\|show\|list\|install` | CLI tools | available |
 | `positronick mcp search\|show\|list\|install` | MCP servers | available |
+| `positronick memory search\|show\|list\|install` | Memory and context engines | available |
 | `positronick agent search\|show\|list\|install` | Agents | available |
 | `positronick skill search\|show\|list\|install` | Skills | available |
 | `positronick plugin search\|show\|list\|install` | Plugins | available |

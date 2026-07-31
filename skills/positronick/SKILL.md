@@ -2,8 +2,8 @@
 name: positronick
 description: >-
   Discover and install agent capabilities from the positronick.com registry —
-  souls (SOUL.md personality files), harnesses, CLIs, MCP servers, agents,
-  skills, plugins, and loops. Use when asked to find or install a soul or
+  souls (SOUL.md personality files), harnesses, CLIs, MCP servers, memory,
+  agents, skills, plugins, and loops. Use when asked to find or install a soul or
   SOUL.md, browse positronick listings, set up a loop recipe, or whenever the
   positronick MCP tools or `positronick` CLI are available and the task
   involves agent tooling discovery.
@@ -48,7 +48,7 @@ Souls are installable SOUL.md personality files for coding agents.
 ## Registry listings: search → show
 
 Everything else is a listing with one of these types: `harness`, `cli`,
-`mcp`, `agent`, `skill`, `plugin`, `loop`.
+`mcp`, `memory`, `agent`, `skill`, `plugin`, `loop`.
 
 1. `listing_search` — scope with `type`, filter with `category`. Cards carry
    the official `installCmd` and verified `sourceUrl`.
