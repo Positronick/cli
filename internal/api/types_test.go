@@ -117,6 +117,58 @@ func TestListingSkillData(t *testing.T) {
 	}
 }
 
+// Bot listings carry prompt/schedule extras in Listing.Data; the typed decode
+// must round-trip them, and a wrong-typed field must fail loud rather than
+// silently drop the recipe.
+func TestListingBotData(t *testing.T) {
+	tests := []struct {
+		name    string
+		data    map[string]any
+		want    BotData
+		wantErr bool
+	}{
+		{
+			name: "full bot payload decodes field for field",
+			data: map[string]any{
+				"prompt":       "Summarize overnight PRs",
+				"integrations": []any{"github", "slack"},
+				"schedule":     "0 9 * * 1-5",
+				"platforms":    []any{"hermes"},
+				"soulSlug":     "sherlock",
+			},
+			want: BotData{
+				Prompt:       "Summarize overnight PRs",
+				Integrations: []string{"github", "slack"},
+				Schedule:     "0 9 * * 1-5",
+				Platforms:    []string{"hermes"},
+				SoulSlug:     "sherlock",
+			},
+		},
+		{"empty data yields zero value", map[string]any{}, BotData{}, false},
+		{"nil data yields zero value", nil, BotData{}, false},
+		{"unknown keys ignored", map[string]any{"prompt": "p", "futureField": true}, BotData{Prompt: "p"}, false},
+		{"wrong-typed integrations fails loud", map[string]any{"integrations": "github"}, BotData{}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := Listing{Data: tt.data}
+			got, err := l.BotData()
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("BotData should error on a wrong-typed field")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("BotData: %v", err)
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("BotData = %+v, want %+v", got, tt.want)
+			}
+		})
+	}
+}
+
 // The CLI mirrors src/lib/types.ts field-for-field so an agent reading --json
 // sees everything the server sends. These fields were added to the API after
 // the CLI's first cut; this pins that they survive a decode→encode round-trip
@@ -172,7 +224,7 @@ func TestNewWireFieldsRoundTrip(t *testing.T) {
 // cobra noun per entry, skill_contract pins the joined list, and MCP type enums
 // derive from it. Keep this in lockstep with src/lib/types.ts.
 func TestListingTypesMatchPlatformOrder(t *testing.T) {
-	want := []string{"harness", "cli", "mcp", "memory", "agent", "skill", "plugin", "loop"}
+	want := []string{"harness", "cli", "mcp", "memory", "agent", "skill", "plugin", "loop", "bot"}
 	if !reflect.DeepEqual(ListingTypes, want) {
 		t.Fatalf("ListingTypes = %#v\nwant %#v", ListingTypes, want)
 	}

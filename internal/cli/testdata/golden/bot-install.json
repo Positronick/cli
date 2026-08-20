@@ -1,0 +1,8 @@
+{
+  "listing": {
+    "slug": "daily-briefing",
+    "name": "Daily Briefing",
+    "type": "bot"
+  },
+  "prompt": "Summarize overnight PRs, incidents, and calendar for the team standup."
+}

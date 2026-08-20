@@ -33,7 +33,7 @@ type listingDetail struct {
 }
 
 // listingNounShorts gives each registry noun its own help line.
-// Keys mirror api.ListingTypes (harness, cli, mcp, memory, agent, skill, plugin, loop).
+// Keys mirror api.ListingTypes (harness, cli, mcp, memory, agent, skill, plugin, loop, bot).
 var listingNounShorts = map[string]string{
 	"harness": "Discover agent harnesses in the registry",
 	"cli":     "Discover official CLI tools in the registry",
@@ -43,6 +43,7 @@ var listingNounShorts = map[string]string{
 	"skill":   "Discover agent skills in the registry",
 	"plugin":  "Discover agent plugins in the registry",
 	"loop":    "Discover reusable agent loops in the registry",
+	"bot":     "Discover scheduled agent bots in the registry",
 }
 
 // newListingNounCmd builds one registry noun from api.ListingTypes with the

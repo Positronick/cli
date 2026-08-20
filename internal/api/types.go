@@ -19,7 +19,7 @@ import (
 
 // ListingTypes are the kinds of official tooling the registry catalogs.
 // Mirrors LISTING_TYPES in src/lib/types.ts.
-var ListingTypes = []string{"harness", "cli", "mcp", "memory", "agent", "skill", "plugin", "loop"}
+var ListingTypes = []string{"harness", "cli", "mcp", "memory", "agent", "skill", "plugin", "loop", "bot"}
 
 // ListingCategories are the broad subject labels a listing may use.
 // Mirrors LISTING_CATEGORIES in src/lib/types.ts.
@@ -115,7 +115,7 @@ type Listing struct {
 	// InstallCmd is the canonical official install/run command, if any.
 	InstallCmd *string `json:"installCmd"`
 	// Data holds type-specific extras (e.g. LoopData for loops, SkillData for
-	// skills); {} when none.
+	// skills, BotData for bots); {} when none.
 	Data map[string]any `json:"data"`
 	// HasAsset is true when a hosted SKILL.md asset exists for this (skill) listing.
 	HasAsset bool `json:"hasAsset"`
@@ -165,6 +165,23 @@ func (l *Listing) SkillData() (SkillData, error) {
 		return sd, fmt.Errorf("decoding skill data for %q: %w", l.Slug, err)
 	}
 	return sd, nil
+}
+
+// BotData decodes the untyped Data payload into BotData. Empty or nil Data
+// yields the zero value; a wrong-typed field is an error, never a silent zero.
+func (l *Listing) BotData() (BotData, error) {
+	var bd BotData
+	if len(l.Data) == 0 {
+		return bd, nil
+	}
+	b, err := json.Marshal(l.Data)
+	if err != nil {
+		return bd, fmt.Errorf("encoding listing data: %w", err)
+	}
+	if err := json.Unmarshal(b, &bd); err != nil {
+		return bd, fmt.Errorf("decoding bot data for %q: %w", l.Slug, err)
+	}
+	return bd, nil
 }
 
 // Profile is a verified person or org that authors registry tooling. Mirrors
@@ -219,6 +236,21 @@ type LoopData struct {
 type SkillData struct {
 	// Bundles are slugs of listings this skill bundles — its install-time deps.
 	Bundles []string `json:"bundles,omitempty"`
+}
+
+// BotData is the type-specific extras for a `bot` listing, stored in
+// Listing.Data. Mirrors BotData in src/lib/types.ts.
+type BotData struct {
+	// Prompt is the paste-ready instruction the bot runs on each fire.
+	Prompt string `json:"prompt"`
+	// Integrations are services the bot is wired to (e.g. github, slack).
+	Integrations []string `json:"integrations,omitempty"`
+	// Schedule is the cron expression the bot fires on, if any.
+	Schedule string `json:"schedule,omitempty"`
+	// Platforms are harnesses the bot is known to run on.
+	Platforms []string `json:"platforms,omitempty"`
+	// SoulSlug is the soul this bot is paired with, if any.
+	SoulSlug string `json:"soulSlug,omitempty"`
 }
 
 // FeedSource is a subscribed blog feed source the ingestor mirrors into posts

@@ -17,8 +17,8 @@ import (
 )
 
 // attachInstallCommands wires the install verbs onto the existing noun
-// commands by lookup (souls and loops have bespoke installs; every other
-// registry noun shares the install-command flow) and registers the
+// commands by lookup (souls, loops and bots have bespoke installs; every
+// other registry noun shares the install-command flow) and registers the
 // root-level init and self commands.
 func attachInstallCommands(root *cobra.Command) {
 	for _, c := range root.Commands() {
@@ -27,6 +27,8 @@ func attachInstallCommands(root *cobra.Command) {
 			c.AddCommand(newSoulInstallCmd())
 		case "loop":
 			c.AddCommand(newLoopInstallCmd())
+		case "bot":
+			c.AddCommand(newBotInstallCmd())
 		case "harness", "cli", "mcp", "memory", "agent", "skill", "plugin":
 			c.AddCommand(newListingInstallCmd(c.Name()))
 		}
@@ -61,6 +63,12 @@ type listingRef struct {
 type loopInstallResult struct {
 	Listing listingRef `json:"listing"`
 	Kickoff string     `json:"kickoff"`
+}
+
+// botInstallResult is the `bot install --json` contract.
+type botInstallResult struct {
+	Listing listingRef `json:"listing"`
+	Prompt  string     `json:"prompt"`
 }
 
 // listingInstallResult is the `<noun> install --json` contract. ExitCode is
@@ -272,6 +280,64 @@ func newLoopInstallCmd() *cobra.Command {
 			return nil
 		},
 	}
+}
+
+func newBotInstallCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "install <slug>",
+		Short: "Print a bot's prompt, ready to paste into your agent",
+		Long: "A bot installs as a prompt, not a file: this prints the bot's prompt " +
+			"(or one generated from its name, integrations and schedule) ready to paste " +
+			"into your agent.",
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			p, err := printerFor(cmd)
+			if err != nil {
+				return err
+			}
+			client, err := clientFor(cmd)
+			if err != nil {
+				return err
+			}
+
+			slug := args[0]
+			listing, err := fetchTypedListing(cmd.Context(), client, "bot", slug)
+			if err != nil {
+				return err
+			}
+			bot, err := listing.BotData()
+			if err != nil {
+				return err
+			}
+			prompt := bot.Prompt
+			if prompt == "" {
+				prompt = generatedBotPrompt(listing, bot)
+			}
+
+			if p.Mode.JSON {
+				return p.EmitJSON(botInstallResult{
+					Listing: listingRef{Slug: listing.Slug, Name: listing.Name, Type: listing.Type},
+					Prompt:  prompt,
+				})
+			}
+			p.Human("PROMPT\n%s\n", prompt)
+			return nil
+		},
+	}
+}
+
+// generatedBotPrompt builds a paste-ready prompt for a bot that ships without
+// one, from its name plus whatever integrations and schedule it has.
+func generatedBotPrompt(l *api.Listing, bot api.BotData) string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "Run the %s bot.", l.Name)
+	if len(bot.Integrations) > 0 {
+		fmt.Fprintf(&b, "\nIntegrations: %s", strings.Join(bot.Integrations, ", "))
+	}
+	if bot.Schedule != "" {
+		fmt.Fprintf(&b, "\nSchedule: %s", bot.Schedule)
+	}
+	return b.String()
 }
 
 // generatedKickoff builds a paste-ready kickoff prompt for a loop that ships

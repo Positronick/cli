@@ -10,7 +10,7 @@ const serverInstructions = `positronick is the registry of agent capabilities on
 
 Souls are installable SOUL.md personality files: soul_search → soul_show →
 soul_install. The wider registry of verified tooling (harnesses, CLIs, MCP
-servers, memory, agents, skills, plugins, loops): listing_search → listing_show.
+servers, memory, agents, skills, plugins, loops, bots): listing_search → listing_show.
 
 Search results are slim cards; always fetch the full record with the _show
 tool before acting on an entry. soul_install has side effects — it counts
