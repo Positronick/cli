@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **`memory` listing type**: `positronick memory search|list|show|install` — platform LISTING_TYPES
+- **`bot` listing type**: `positronick bot search|list|show|install` — scheduled agent bots; install prints the bot's prompt (no `--run`)
 - **Listing categories**: Memory and Observability on admin validation
 - **`positronick research`**: the agent-facing "what's new" feed over positronick.com's published blog posts, mirrored GitHub releases, and mirrored news links — newest first, so agents avoid stale knowledge. Filter with `--kind` (article/release/link), `--category`, `--tag`, or a free-text query, and poll just the delta with `--since <iso>`; the printed `latest` timestamp is the value to pass back next time. Read-only and unauthenticated, like the soul/listing reads. Backed by the public `GET /api/research` endpoint.
 - **`positronick blog`**: read the positronick.com blog from the terminal — `blog list` (newest first, optional `--kind` article/release/link) and `blog show <slug>`, with `--raw` printing the markdown body verbatim and did-you-mean hints (exit 3) on a missing slug. Read-only and unauthenticated, mirroring the soul/listing reads. Backed by the public `GET /api/blog`, `/api/blog/{slug}`, and `/api/blog/{slug}.md` endpoints.
