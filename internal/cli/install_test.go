@@ -289,6 +289,50 @@ func TestInstallWrongTypeHint(t *testing.T) {
 	}
 }
 
+// bot install prints the registry's prompt. There is no --run: bots install
+// as a prompt, not a command.
+func TestBotInstall(t *testing.T) {
+	isolateHome(t)
+	srv := newMockServer(t)
+
+	stdout, stderr, code := executeAgainst(t, srv.URL, "bot", "install", "daily-briefing", "--json")
+	if code != 0 {
+		t.Fatalf("exit code = %d, want 0 (stderr: %s)", code, stderr)
+	}
+	assertGolden(t, "bot-install.json", stdout)
+
+	stdout, _, code = executeAgainst(t, srv.URL, "bot", "install", "daily-briefing")
+	if code != 0 {
+		t.Fatalf("human exit code = %d, want 0", code)
+	}
+	if !strings.HasPrefix(stdout, "PROMPT\n") {
+		t.Errorf("stdout = %q, want the PROMPT heading first", stdout)
+	}
+	if !strings.Contains(stdout, "Summarize overnight PRs") {
+		t.Errorf("stdout = %q, want the bot prompt", stdout)
+	}
+}
+
+// A bot without a prompt still installs: the prompt is generated from its
+// name, integrations and schedule.
+func TestGeneratedBotPrompt(t *testing.T) {
+	l := &api.Listing{Name: "Daily Briefing"}
+	full := api.BotData{
+		Integrations: []string{"github", "slack"},
+		Schedule:     "0 9 * * 1-5",
+	}
+	got := generatedBotPrompt(l, full)
+	for _, want := range []string{"Daily Briefing", "Integrations: github, slack", "Schedule: 0 9 * * 1-5"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("prompt = %q, want it to contain %q", got, want)
+		}
+	}
+
+	if got := generatedBotPrompt(l, api.BotData{}); !strings.Contains(got, "Daily Briefing") {
+		t.Errorf("prompt for an empty recipe = %q, want at least the bot named", got)
+	}
+}
+
 // A loop without a kickoff still installs: the prompt is generated from the
 // recipe fields that exist.
 func TestGeneratedKickoff(t *testing.T) {

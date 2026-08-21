@@ -54,7 +54,7 @@ func addListingTools(srv *mcp.Server, opts Options) {
 	mcp.AddTool(srv, &mcp.Tool{
 		Name: "listing_search",
 		Description: "Search positronick.com's registry of verified agent tooling — harnesses, " +
-			"CLIs, MCP servers, agent SDKs, skills, plugins and loops — ranked by fuzzy " +
+			"CLIs, MCP servers, memory, agent SDKs, skills, plugins, loops and bots — ranked by fuzzy " +
 			"relevance. Follow up with listing_show for the full record.",
 		InputSchema: inputSchema[listingSearchIn](func(s *jsonschema.Schema) {
 			s.Properties["type"].Enum = enumOf(api.ListingTypes)

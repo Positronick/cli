@@ -146,9 +146,10 @@ var Souls = []api.Soul{
 	},
 }
 
-// Listings is the fixture registry: five listings covering harness, cli, mcp,
-// skill and a loop with a full LoopData payload (the `loop show` fixture).
-// The agent and plugin types are deliberately empty so empty-result output is
+// Listings is the fixture registry: six listings covering harness, cli, mcp,
+// skill, a loop with a full LoopData payload (the `loop show` fixture), and a
+// bot with a full BotData payload (the `bot install` fixture). The agent,
+// plugin and memory types are deliberately empty so empty-result output is
 // pinned too.
 var Listings = []api.Listing{
 	{
@@ -293,6 +294,39 @@ var Listings = []api.Listing{
 		ChargeCount:      3,
 		CreatedAt:        "2026-05-01T09:00:00.000Z",
 		UpdatedAt:        "2026-05-02T09:00:00.000Z",
+	},
+	{
+		ID:            "01LSTDAILYBRIEFING000000XX",
+		Slug:          "daily-briefing",
+		ProfileHandle: "nsollazzo",
+		ProfileName:   "Nicholas Sollazzo",
+		ProfileTier:   ptr("official"),
+		Name:          "Daily Briefing",
+		Type:          "bot",
+		Tagline:       "A weekday standup bot that summarizes overnight activity",
+		Description:   ptr("A scheduled briefing covering GitHub PRs, incidents, and the calendar."),
+		Category:      "Productivity",
+		Tags:          []string{"standup", "schedule"},
+		Official:      true,
+		SourceURL:     "https://example.com/daily-briefing",
+		RepoURL:       nil,
+		InstallCmd:    nil,
+		Data: map[string]any{
+			"prompt":       "Summarize overnight PRs, incidents, and calendar for the team standup.",
+			"integrations": []any{"github", "slack"},
+			"schedule":     "0 9 * * 1-5",
+			"platforms":    []any{"hermes"},
+			"soulSlug":     "sherlock",
+		},
+		HasAsset:         false,
+		AssetVersion:     nil,
+		AssetContentHash: nil,
+		Confidence:       "official",
+		Status:           "published",
+		DownloadCount:    8,
+		ChargeCount:      1,
+		CreatedAt:        "2026-06-01T09:00:00.000Z",
+		UpdatedAt:        "2026-06-02T09:00:00.000Z",
 	},
 }
 

@@ -493,8 +493,8 @@ func newListingCmd() *cobra.Command {
 	cmd := markAdmin(&cobra.Command{
 		Use:   "listing",
 		Short: "Create and update registry listings (admin)",
-		Long: "Write access to registry listings of any type — the public type nouns (harness, " +
-			"cli, mcp, agent, skill, plugin, loop) stay read-only. Listings are authored by an " +
+		Long: "Write access to registry listings of any type — the public type nouns (" +
+			strings.Join(api.ListingTypes, ", ") + ") stay read-only. Listings are authored by an " +
 			"existing profile handle; profiles themselves stay git-curated." + adminNote,
 	})
 	cmd.AddCommand(newListingCreateCmd(), newListingUpdateCmd())

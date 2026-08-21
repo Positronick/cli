@@ -43,7 +43,7 @@ var exitCodeMeanings = map[string]string{
 
 const agentDocsIntro = "`positronick` is the command-line client for positronick.com. It discovers agent " +
 	"capabilities: souls (installable SOUL.md personality files), a registry of official " +
-	"tooling (harnesses, CLIs, MCP servers, agents, skills, plugins, loops), and a `research` " +
+	"tooling (harnesses, CLIs, MCP servers, memory, agents, skills, plugins, loops, bots), and a `research` " +
 	"feed of what's new (articles, releases, links) so agents avoid stale knowledge. It is built to be " +
 	"driven by coding agents — pass `--json` to any command for stable machine-readable JSON on " +
 	"stdout, read progress and errors from stderr, and branch on the exit code. Read commands " +

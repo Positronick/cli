@@ -41,10 +41,12 @@ const (
 )
 
 // Enum fixtures mirroring src/lib/types.ts in the product repo.
+// Listing categories come from api.ListingCategories so mockadmin validation
+// stays in lockstep with the platform LISTING_CATEGORIES contract.
 var (
 	soulCategories    = []string{"Technical", "Professional", "Creative", "Educational", "Wellness", "Research", "Experimental", "Playful"}
 	soulFrameworks    = []string{"hermes", "openclaw", "claude-code", "cursor"}
-	listingCategories = []string{"AI/ML", "DevOps", "Cloud", "Web", "Data", "Security", "Technical", "Productivity"}
+	listingCategories = api.ListingCategories
 	statuses          = []string{"draft", "pending", "published"}
 )
 

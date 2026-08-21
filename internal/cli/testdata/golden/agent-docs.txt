@@ -1,6 +1,6 @@
 # positronick — agent manual
 
-`positronick` is the command-line client for positronick.com. It discovers agent capabilities: souls (installable SOUL.md personality files), a registry of official tooling (harnesses, CLIs, MCP servers, agents, skills, plugins, loops), and a `research` feed of what's new (articles, releases, links) so agents avoid stale knowledge. It is built to be driven by coding agents — pass `--json` to any command for stable machine-readable JSON on stdout, read progress and errors from stderr, and branch on the exit code. Read commands never prompt. Hidden admin commands (create/update for souls and listings, create/list for profiles, list/create/update/sync for blog feed sources, and create/update/list for blog posts) exist and appear in help and in these docs after logging in with an admin account.
+`positronick` is the command-line client for positronick.com. It discovers agent capabilities: souls (installable SOUL.md personality files), a registry of official tooling (harnesses, CLIs, MCP servers, memory, agents, skills, plugins, loops, bots), and a `research` feed of what's new (articles, releases, links) so agents avoid stale knowledge. It is built to be driven by coding agents — pass `--json` to any command for stable machine-readable JSON on stdout, read progress and errors from stderr, and branch on the exit code. Read commands never prompt. Hidden admin commands (create/update for souls and listings, create/list for profiles, list/create/update/sync for blog feed sources, and create/update/list for blog posts) exist and appear in help and in these docs after logging in with an admin account.
 
 Exit codes:
 
@@ -140,6 +140,48 @@ Show one blog post in full
 Flags:
 
 - `--raw` (default `false`): print only the markdown body verbatim (overrides --json)
+
+## positronick bot
+
+Usage: `positronick bot [flags]`
+
+Discover scheduled agent bots in the registry
+
+## positronick bot install
+
+Usage: `positronick bot install <slug> [flags]`
+
+Print a bot's prompt, ready to paste into your agent
+
+## positronick bot list
+
+Usage: `positronick bot list [flags]`
+
+List all bot listings
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `name`): sort order: relevance, name, downloads or newest
+
+## positronick bot search
+
+Usage: `positronick bot search <query> [flags]`
+
+Search bot listings by fuzzy relevance
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `relevance`): sort order: relevance, name, downloads or newest
+
+## positronick bot show
+
+Usage: `positronick bot show <slug> [flags]`
+
+Show one bot listing in full
 
 ## positronick cli
 
@@ -403,6 +445,52 @@ Flags:
 Usage: `positronick mcp show <slug> [flags]`
 
 Show one mcp listing in full
+
+## positronick memory
+
+Usage: `positronick memory [flags]`
+
+Discover memory and context engines in the registry
+
+## positronick memory install
+
+Usage: `positronick memory install <slug> [flags]`
+
+Print (or run with --run) the official install command for one memory
+
+Flags:
+
+- `--run` (default `false`): execute the install command via `sh -c` instead of printing it
+
+## positronick memory list
+
+Usage: `positronick memory list [flags]`
+
+List all memory listings
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `name`): sort order: relevance, name, downloads or newest
+
+## positronick memory search
+
+Usage: `positronick memory search <query> [flags]`
+
+Search memory listings by fuzzy relevance
+
+Flags:
+
+- `--category` (default ``): only results in this category (case-insensitive)
+- `--limit` (default `20`): maximum number of results
+- `--sort` (default `relevance`): sort order: relevance, name, downloads or newest
+
+## positronick memory show
+
+Usage: `positronick memory show <slug> [flags]`
+
+Show one memory listing in full
 
 ## positronick plugin
 

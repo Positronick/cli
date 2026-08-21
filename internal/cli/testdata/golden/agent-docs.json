@@ -188,6 +188,74 @@
       ]
     },
     {
+      "path": "positronick bot",
+      "use": "positronick bot [flags]",
+      "description": "Discover scheduled agent bots in the registry",
+      "flags": []
+    },
+    {
+      "path": "positronick bot install",
+      "use": "positronick bot install \u003cslug\u003e [flags]",
+      "description": "Print a bot's prompt, ready to paste into your agent",
+      "flags": []
+    },
+    {
+      "path": "positronick bot list",
+      "use": "positronick bot list [flags]",
+      "description": "List all bot listings",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "name"
+        }
+      ]
+    },
+    {
+      "path": "positronick bot search",
+      "use": "positronick bot search \u003cquery\u003e [flags]",
+      "description": "Search bot listings by fuzzy relevance",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "relevance"
+        }
+      ]
+    },
+    {
+      "path": "positronick bot show",
+      "use": "positronick bot show \u003cslug\u003e [flags]",
+      "description": "Show one bot listing in full",
+      "flags": []
+    },
+    {
       "path": "positronick cli",
       "use": "positronick cli [flags]",
       "description": "Discover official CLI tools in the registry",
@@ -587,6 +655,81 @@
       "path": "positronick mcp show",
       "use": "positronick mcp show \u003cslug\u003e [flags]",
       "description": "Show one mcp listing in full",
+      "flags": []
+    },
+    {
+      "path": "positronick memory",
+      "use": "positronick memory [flags]",
+      "description": "Discover memory and context engines in the registry",
+      "flags": []
+    },
+    {
+      "path": "positronick memory install",
+      "use": "positronick memory install \u003cslug\u003e [flags]",
+      "description": "Print (or run with --run) the official install command for one memory",
+      "flags": [
+        {
+          "name": "run",
+          "shorthand": "",
+          "usage": "execute the install command via `sh -c` instead of printing it",
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "path": "positronick memory list",
+      "use": "positronick memory list [flags]",
+      "description": "List all memory listings",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "name"
+        }
+      ]
+    },
+    {
+      "path": "positronick memory search",
+      "use": "positronick memory search \u003cquery\u003e [flags]",
+      "description": "Search memory listings by fuzzy relevance",
+      "flags": [
+        {
+          "name": "category",
+          "shorthand": "",
+          "usage": "only results in this category (case-insensitive)",
+          "default": ""
+        },
+        {
+          "name": "limit",
+          "shorthand": "",
+          "usage": "maximum number of results",
+          "default": "20"
+        },
+        {
+          "name": "sort",
+          "shorthand": "",
+          "usage": "sort order: relevance, name, downloads or newest",
+          "default": "relevance"
+        }
+      ]
+    },
+    {
+      "path": "positronick memory show",
+      "use": "positronick memory show \u003cslug\u003e [flags]",
+      "description": "Show one memory listing in full",
       "flags": []
     },
     {
