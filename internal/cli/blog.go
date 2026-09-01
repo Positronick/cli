@@ -139,24 +139,15 @@ func newBlogShowCmd() *cobra.Command {
 }
 
 // blogNotFound builds the exit-3 error for a missing slug, with a did-you-mean
-// hint when the gallery has a plausible neighbor. A failing suggestion fetch
-// never masks the original not-found. Mirrors soulNotFound.
+// hint when the gallery has a plausible neighbor. The entity is a "post" but it
+// is listed under the `blog` command. See notFoundWithSuggestion.
 func blogNotFound(ctx context.Context, client *api.Client, slug string) error {
-	hint := "Run: positronick blog list"
-	if posts, err := client.Posts(ctx, ""); err == nil {
-		slugs := make([]string, len(posts))
-		for i, post := range posts {
-			slugs[i] = post.Slug
-		}
-		if match := closestSlug(slug, slugs); match == slug {
-			// The list knows the slug but the detail fetch 404'd: an older server,
-			// not a typo — say so rather than suggesting the input back.
-			hint = "the server lists this post but could not return its details — positronick.com may be running an older API"
-		} else if match != "" {
-			hint = fmt.Sprintf("did you mean %q? %s", match, hint)
-		}
+	posts, err := client.Posts(ctx, "")
+	slugs := make([]string, len(posts))
+	for i, post := range posts {
+		slugs[i] = post.Slug
 	}
-	return output.NotFoundError(fmt.Sprintf("post %q not found", slug), hint)
+	return notFoundWithSuggestion("post", "blog", slug, slugs, err)
 }
 
 func renderBlogDetail(p *output.Printer, post *api.Post) {
