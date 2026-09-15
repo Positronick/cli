@@ -269,7 +269,8 @@
             "hermes",
             "claude",
             "cursor",
-            "openclaw"
+            "openclaw",
+            "grok"
           ],
           "type": "string"
         }

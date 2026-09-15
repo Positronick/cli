@@ -20,7 +20,7 @@ func mkdirs(t *testing.T, base string, names ...string) string {
 // DetectHarness picks the install target from on-disk harness markers so that
 // `positronick soul install` lands the SOUL.md where the user's actual tooling
 // reads it — cwd beats home (a project-local harness wins over a global one),
-// and the priority order within a directory is hermes, claude, cursor, openclaw.
+// and the priority order within a directory is hermes, claude, cursor, openclaw, grok.
 func TestDetectHarness(t *testing.T) {
 	tests := []struct {
 		name string
@@ -33,12 +33,15 @@ func TestDetectHarness(t *testing.T) {
 		{"claude in cwd", []string{".claude"}, nil, "claude"},
 		{"cursor in cwd", []string{".cursor"}, nil, "cursor"},
 		{"openclaw in cwd", []string{".openclaw"}, nil, "openclaw"},
+		{"grok in cwd", []string{".grok"}, nil, "grok"},
 		{"hermes in home only", nil, []string{".hermes"}, "hermes"},
 		{"hermes beats claude in the same dir", []string{".claude", ".hermes"}, nil, "hermes"},
 		{"claude beats cursor in the same dir", []string{".cursor", ".claude"}, nil, "claude"},
 		{"cursor beats openclaw in the same dir", []string{".openclaw", ".cursor"}, nil, "cursor"},
+		{"openclaw beats grok in the same dir", []string{".grok", ".openclaw"}, nil, "openclaw"},
 		{"any cwd match beats any home match", []string{".openclaw"}, []string{".hermes"}, "openclaw"},
 		{"home is the fallback", nil, []string{".cursor"}, "cursor"},
+		{"grok never outranks an existing harness", []string{".grok", ".hermes"}, nil, "hermes"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

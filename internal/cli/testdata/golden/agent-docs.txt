@@ -630,9 +630,9 @@ Install a soul's SOUL.md for your agent framework
 Flags:
 
 - `--force` (default `false`): overwrite an existing file without asking
-- `--link` (default `false`): claude target only: add an @-import line to ~/.claude/CLAUDE.md
+- `--link` (default `false`): claude or grok target only: claude gets an @-import line in ~/.claude/CLAUDE.md, grok gets an instruction line in ~/.grok/AGENTS.md (Grok Build does not expand @-imports)
 - `--path` (default ``): write the SOUL.md to this exact file instead of the target's path
-- `--target` (default ``): install target: hermes, claude, cursor or openclaw (default: detected harness, else hermes)
+- `--target` (default ``): install target: hermes, claude, cursor, openclaw or grok (default: detected harness, else hermes)
 - `--workspace` (default ``): openclaw target only: the OpenClaw agent id or workspace dir; default: the single configured agent
 
 ## positronick soul list

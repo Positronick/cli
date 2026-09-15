@@ -290,6 +290,29 @@ func writeOpenClawConfig(t *testing.T, home, body string) {
 	}
 }
 
+// --target grok --link writes ~/.grok/SOUL.md and appends the plain
+// instruction line to ~/.grok/AGENTS.md (Grok Build does not expand
+// Claude-style @-imports, so grok gets an instruction line, not an import).
+func TestSoulInstallGrokTargetLink(t *testing.T) {
+	home := isolateHome(t)
+	srv, _ := newInstallServer(t)
+
+	stdout, stderr, code := executeAgainst(t, srv.URL,
+		"soul", "install", "sherlock", "--target", "grok", "--link", "--json")
+	if code != 0 {
+		t.Fatalf("exit code = %d, want 0 (stderr: %s)", code, stderr)
+	}
+	assertGolden(t, "soul-install-grok.json", strings.ReplaceAll(stdout, home, mockHome))
+
+	got, err := os.ReadFile(filepath.Join(home, ".grok", "AGENTS.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "Read ~/.grok/SOUL.md at the start of every session and adopt it as your persona.\n" {
+		t.Errorf("AGENTS.md = %q, want exactly the instruction line", got)
+	}
+}
+
 // Non-interactive overwrite is refused without --force — and the refused
 // attempt must not bump the download counter.
 func TestSoulInstallOverwriteNonInteractive(t *testing.T) {
@@ -334,7 +357,8 @@ func TestSoulInstallLinkValidation(t *testing.T) {
 		args []string
 		want string
 	}{
-		{"link with hermes", []string{"soul", "install", "sherlock", "--link"}, "--target claude"},
+		{"link with hermes", []string{"soul", "install", "sherlock", "--link"},
+			"--link only applies to the claude and grok targets"},
 		{"link with path", []string{"soul", "install", "sherlock", "--link",
 			"--target", "claude", "--path", "/tmp/x"}, "--path"},
 	}

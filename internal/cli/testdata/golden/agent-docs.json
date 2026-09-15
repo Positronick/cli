@@ -964,7 +964,7 @@
         {
           "name": "link",
           "shorthand": "",
-          "usage": "claude target only: add an @-import line to ~/.claude/CLAUDE.md",
+          "usage": "claude or grok target only: claude gets an @-import line in ~/.claude/CLAUDE.md, grok gets an instruction line in ~/.grok/AGENTS.md (Grok Build does not expand @-imports)",
           "default": "false"
         },
         {
@@ -976,7 +976,7 @@
         {
           "name": "target",
           "shorthand": "",
-          "usage": "install target: hermes, claude, cursor or openclaw (default: detected harness, else hermes)",
+          "usage": "install target: hermes, claude, cursor, openclaw or grok (default: detected harness, else hermes)",
           "default": ""
         },
         {

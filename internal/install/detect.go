@@ -11,12 +11,14 @@ import (
 
 // harnessMarkers maps each install target to the directory that betrays the
 // harness's presence, in priority order: hermes first (the issue-#9 default),
-// then claude, cursor, openclaw.
+// then claude, cursor, openclaw, grok (last, so it never outranks an
+// existing harness).
 var harnessMarkers = []struct{ dir, target string }{
 	{".hermes", "hermes"},
 	{".claude", "claude"},
 	{".cursor", "cursor"},
 	{".openclaw", "openclaw"},
+	{".grok", "grok"},
 }
 
 // DetectHarness returns the install target for the first harness marker

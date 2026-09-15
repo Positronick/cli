@@ -33,6 +33,7 @@ func TestTargetPath(t *testing.T) {
 		{"openclaw", "/home/ada/.openclaw/workspace/SOUL.md"},
 		{"claude", "/home/ada/.claude/SOUL.md"},
 		{"cursor", "/work/project/.cursor/rules/soul.mdc"},
+		{"grok", "/home/ada/.grok/SOUL.md"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.target, func(t *testing.T) {
@@ -193,6 +194,78 @@ func TestInstallClaudeLink(t *testing.T) {
 		}
 		if _, err := os.Stat(claudeMd(home)); !os.IsNotExist(err) {
 			t.Errorf("CLAUDE.md must not exist without Link, stat err = %v", err)
+		}
+	})
+}
+
+// grok --link makes Grok Build actually load the persona: Grok Build reads
+// $GROK_HOME/AGENTS.md as a global instruction file but does not expand
+// Claude-style @-imports inside it, so --link appends a plain instruction
+// line instead of an @-import.
+func TestInstallGrokLink(t *testing.T) {
+	grokAgentsMd := func(home string) string { return filepath.Join(home, ".grok", "AGENTS.md") }
+
+	t.Run("creates AGENTS.md when missing", func(t *testing.T) {
+		home := t.TempDir()
+		if _, err := Install(Options{Target: "grok", Home: home, Link: true,
+			Fetch: staticFetch(testBody)}); err != nil {
+			t.Fatalf("Install: %v", err)
+		}
+		got, err := os.ReadFile(grokAgentsMd(home))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(got) != grokSoulLine+"\n" {
+			t.Errorf("AGENTS.md = %q, want just the instruction line", got)
+		}
+	})
+
+	t.Run("appends to existing content, adding the missing newline", func(t *testing.T) {
+		home := t.TempDir()
+		if err := os.MkdirAll(filepath.Join(home, ".grok"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(grokAgentsMd(home), []byte("# My rules"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := Install(Options{Target: "grok", Home: home, Link: true, Force: true,
+			Fetch: staticFetch(testBody)}); err != nil {
+			t.Fatalf("Install: %v", err)
+		}
+		got, err := os.ReadFile(grokAgentsMd(home))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(got) != "# My rules\n"+grokSoulLine+"\n" {
+			t.Errorf("AGENTS.md = %q, want existing content then the instruction line", got)
+		}
+	})
+
+	t.Run("idempotent: a second install never duplicates the line", func(t *testing.T) {
+		home := t.TempDir()
+		for range 2 {
+			if _, err := Install(Options{Target: "grok", Home: home, Link: true, Force: true,
+				Fetch: staticFetch(testBody)}); err != nil {
+				t.Fatalf("Install: %v", err)
+			}
+		}
+		got, err := os.ReadFile(grokAgentsMd(home))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if n := strings.Count(string(got), grokSoulLine); n != 1 {
+			t.Errorf("instruction line appears %d times, want exactly 1:\n%s", n, got)
+		}
+	})
+
+	t.Run("no --link, no AGENTS.md touch", func(t *testing.T) {
+		home := t.TempDir()
+		if _, err := Install(Options{Target: "grok", Home: home,
+			Fetch: staticFetch(testBody)}); err != nil {
+			t.Fatalf("Install: %v", err)
+		}
+		if _, err := os.Stat(grokAgentsMd(home)); !os.IsNotExist(err) {
+			t.Errorf("AGENTS.md must not exist without Link, stat err = %v", err)
 		}
 	})
 }

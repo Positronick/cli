@@ -10,17 +10,23 @@ import (
 )
 
 // Targets are the supported install targets, in detection-priority order.
-var Targets = []string{"hermes", "claude", "cursor", "openclaw"}
+var Targets = []string{"hermes", "claude", "cursor", "openclaw", "grok"}
 
 // claudeImportLine is the line --link appends to ~/.claude/CLAUDE.md so
 // Claude Code actually loads the installed soul.
 const claudeImportLine = "@~/.claude/SOUL.md"
 
+// grokSoulLine is the line --link appends to $GROK_HOME/AGENTS.md so Grok
+// Build actually loads the installed soul. Grok Build does not expand
+// Claude-style @-imports inside AGENTS.md, so this is a plain instruction
+// line rather than an @-import.
+const grokSoulLine = "Read ~/.grok/SOUL.md at the start of every session and adopt it as your persona."
+
 // TargetPath returns the conventional SOUL.md location for a target.
-// hermes, claude and openclaw are home-anchored; cursor is project-local
-// (its rules live inside the repository). openclaw's result is the
-// no-config default (~/.openclaw/workspace/SOUL.md) — the actual OpenClaw
-// destination for `soul install` is resolved per-machine by
+// hermes, claude, openclaw and grok are home-anchored; cursor is
+// project-local (its rules live inside the repository). openclaw's result
+// is the no-config default (~/.openclaw/workspace/SOUL.md) — the actual
+// OpenClaw destination for `soul install` is resolved per-machine by
 // ResolveOpenClawWorkspaces + OpenClawSoulPath, since OpenClaw reads
 // SOUL.md from its configured agent workspace, not ~/.openclaw.
 func TargetPath(target, cwd, home string) (string, error) {
@@ -33,6 +39,8 @@ func TargetPath(target, cwd, home string) (string, error) {
 		return filepath.Join(home, ".claude", "SOUL.md"), nil
 	case "cursor":
 		return filepath.Join(cwd, ".cursor", "rules", "soul.mdc"), nil
+	case "grok":
+		return filepath.Join(home, ".grok", "SOUL.md"), nil
 	default:
 		return "", fmt.Errorf("unknown install target %q (valid: %s)",
 			target, strings.Join(Targets, ", "))
@@ -53,8 +61,8 @@ type Options struct {
 	Cwd, Home string
 	// Force overwrites an existing file without asking.
 	Force bool
-	// Link, with Target "claude", appends the @-import line to
-	// ~/.claude/CLAUDE.md when not already present.
+	// Link, with Target "claude" or "grok", appends the link line to
+	// ~/.claude/CLAUDE.md or $GROK_HOME/AGENTS.md when not already present.
 	Link bool
 	// Interactive enables the Confirm prompt for overwrites.
 	Interactive bool
@@ -117,9 +125,16 @@ func Install(opts Options) (*Result, error) {
 		return nil, fmt.Errorf("writing %s: %w", dest, err)
 	}
 
-	if opts.Target == "claude" && opts.Link {
-		if err := linkClaude(opts.Home); err != nil {
-			return nil, err
+	if opts.Link {
+		switch opts.Target {
+		case "claude":
+			if err := linkClaude(opts.Home); err != nil {
+				return nil, err
+			}
+		case "grok":
+			if err := linkGrok(opts.Home); err != nil {
+				return nil, err
+			}
 		}
 	}
 	return &Result{Path: dest, Bytes: len(content)}, nil
@@ -159,13 +174,27 @@ func gateOverwrite(dest string, opts Options) error {
 // is not already present, creating the file if needed and preserving
 // existing content (a missing trailing newline is added before appending).
 func linkClaude(home string) error {
-	path := filepath.Join(home, ".claude", "CLAUDE.md")
+	return appendLineIfAbsent(filepath.Join(home, ".claude", "CLAUDE.md"), claudeImportLine)
+}
+
+// linkGrok appends grokSoulLine to ~/.grok/AGENTS.md when the line is not
+// already present, creating the file if needed and preserving existing
+// content (a missing trailing newline is added before appending).
+func linkGrok(home string) error {
+	return appendLineIfAbsent(filepath.Join(home, ".grok", "AGENTS.md"), grokSoulLine)
+}
+
+// appendLineIfAbsent appends line to path when it is not already present as
+// its own line, creating the file (and parent directory) if needed and
+// preserving existing content — a missing trailing newline is added before
+// appending.
+func appendLineIfAbsent(path, line string) error {
 	existing, err := os.ReadFile(path)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("reading %s: %w", path, err)
 	}
-	for line := range strings.Lines(string(existing)) {
-		if strings.TrimSpace(line) == claudeImportLine {
+	for l := range strings.Lines(string(existing)) {
+		if strings.TrimSpace(l) == line {
 			return nil
 		}
 	}
@@ -173,7 +202,7 @@ func linkClaude(home string) error {
 	if content != "" && !strings.HasSuffix(content, "\n") {
 		content += "\n"
 	}
-	content += claudeImportLine + "\n"
+	content += line + "\n"
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return fmt.Errorf("creating %s: %w", filepath.Dir(path), err)
 	}
