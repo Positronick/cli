@@ -22,7 +22,7 @@ match CI.
 - **Every command's `RunE` returns a typed result through `internal/output`** — never `fmt.Print` directly in command code. `internal/output` is the single rendering authority (Printer, RenderTable, EmitJSON).
 - **Errors flow up to `Execute()`; render exactly once.** Commands return errors (use `internal/output` constructors: `NotFoundError`, `AuthError`, `CancelledError`, `Errorf`) and never print them. `cli.Execute` renders via `output.RenderError` and maps to the exit code. Cobra's `SilenceErrors`/`SilenceUsage` stay on.
 - **Conventional commits.** `feat:`, `fix:`, `docs:`, `chore:`, `ci:`, `test:`, `refactor:`.
-- **Repo-root artifacts are pinned from `cmd/positronick`.** Tests that guard a repo-root file against Go exports (.goreleaser.yaml/install.sh in `release_contract_test.go`, skills/positronick/SKILL.md in `skill_contract_test.go`) live there — not in `internal/*`. Add new drift guards to that package.
+- **Repo-root artifacts are pinned from `cmd/positronick`.** Tests that guard a repo-root file against Go exports (.goreleaser.yaml/install.sh in `release_contract_test.go`, skills/positronick/SKILL.md in `skill_contract_test.go`, `.claude-plugin/plugin.json`/`.claude-plugin/marketplace.json`/`.mcp.json` in `plugin_contract_test.go`) live there — not in `internal/*`. Add new drift guards to that package.
 
 ## Layout
 
@@ -45,3 +45,7 @@ match CI.
 
 - **MCP** — `hermes mcp add positronick --command positronick --args mcp serve` loads the five tools from `internal/mcpserver` over stdio. Keep `mcp-tools-list.json` golden in sync (it is the registered tool contract).
 - **Skill** — the bundled [`skills/positronick/SKILL.md`](skills/positronick/SKILL.md) drops into a Hermes profile's `skills/` dir and is auto-discovered; the agent then drives the CLI. Its drift guard is `skill_contract_test.go` (see the repo-root-artifacts rule above).
+
+## Harness integration (Claude Code)
+
+The repo root doubles as a Claude Code plugin — `.claude-plugin/plugin.json`, `.mcp.json` (auto-starts `positronick mcp serve`), and `.claude-plugin/marketplace.json` let `/plugin marketplace add Positronick/cli` + `/plugin install positronick@positronick` work with no separate plugin repo; drift guard is `plugin_contract_test.go` (see the repo-root-artifacts rule above).

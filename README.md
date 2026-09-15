@@ -135,6 +135,20 @@ Offline or working from a clone, copy the file into any category folder under
 your active profile instead:
 `cp skills/positronick/SKILL.md ~/.hermes/profiles/<profile>/skills/agent-tooling/positronick/SKILL.md`.
 
+## Use with Claude Code
+
+This repo is itself a Claude Code plugin — no separate plugin repo needed:
+
+```
+/plugin marketplace add Positronick/cli
+/plugin install positronick@positronick
+```
+
+The `positronick` binary must be on `PATH` (see [Install](#install)); the
+plugin auto-starts `positronick mcp serve` for you, giving the agent the same
+five Positronick MCP tools as the Hermes integration above, plus the bundled
+skill.
+
 ## Verifying releases
 
 Release archives ship with `checksums.txt` (SHA-256) and sigstore-backed build
