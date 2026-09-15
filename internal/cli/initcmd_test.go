@@ -63,6 +63,55 @@ func TestInitHuman(t *testing.T) {
 	}
 }
 
+// init --target openclaw routes through the same workspace resolver as
+// `soul install`: with a single configured agent it installs there.
+func TestInitOpenClawTargetSingleAgent(t *testing.T) {
+	home := isolateHome(t)
+	writeOpenClawConfig(t, home, `{"agents":{"defaults":{"workspace":"`+
+		filepath.ToSlash(filepath.Join(home, "agents", "main-ws"))+`"}}}`)
+	srv, mdHits := newInstallServer(t)
+
+	stdout, stderr, code := executeAgainst(t, srv.URL,
+		"init", "--soul", "sherlock", "--target", "openclaw", "--json")
+	if code != 0 {
+		t.Fatalf("exit code = %d, want 0 (stderr: %s)", code, stderr)
+	}
+	wantPath := filepath.Join(home, "agents", "main-ws", "SOUL.md")
+	if !strings.Contains(stdout, fmt.Sprintf(`"path": %q`, wantPath)) {
+		t.Errorf("stdout = %q, want the resolved workspace path %q", stdout, wantPath)
+	}
+	if n := mdHits.Load(); n != 1 {
+		t.Errorf(".md endpoint hit %d times, want exactly 1", n)
+	}
+}
+
+// init has no --workspace flag: a multi-agent OpenClaw setup fails loudly
+// with the same "several OpenClaw agents configured" message soul install
+// gives, instead of guessing a destination.
+func TestInitOpenClawTargetSeveralAgentsFailsLoud(t *testing.T) {
+	home := isolateHome(t)
+	writeOpenClawConfig(t, home, `{"agents":{"entries":{
+		"main": {"default": true, "workspace": "`+filepath.ToSlash(filepath.Join(home, "a"))+`"},
+		"researcher": {"workspace": "`+filepath.ToSlash(filepath.Join(home, "b"))+`"}
+	}}}`)
+	srv, mdHits := newInstallServer(t)
+
+	stdout, stderr, code := executeAgainst(t, srv.URL,
+		"init", "--soul", "sherlock", "--target", "openclaw", "--json")
+	if code != output.ExitError {
+		t.Fatalf("exit code = %d, want %d (stderr: %s)", code, output.ExitError, stderr)
+	}
+	if stdout != "" {
+		t.Errorf("stdout = %q, want empty on error", stdout)
+	}
+	if !strings.Contains(stderr, "several OpenClaw agents configured") {
+		t.Errorf("stderr = %q, want the several-agents message", stderr)
+	}
+	if n := mdHits.Load(); n != 0 {
+		t.Errorf(".md endpoint hit %d times on a refused install, want 0", n)
+	}
+}
+
 // Non-interactive init without --soul must not guess a personality for the
 // machine: it fails with the flag named.
 func TestInitRequiresSoulNonInteractive(t *testing.T) {

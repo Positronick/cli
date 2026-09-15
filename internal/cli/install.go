@@ -86,7 +86,8 @@ reads it:
   hermes    ~/.hermes/SOUL.md (the default)
   claude    ~/.claude/SOUL.md (--link also adds an @-import to ~/.claude/CLAUDE.md)
   cursor    ./.cursor/rules/soul.mdc (wrapped in mdc frontmatter)
-  openclaw  ~/.openclaw/SOUL.md
+  openclaw  <workspace>/SOUL.md (default ~/.openclaw/workspace/SOUL.md; --workspace
+            picks the agent when several are configured)
 
 Without --target the harness is detected from marker directories (.hermes,
 .claude, .cursor, .openclaw) in the working directory, then your home
@@ -121,6 +122,10 @@ func newSoulInstallCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			workspace, err := cmd.Flags().GetString("workspace")
+			if err != nil {
+				return err
+			}
 			p, err := printerFor(cmd)
 			if err != nil {
 				return err
@@ -149,6 +154,13 @@ func newSoulInstallCmd() *cobra.Command {
 				return output.ErrorWithHint("--link only applies to the claude target",
 					"re-run with --target claude")
 			}
+			if workspace != "" && target != "openclaw" {
+				return output.ErrorWithHint("--workspace only applies to the openclaw target",
+					"re-run with --target openclaw")
+			}
+			if workspace != "" && path != "" {
+				return output.Errorf("--workspace cannot be combined with --path")
+			}
 
 			spec := soulInstallSpec{
 				slug:          args[0],
@@ -167,6 +179,13 @@ func newSoulInstallCmd() *cobra.Command {
 				spec.target = ""
 				spec.reportTarget = "path"
 			}
+			if target == "openclaw" && path == "" {
+				dest, err := resolveOpenClawDest(home, workspace)
+				if err != nil {
+					return err
+				}
+				spec.path = dest
+			}
 
 			installed, err := installSoul(cmd, p, client, spec)
 			if err != nil {
@@ -183,7 +202,21 @@ func newSoulInstallCmd() *cobra.Command {
 	cmd.Flags().String("path", "", "write the SOUL.md to this exact file instead of the target's path")
 	cmd.Flags().Bool("force", false, "overwrite an existing file without asking")
 	cmd.Flags().Bool("link", false, "claude target only: add an @-import line to ~/.claude/CLAUDE.md")
+	cmd.Flags().String("workspace", "",
+		"openclaw target only: the OpenClaw agent id or workspace dir; default: the single configured agent")
 	return cmd
+}
+
+// resolveOpenClawDest resolves the real OpenClaw SOUL.md destination for the
+// openclaw target: OpenClaw reads SOUL.md from its configured agent
+// workspace, not ~/.openclaw, so this is used instead of install.TargetPath
+// wherever a soul is installed for openclaw.
+func resolveOpenClawDest(home, pick string) (string, error) {
+	workspaces, err := install.ResolveOpenClawWorkspaces(home, os.Getenv, os.ReadFile)
+	if err != nil {
+		return "", err
+	}
+	return install.OpenClawSoulPath(workspaces, pick, home)
 }
 
 // soulInstallSpec carries one resolved soul-install request into installSoul.

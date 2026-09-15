@@ -20,7 +20,9 @@ func staticFetch(body string) func() (string, error) {
 
 // TargetPath is the per-framework SOUL.md convention table — the paths agents
 // and docs promise. hermes/claude/openclaw are home-anchored; cursor is
-// project-local (its rules dir lives in the repo).
+// project-local (its rules dir lives in the repo). openclaw returns the
+// no-config default workspace path — soul install itself resolves the real
+// workspace via ResolveOpenClawWorkspaces/OpenClawSoulPath instead.
 func TestTargetPath(t *testing.T) {
 	cwd, home := "/work/project", "/home/ada"
 	tests := []struct {
@@ -28,7 +30,7 @@ func TestTargetPath(t *testing.T) {
 		want   string
 	}{
 		{"hermes", "/home/ada/.hermes/SOUL.md"},
-		{"openclaw", "/home/ada/.openclaw/SOUL.md"},
+		{"openclaw", "/home/ada/.openclaw/workspace/SOUL.md"},
 		{"claude", "/home/ada/.claude/SOUL.md"},
 		{"cursor", "/work/project/.cursor/rules/soul.mdc"},
 	}

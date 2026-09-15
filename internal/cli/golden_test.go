@@ -50,6 +50,7 @@ var goldenCases = []struct {
 	{"research.txt", []string{"research"}},
 	{"blog-show.txt", []string{"blog", "show", "positronick-cli-v0-1-0"}},
 	{"agent-docs.txt", []string{"agent-docs"}},
+	{"soul-install-help.txt", []string{"soul", "install", "--help"}},
 }
 
 func TestGolden(t *testing.T) {
