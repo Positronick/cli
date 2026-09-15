@@ -1,8 +1,9 @@
 // Package mcpserver embeds an MCP (Model Context Protocol) stdio server in
-// the positronick binary: five consolidated tools — soul_search, soul_show,
-// soul_install, listing_search, listing_show — each a thin wrapper over the
-// same internal packages the CLI commands use (the api client, the search
-// ranking, the install machinery), so the two surfaces can never disagree.
+// the positronick binary: six consolidated tools — soul_search, soul_show,
+// soul_install, listing_search, listing_show, skill_install — each a thin
+// wrapper over the same internal packages the CLI commands use (the api
+// client, the search ranking, the install machinery), so the two surfaces
+// can never disagree.
 // The MCP SDK dependency is confined to this package; the `mcp serve`
 // command in internal/cli is just glue.
 package mcpserver
@@ -39,7 +40,7 @@ type Options struct {
 	Suggest func(input string, candidates []string) string
 }
 
-// New builds the MCP server advertising the five positronick tools. The
+// New builds the MCP server advertising the six positronick tools. The
 // server name is "positronick"; the version is the binary's build version;
 // the initialize result carries serverInstructions for the client's model.
 func New(opts Options) *mcp.Server {
@@ -47,6 +48,7 @@ func New(opts Options) *mcp.Server {
 		&mcp.ServerOptions{Instructions: serverInstructions})
 	addSoulTools(srv, opts)
 	addListingTools(srv, opts)
+	addSkillTools(srv, opts)
 	return srv
 }
 

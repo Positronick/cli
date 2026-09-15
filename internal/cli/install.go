@@ -29,7 +29,9 @@ func attachInstallCommands(root *cobra.Command) {
 			c.AddCommand(newLoopInstallCmd())
 		case "bot":
 			c.AddCommand(newBotInstallCmd())
-		case "harness", "cli", "mcp", "memory", "agent", "skill", "plugin":
+		case "skill":
+			c.AddCommand(newSkillInstallCmd())
+		case "harness", "cli", "mcp", "memory", "agent", "plugin":
 			c.AddCommand(newListingInstallCmd(c.Name()))
 		}
 	}
@@ -271,6 +273,167 @@ func installSoul(cmd *cobra.Command, p *output.Printer, client *api.Client, spec
 	}, nil
 }
 
+// installedSkill is the payload of the `skill install --json` contract, for
+// a skill with a hosted SKILL.md asset.
+type installedSkill struct {
+	Slug    string `json:"slug"`
+	Name    string `json:"name"`
+	Version string `json:"version"`
+	Target  string `json:"target"`
+	Path    string `json:"path"`
+	Bytes   int    `json:"bytes"`
+}
+
+// skillInstallResult is the `skill install --json` contract when the skill
+// has a hosted asset: {"installed":{"slug","name","version","target","path","bytes"}}.
+type skillInstallResult struct {
+	Installed installedSkill `json:"installed"`
+}
+
+const skillInstallLong = `When the skill has a hosted SKILL.md asset, fetch it verbatim and write it to
+the target's conventional skills directory — the install folder is the
+skill's slug, which must equal its SKILL.md frontmatter name:
+
+  agents    ~/.agents/skills/<slug>/SKILL.md (the default — shared by Codex, Cursor, Grok Build and OpenClaw)
+  claude    ~/.claude/skills/<slug>/SKILL.md
+  cursor    ~/.cursor/skills/<slug>/SKILL.md
+  grok      ~/.grok/skills/<slug>/SKILL.md
+  codex     ~/.agents/skills/<slug>/SKILL.md (shares agents' directory)
+  openclaw  ~/.openclaw/skills/<slug>/SKILL.md (project-level uses .agents/skills instead)
+
+--project writes the project-local variant under the working directory
+instead of home. --path <dir> writes <dir>/<slug>/SKILL.md directly and
+cannot be combined with --target or --project.
+
+When the skill has no hosted asset, this falls back to printing (or with
+--run, running) its official install command instead — see the other
+listing install verbs; --run and --yes are rejected when the skill does have
+a hosted asset.
+
+This is the one command that counts as a download on positronick.com when a
+hosted asset exists. An existing file is only overwritten with --force.`
+
+func newSkillInstallCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "install <slug>",
+		Short: "Install a skill's SKILL.md, or print its install command",
+		Long:  skillInstallLong,
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			target, err := cmd.Flags().GetString("target")
+			if err != nil {
+				return err
+			}
+			project, err := cmd.Flags().GetBool("project")
+			if err != nil {
+				return err
+			}
+			path, err := cmd.Flags().GetString("path")
+			if err != nil {
+				return err
+			}
+			force, err := cmd.Flags().GetBool("force")
+			if err != nil {
+				return err
+			}
+			run, err := cmd.Flags().GetBool("run")
+			if err != nil {
+				return err
+			}
+			yes, err := cmd.Flags().GetBool("yes")
+			if err != nil {
+				return err
+			}
+			p, err := printerFor(cmd)
+			if err != nil {
+				return err
+			}
+			client, err := clientFor(cmd)
+			if err != nil {
+				return err
+			}
+
+			explicitTarget := cmd.Flags().Changed("target")
+			if path != "" && (explicitTarget || project) {
+				return output.Errorf("--path cannot be combined with --target or --project")
+			}
+			cwd, home, err := resolveCwdHome()
+			if err != nil {
+				return err
+			}
+			if path == "" {
+				if _, err := install.SkillDir(target, project, cwd, home); err != nil {
+					return output.Errorf("%s", err)
+				}
+			}
+
+			slug := args[0]
+			listing, err := fetchTypedListing(cmd.Context(), client, "skill", slug)
+			if err != nil {
+				return err
+			}
+
+			if !listing.HasAsset {
+				return runListingInstall(cmd, p, listing, "skill", run, yes)
+			}
+			if run || yes {
+				return output.ErrorWithHint("--run does not apply to a hosted skill",
+					fmt.Sprintf("skill %s installs its SKILL.md; omit --run", slug))
+			}
+
+			var dir, reportTarget string
+			if path != "" {
+				dir = path
+				reportTarget = "path"
+			} else {
+				if dir, err = install.SkillDir(target, project, cwd, home); err != nil {
+					return output.Errorf("%s", err)
+				}
+				reportTarget = target
+			}
+
+			res, err := install.Skill(install.SkillOptions{
+				Dir:           dir,
+				Slug:          listing.Slug,
+				Force:         force,
+				Interactive:   p.Mode.Interactive(),
+				Confirm:       confirmFunc(cmd),
+				OverwriteHint: "--force",
+				Fetch: func() (string, error) {
+					return client.SkillMarkdown(cmd.Context(), listing.Slug)
+				},
+			})
+			if err != nil {
+				return err
+			}
+
+			installed := installedSkill{
+				Slug:    listing.Slug,
+				Name:    res.Name,
+				Version: deref(listing.AssetVersion),
+				Target:  reportTarget,
+				Path:    res.Path,
+				Bytes:   res.Bytes,
+			}
+			if p.Mode.JSON {
+				return p.EmitJSON(skillInstallResult{Installed: installed})
+			}
+			p.Human("Installed skill %s v%s → %s\n", installed.Name, installed.Version, installed.Path)
+			if reportTarget == "agents" {
+				p.Status("hint: ~/.agents/skills is read by Codex, Cursor, Grok Build and OpenClaw; pass --target claude for Claude Code\n")
+			}
+			return nil
+		},
+	}
+	cmd.Flags().String("target", "agents", "install target: agents, claude, cursor, grok, codex or openclaw (default: agents)")
+	cmd.Flags().Bool("project", false, "write the project-local variant under the working directory instead of home")
+	cmd.Flags().String("path", "", "write the SKILL.md to this exact directory instead of the target's path")
+	cmd.Flags().Bool("force", false, "overwrite an existing file without asking")
+	cmd.Flags().Bool("run", false, "execute the install command via `sh -c` instead of printing it (only when the skill has no hosted asset)")
+	cmd.Flags().Bool("yes", false, "skip the confirmation prompt for --run (only when the skill has no hosted asset)")
+	return cmd
+}
+
 func newLoopInstallCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "install <slug>",
@@ -430,79 +593,87 @@ func newListingInstallCmd(listingType string) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			installCmd := listingInstallCommand(listing)
-			ref := listingRef{Slug: listing.Slug, Name: listing.Name, Type: listing.Type}
-
-			if !run {
-				if p.Mode.JSON {
-					return p.EmitJSON(listingInstallResult{
-						Listing: ref, InstallCmd: installCmd, Executed: false,
-					})
-				}
-				p.Human("%s\n", installCmd)
-				if deref(listing.InstallCmd) == "" {
-					p.Status("hint: %s has no official install command — its source URL is shown instead\n",
-						listing.Slug)
-				} else {
-					p.Status("hint: re-run with --run to execute\n")
-				}
-				suggestClaudeMCPAdd(p, listing)
-				return nil
-			}
-
-			if deref(listing.InstallCmd) == "" {
-				return output.ErrorWithHint(
-					fmt.Sprintf("%s %q has no official install command to run", listingType, slug),
-					"see "+listing.SourceURL)
-			}
-			if !yes {
-				if !p.Mode.Interactive() {
-					return output.ErrorWithHint(
-						"refusing to run the install command without confirmation",
-						fmt.Sprintf("re-run with --yes to execute %q", installCmd))
-				}
-				ok, err := confirmFunc(cmd)(fmt.Sprintf("Run %q?", installCmd))
-				if err != nil {
-					return err
-				}
-				if !ok {
-					return output.CancelledError("install cancelled")
-				}
-			}
-
-			p.Status("Running: %s\n", installCmd)
-			// In JSON mode stdout must stay pure JSON, so the command's
-			// stdout is streamed to stderr alongside its own stderr.
-			cmdStdout := p.Out
-			if p.Mode.JSON {
-				cmdStdout = p.Err
-			}
-			exitCode, err := runShell(cmd.Context(), installCmd, cmdStdout, p.Err)
-			if err != nil {
-				return err
-			}
-			if p.Mode.JSON {
-				if err := p.EmitJSON(listingInstallResult{
-					Listing: ref, InstallCmd: installCmd, Executed: true, ExitCode: &exitCode,
-				}); err != nil {
-					return err
-				}
-			}
-			if exitCode != 0 {
-				return &output.CodedError{
-					Code:    exitCode,
-					ErrCode: "error",
-					Message: fmt.Sprintf("install command exited with code %d", exitCode),
-				}
-			}
-			if !p.Mode.JSON {
-				p.Status("Done.\n")
-			}
-			return nil
+			return runListingInstall(cmd, p, listing, listingType, run, yes)
 		},
 	}
 	cmd.Flags().Bool("run", false, "execute the install command via `sh -c` instead of printing it")
 	return cmd
+}
+
+// runListingInstall is the print-or-run install-command flow shared by every
+// plain listing install verb (harness, cli, mcp, memory, agent, plugin) and
+// reused as skill install's fallback when a skill listing has no hosted
+// SKILL.md asset.
+func runListingInstall(cmd *cobra.Command, p *output.Printer, listing *api.Listing, listingType string, run, yes bool) error {
+	installCmd := listingInstallCommand(listing)
+	ref := listingRef{Slug: listing.Slug, Name: listing.Name, Type: listing.Type}
+
+	if !run {
+		if p.Mode.JSON {
+			return p.EmitJSON(listingInstallResult{
+				Listing: ref, InstallCmd: installCmd, Executed: false,
+			})
+		}
+		p.Human("%s\n", installCmd)
+		if deref(listing.InstallCmd) == "" {
+			p.Status("hint: %s has no official install command — its source URL is shown instead\n",
+				listing.Slug)
+		} else {
+			p.Status("hint: re-run with --run to execute\n")
+		}
+		suggestClaudeMCPAdd(p, listing)
+		return nil
+	}
+
+	if deref(listing.InstallCmd) == "" {
+		return output.ErrorWithHint(
+			fmt.Sprintf("%s %q has no official install command to run", listingType, listing.Slug),
+			"see "+listing.SourceURL)
+	}
+	if !yes {
+		if !p.Mode.Interactive() {
+			return output.ErrorWithHint(
+				"refusing to run the install command without confirmation",
+				fmt.Sprintf("re-run with --yes to execute %q", installCmd))
+		}
+		ok, err := confirmFunc(cmd)(fmt.Sprintf("Run %q?", installCmd))
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return output.CancelledError("install cancelled")
+		}
+	}
+
+	p.Status("Running: %s\n", installCmd)
+	// In JSON mode stdout must stay pure JSON, so the command's
+	// stdout is streamed to stderr alongside its own stderr.
+	cmdStdout := p.Out
+	if p.Mode.JSON {
+		cmdStdout = p.Err
+	}
+	exitCode, err := runShell(cmd.Context(), installCmd, cmdStdout, p.Err)
+	if err != nil {
+		return err
+	}
+	if p.Mode.JSON {
+		if err := p.EmitJSON(listingInstallResult{
+			Listing: ref, InstallCmd: installCmd, Executed: true, ExitCode: &exitCode,
+		}); err != nil {
+			return err
+		}
+	}
+	if exitCode != 0 {
+		return &output.CodedError{
+			Code:    exitCode,
+			ErrCode: "error",
+			Message: fmt.Sprintf("install command exited with code %d", exitCode),
+		}
+	}
+	if !p.Mode.JSON {
+		p.Status("Done.\n")
+	}
+	return nil
 }
 
 // fetchTypedListing fetches one listing and enforces the noun's type: a

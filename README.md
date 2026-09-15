@@ -118,6 +118,23 @@ The CLI is designed to be driven by coding agents:
 - **MCP server**: `positronick mcp serve` speaks MCP over stdio (`claude mcp add positronick -- positronick mcp serve`). The initialize response carries usage instructions for the client's model.
 - **Agent skill**: [`skills/positronick/SKILL.md`](skills/positronick/SKILL.md) teaches agents the full search → show → install workflow; it is published on the registry itself as the `positronick` skill listing once released.
 
+## Install a skill
+
+`positronick skill install <slug>` installs a skill listing's hosted `SKILL.md`
+verbatim — the same download-counted contract as `soul install`, for skills
+in the registry:
+
+```sh
+positronick skill install positronick   # dogfood: installs this CLI's own skill
+```
+
+By default it writes to `~/.agents/skills/<slug>/SKILL.md`, the shared
+standard read by Codex, Cursor, Grok Build and OpenClaw. Pass `--target
+claude|cursor|grok|codex|openclaw` for another agent's own directory, and
+`--project` to write the project-local variant under the working directory
+instead of home. A skill listing with no hosted asset falls back to printing
+(or with `--run`, running) its official install command instead.
+
 ## Use with Hermes
 
 Hermes treats `positronick` as a first-class harness target (it is the default
@@ -125,13 +142,13 @@ when no harness is specified). After [installing](#install) the binary, wire it
 into a Hermes agent one of two ways. Both work with anonymous reads; see
 [Authentication](#authentication) for installs and publishing.
 
-**As an MCP server (recommended)** — gives the agent the five Positronick tools
+**As an MCP server (recommended)** — gives the agent the six Positronick tools
 natively (`soul_search`, `soul_show`, `soul_install`, `listing_search`,
-`listing_show`):
+`listing_show`, `skill_install`):
 
 ```sh
 hermes mcp add positronick --command positronick --args mcp serve
-hermes mcp test positronick   # ✓ Connected — 5 tools
+hermes mcp test positronick   # ✓ Connected — 6 tools
 ```
 
 Start a new agent session to pick up the tools. To install or publish from

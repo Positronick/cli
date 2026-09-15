@@ -1,0 +1,40 @@
+When the skill has a hosted SKILL.md asset, fetch it verbatim and write it to
+the target's conventional skills directory — the install folder is the
+skill's slug, which must equal its SKILL.md frontmatter name:
+
+  agents    ~/.agents/skills/<slug>/SKILL.md (the default — shared by Codex, Cursor, Grok Build and OpenClaw)
+  claude    ~/.claude/skills/<slug>/SKILL.md
+  cursor    ~/.cursor/skills/<slug>/SKILL.md
+  grok      ~/.grok/skills/<slug>/SKILL.md
+  codex     ~/.agents/skills/<slug>/SKILL.md (shares agents' directory)
+  openclaw  ~/.openclaw/skills/<slug>/SKILL.md (project-level uses .agents/skills instead)
+
+--project writes the project-local variant under the working directory
+instead of home. --path <dir> writes <dir>/<slug>/SKILL.md directly and
+cannot be combined with --target or --project.
+
+When the skill has no hosted asset, this falls back to printing (or with
+--run, running) its official install command instead — see the other
+listing install verbs; --run and --yes are rejected when the skill does have
+a hosted asset.
+
+This is the one command that counts as a download on positronick.com when a
+hosted asset exists. An existing file is only overwritten with --force.
+
+Usage:
+  positronick skill install <slug> [flags]
+
+Flags:
+      --force           overwrite an existing file without asking
+  -h, --help            help for install
+      --path string     write the SKILL.md to this exact directory instead of the target's path
+      --project         write the project-local variant under the working directory instead of home
+      --run sh -c       execute the install command via sh -c instead of printing it (only when the skill has no hosted asset)
+      --target string   install target: agents, claude, cursor, grok, codex or openclaw (default: agents) (default "agents")
+      --yes             skip the confirmation prompt for --run (only when the skill has no hosted asset)
+
+Global Flags:
+      --base-url string   override the positronick.com API base URL
+      --json              emit machine-readable JSON on stdout
+      --no-color          disable color output
+      --quiet             suppress progress output on stderr

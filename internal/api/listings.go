@@ -33,3 +33,15 @@ func (c *Client) Listing(ctx context.Context, slug string) (*Listing, error) {
 	}
 	return &out.Listing, nil
 }
+
+// SkillMarkdown fetches a hosted skill's raw SKILL.md body verbatim: GET
+// /api/skills/{slug}.md. This is the install contract for skill listings
+// whose HasAsset is true — mirrors SoulMarkdown, and bumps the same public
+// download counter.
+func (c *Client) SkillMarkdown(ctx context.Context, slug string) (string, error) {
+	var body string
+	if err := c.do(ctx, http.MethodGet, "/api/skills/"+url.PathEscape(slug)+".md", nil, nil, &body); err != nil {
+		return "", err
+	}
+	return body, nil
+}

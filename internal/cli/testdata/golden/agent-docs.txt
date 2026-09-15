@@ -579,11 +579,16 @@ Discover agent skills in the registry
 
 Usage: `positronick skill install <slug> [flags]`
 
-Print (or run with --run) the official install command for one skill
+Install a skill's SKILL.md, or print its install command
 
 Flags:
 
-- `--run` (default `false`): execute the install command via `sh -c` instead of printing it
+- `--force` (default `false`): overwrite an existing file without asking
+- `--path` (default ``): write the SKILL.md to this exact directory instead of the target's path
+- `--project` (default `false`): write the project-local variant under the working directory instead of home
+- `--run` (default `false`): execute the install command via `sh -c` instead of printing it (only when the skill has no hosted asset)
+- `--target` (default `agents`): install target: agents, claude, cursor, grok, codex or openclaw (default: agents)
+- `--yes` (default `false`): skip the confirmation prompt for --run (only when the skill has no hosted asset)
 
 ## positronick skill list
 
