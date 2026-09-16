@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-16
+
 ### Added
 
 - **Claude Code plugin**: the repo root is now a Claude Code plugin (`.claude-plugin/plugin.json`, `.mcp.json`, `.claude-plugin/marketplace.json`) — `/plugin marketplace add Positronick/cli` then `/plugin install positronick@positronick` wires up the bundled skill and auto-starts `positronick mcp serve`, no separate plugin repo required.
@@ -66,7 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release-contract test pinning the `positronick_<os>_<arch>` / `checksums.txt` asset naming shared by .goreleaser.yaml, install.sh and self-update (new `selfupdate.AssetName`/`ChecksumsName` exports).
 - CI hardening: all actions SHA-pinned, `persist-credentials: false`, per-job release permissions, PR-run cancellation, new govulncheck + hygiene (tidy drift, shellcheck, actionlint) checks, weekly grouped Dependabot for gomod and actions.
 
-[Unreleased]: https://github.com/Positronick/cli/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/Positronick/cli/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Positronick/cli/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/Positronick/cli/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/Positronick/cli/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Positronick/cli/releases/tag/v0.1.0
