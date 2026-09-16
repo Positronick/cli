@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Claude Code plugin**: the repo root is now a Claude Code plugin (`.claude-plugin/plugin.json`, `.mcp.json`, `.claude-plugin/marketplace.json`) — `/plugin marketplace add Positronick/cli` then `/plugin install positronick@positronick` wires up the bundled skill and auto-starts `positronick mcp serve`, no separate plugin repo required.
+- **`grok` soul install target**: `positronick soul install <slug> --target grok` writes `~/.grok/SOUL.md`; `--target grok --link` appends an instruction line (not an `@`-import — Grok Build does not expand them) to `$GROK_HOME/AGENTS.md` so Grok Build actually loads the persona. Harness detection also picks up a `.grok` marker directory, last in priority so it never outranks an existing harness.
 - **`memory` listing type**: `positronick memory search|list|show|install` — platform LISTING_TYPES
 - **`bot` listing type**: `positronick bot search|list|show|install` — scheduled agent bots; install prints the bot's prompt (no `--run`)
 - **Listing categories**: Memory and Observability on admin validation

@@ -88,9 +88,10 @@ reads it:
   cursor    ./.cursor/rules/soul.mdc (wrapped in mdc frontmatter)
   openclaw  <workspace>/SOUL.md (default ~/.openclaw/workspace/SOUL.md; --workspace
             picks the agent when several are configured)
+  grok      ~/.grok/SOUL.md (--link also adds an instruction line to ~/.grok/AGENTS.md)
 
 Without --target the harness is detected from marker directories (.hermes,
-.claude, .cursor, .openclaw) in the working directory, then your home
+.claude, .cursor, .openclaw, .grok) in the working directory, then your home
 directory; hermes is the fallback. --path overrides everything and writes the
 body verbatim to that exact file (the cursor wrapper applies only when
 --target cursor is set explicitly).
@@ -150,9 +151,8 @@ func newSoulInstallCmd() *cobra.Command {
 			if link && path != "" {
 				return output.Errorf("--link cannot be combined with --path")
 			}
-			if link && target != "claude" {
-				return output.ErrorWithHint("--link only applies to the claude target",
-					"re-run with --target claude")
+			if link && target != "claude" && target != "grok" {
+				return output.Errorf("--link only applies to the claude and grok targets")
 			}
 			if workspace != "" && target != "openclaw" {
 				return output.ErrorWithHint("--workspace only applies to the openclaw target",
@@ -198,10 +198,10 @@ func newSoulInstallCmd() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().String("target", "", "install target: hermes, claude, cursor or openclaw (default: detected harness, else hermes)")
+	cmd.Flags().String("target", "", "install target: hermes, claude, cursor, openclaw or grok (default: detected harness, else hermes)")
 	cmd.Flags().String("path", "", "write the SOUL.md to this exact file instead of the target's path")
 	cmd.Flags().Bool("force", false, "overwrite an existing file without asking")
-	cmd.Flags().Bool("link", false, "claude target only: add an @-import line to ~/.claude/CLAUDE.md")
+	cmd.Flags().Bool("link", false, "claude or grok target only: claude gets an @-import line in ~/.claude/CLAUDE.md, grok gets an instruction line in ~/.grok/AGENTS.md (Grok Build does not expand @-imports)")
 	cmd.Flags().String("workspace", "",
 		"openclaw target only: the OpenClaw agent id or workspace dir; default: the single configured agent")
 	return cmd

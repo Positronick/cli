@@ -52,6 +52,21 @@ yay -S positronick-bin                            # Arch (AUR)
 | `positronick self update` | Update the CLI in place | available |
 | `positronick version` | Print version information | available |
 
+### Soul install targets
+
+`positronick soul install <slug> --target <target>` writes the soul's SOUL.md
+where the target framework reads it. Without `--target` the harness is
+detected from marker directories (`.hermes`/`.claude`/`.cursor`/`.openclaw`/`.grok`)
+in the working directory, then your home directory; `hermes` is the fallback.
+
+| Target | Path | `--link` |
+| --- | --- | --- |
+| `hermes` (default) | `~/.hermes/SOUL.md` | — |
+| `claude` | `~/.claude/SOUL.md` | adds an `@`-import line to `~/.claude/CLAUDE.md` |
+| `cursor` | `./.cursor/rules/soul.mdc` (wrapped in mdc frontmatter) | — |
+| `openclaw` | `<workspace>/SOUL.md` (default `~/.openclaw/workspace/SOUL.md`; `--workspace <agent-id\|dir>` picks the agent) | — |
+| `grok` | `~/.grok/SOUL.md` | adds an instruction line to `~/.grok/AGENTS.md` (Grok Build does not expand `@`-imports) |
+
 ## Authentication
 
 Browsing is anonymous; authenticate for account features. Three setups:
