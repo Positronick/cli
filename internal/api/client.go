@@ -148,6 +148,9 @@ func (c *Client) do(ctx context.Context, method, path string, query url.Values, 
 			req.Header.Set("Content-Type", "application/json")
 		}
 		req.Header.Set("User-Agent", c.userAgent)
+		if strings.ToLower(strings.TrimSpace(os.Getenv("POSITRONICK_CLIENT"))) == "fleet" {
+			req.Header.Set("x-positronick-client", "fleet")
+		}
 
 		resp, err := c.http.Do(req)
 		if err != nil {

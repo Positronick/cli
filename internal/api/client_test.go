@@ -164,6 +164,43 @@ func TestUserAgent(t *testing.T) {
 	}
 }
 
+// Overnight fleet workers set POSITRONICK_CLIENT=fleet so positronick.com
+// classifies the install as botName fleet (the header wins over User-Agent).
+// Any other value — or an unset env — must not send the header.
+func TestFleetClientHeader(t *testing.T) {
+	tests := []struct {
+		name    string
+		env     string
+		wantHdr string
+	}{
+		{name: "fleet sends the header", env: "fleet", wantHdr: "fleet"},
+		{name: "mixed-case Fleet still sends literal fleet", env: "Fleet", wantHdr: "fleet"},
+		{name: "lab does not set the header", env: "lab", wantHdr: ""},
+		{name: "unset does not set the header", env: "", wantHdr: ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("POSITRONICK_CLIENT", tt.env)
+
+			rec := &recorder{}
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				rec.add(r)
+				fmt.Fprint(w, `{"souls":[]}`)
+			}))
+			defer srv.Close()
+
+			c, _ := newTestClient(t, srv.URL, Anonymous{})
+			if _, err := c.Souls(context.Background()); err != nil {
+				t.Fatalf("Souls: %v", err)
+			}
+
+			if got := rec.last().Header.Get("x-positronick-client"); got != tt.wantHdr {
+				t.Errorf("x-positronick-client = %q, want %q", got, tt.wantHdr)
+			}
+		})
+	}
+}
+
 // Transient 5xx responses must be retried with growing backoff:
 // 300ms*2^attempt plus up to 100ms jitter.
 func TestRetryOn500Then200(t *testing.T) {
