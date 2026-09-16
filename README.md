@@ -178,7 +178,7 @@ This repo is itself a Claude Code plugin — no separate plugin repo needed:
 
 The `positronick` binary must be on `PATH` (see [Install](#install)); the
 plugin auto-starts `positronick mcp serve` for you, giving the agent the same
-five Positronick MCP tools as the Hermes integration above, plus the bundled
+six Positronick MCP tools as the Hermes integration above, plus the bundled
 skill.
 
 ## Verifying releases
