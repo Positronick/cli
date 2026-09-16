@@ -17,6 +17,18 @@
       "type": "skill",
       "slug": "superpowers",
       "installCmd": "https://example.com/superpowers"
+    },
+    {
+      "kind": "suggestion",
+      "type": "skill",
+      "slug": "plain-skill",
+      "installCmd": "npx plain-skill install"
+    },
+    {
+      "kind": "suggestion",
+      "type": "skill",
+      "slug": "mismatched-skill",
+      "installCmd": "https://example.com/mismatched-skill"
     }
   ]
 }

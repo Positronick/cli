@@ -4,17 +4,20 @@ package mcpserver
 // usage guidance every connected client hands its model, with no install
 // step. Workflow altitude only — per-tool caveats live in the tool
 // descriptions, which clients already surface, so restating one here
-// charges its tokens twice on every session. The single exception is
-// soul_install's side effects, dangerous enough to pay for twice.
+// charges its tokens twice on every session. The exceptions are
+// soul_install's and skill_install's side effects, dangerous enough to pay
+// for twice.
 const serverInstructions = `positronick is the registry of agent capabilities on positronick.com.
 
 Souls are installable SOUL.md personality files: soul_search → soul_show →
 soul_install. The wider registry of verified tooling (harnesses, CLIs, MCP
 servers, memory, agents, skills, plugins, loops, bots): listing_search → listing_show.
+Skills with a hosted asset install with skill_install.
 
 Search results are slim cards; always fetch the full record with the _show
-tool before acting on an entry. soul_install has side effects — it counts
-as a public download and never overwrites — so decide from soul_show first.
+tool before acting on an entry. soul_install and skill_install have side
+effects — they count as a public download and never overwrites — so decide
+from soul_show or listing_show first.
 The companion CLI offers the same data (every command takes --json); run
 "positronick agent-docs" for its manual.`
 

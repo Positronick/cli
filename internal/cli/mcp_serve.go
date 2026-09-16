@@ -24,10 +24,10 @@ func attachMCPServeCommand(root *cobra.Command) {
 }
 
 const mcpServeLong = `Run this binary as an MCP (Model Context Protocol) server over stdio,
-exposing positronick's capabilities as five tools: soul_search, soul_show,
-soul_install, listing_search and listing_show. They wrap the same machinery
-as the CLI commands — including the auth credential chain and the download
-counter semantics of soul_install.
+exposing positronick's capabilities as six tools: soul_search, soul_show,
+soul_install, listing_search, listing_show and skill_install. They wrap the
+same machinery as the CLI commands — including the auth credential chain and
+the download counter semantics of soul_install and skill_install.
 
 When stdin is a terminal the server does not start: setup instructions for
 Claude Code, Cursor and generic stdio clients are printed instead. Pass

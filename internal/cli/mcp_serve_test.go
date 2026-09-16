@@ -116,7 +116,7 @@ func TestMCPServeHandshakeInstructions(t *testing.T) {
 	}
 }
 
-// tools/list is the MCP public contract: exactly five consolidated tools with
+// tools/list is the MCP public contract: exactly six consolidated tools with
 // pinned names, descriptions and schemas. A golden diff here is a contract
 // change and must be called out in the PR.
 func TestMCPServeToolsListGolden(t *testing.T) {
@@ -125,8 +125,8 @@ func TestMCPServeToolsListGolden(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(res.Tools) != 5 {
-		t.Fatalf("tools/list returned %d tools, want exactly 5", len(res.Tools))
+	if len(res.Tools) != 6 {
+		t.Fatalf("tools/list returned %d tools, want exactly 6", len(res.Tools))
 	}
 
 	got, err := json.MarshalIndent(res.Tools, "", "  ")
@@ -385,6 +385,115 @@ func TestMCPSoulInstallPathSafety(t *testing.T) {
 	if res.IsError {
 		t.Fatalf("unexpected tool error: %s", textOf(t, res))
 	}
+	if _, err := os.Stat(absPath); err != nil {
+		t.Errorf("expected install at %s: %v", absPath, err)
+	}
+}
+
+// skill_install reuses the CLI's skill-install machinery end to end: agents
+// is the default target, the folder is the slug, and it never overwrites.
+func TestMCPSkillInstall(t *testing.T) {
+	cwd, home := t.TempDir(), t.TempDir()
+	session := newMCPSession(t, mockapi.InstallHandler(), cwd, home)
+
+	res := callTool(t, session, "skill_install", map[string]any{"slug": "superpowers"})
+	if res.IsError {
+		t.Fatalf("unexpected tool error: %s", textOf(t, res))
+	}
+	var out struct {
+		Installed struct {
+			Slug   string `json:"slug"`
+			Name   string `json:"name"`
+			Target string `json:"target"`
+			Path   string `json:"path"`
+			Bytes  int    `json:"bytes"`
+		} `json:"installed"`
+	}
+	structuredAs(t, res, &out)
+	wantPath := filepath.Join(home, ".agents", "skills", "superpowers", "SKILL.md")
+	if out.Installed.Slug != "superpowers" || out.Installed.Name != "superpowers" ||
+		out.Installed.Target != "agents" || out.Installed.Path != wantPath {
+		t.Errorf("installed = %+v, want superpowers/agents at %s", out.Installed, wantPath)
+	}
+	body, err := os.ReadFile(wantPath)
+	if err != nil {
+		t.Fatalf("installed file missing: %v", err)
+	}
+	if string(body) != mockapi.SkillContent["superpowers"] {
+		t.Errorf("installed body = %q, want the verbatim SKILL.md", body)
+	}
+
+	// Existing file: never prompts (no TTY) — an error result, file untouched.
+	res = callTool(t, session, "skill_install", map[string]any{"slug": "superpowers"})
+	if !res.IsError {
+		t.Fatal("re-install over an existing file must return a tool error result")
+	}
+	if text := textOf(t, res); !strings.Contains(text, "already exists") {
+		t.Errorf("overwrite error missing %q:\n%s", "already exists", text)
+	}
+}
+
+// An explicit target uses that target's conventional directory.
+func TestMCPSkillInstallExplicitTarget(t *testing.T) {
+	cwd, home := t.TempDir(), t.TempDir()
+	session := newMCPSession(t, mockapi.InstallHandler(), cwd, home)
+
+	res := callTool(t, session, "skill_install", map[string]any{"slug": "superpowers", "target": "claude"})
+	if res.IsError {
+		t.Fatalf("unexpected tool error: %s", textOf(t, res))
+	}
+	wantPath := filepath.Join(home, ".claude", "skills", "superpowers", "SKILL.md")
+	if _, err := os.Stat(wantPath); err != nil {
+		t.Errorf("expected install at %s: %v", wantPath, err)
+	}
+}
+
+// A skill without a hosted asset has nothing for skill_install to fetch — it
+// errors instead of silently doing nothing, pointing at listing_show.
+func TestMCPSkillInstallNoAsset(t *testing.T) {
+	cwd, home := t.TempDir(), t.TempDir()
+	session := newMCPSession(t, mockapi.InstallHandler(), cwd, home)
+
+	res := callTool(t, session, "skill_install", map[string]any{"slug": "plain-skill"})
+	if !res.IsError {
+		t.Fatal("a skill with no hosted asset must return a tool error result")
+	}
+	if text := textOf(t, res); !strings.Contains(text, "hosted") {
+		t.Errorf("error missing the hosted-asset explanation:\n%s", text)
+	}
+}
+
+// skill_install's --path guards the same home-directory escape soul_install
+// does: a relative path must resolve inside home, an absolute path is
+// explicit intent.
+func TestMCPSkillInstallPathSafety(t *testing.T) {
+	home := t.TempDir()
+	cwd := filepath.Join(home, "project")
+	if err := os.MkdirAll(cwd, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	session := newMCPSession(t, mockapi.InstallHandler(), cwd, home)
+
+	res := callTool(t, session, "skill_install",
+		map[string]any{"slug": "superpowers", "path": "../../outside"})
+	if !res.IsError {
+		t.Fatal("a relative path escaping home must return a tool error result")
+	}
+	if text := textOf(t, res); !strings.Contains(text, "home") {
+		t.Errorf("escape error should name the home-directory rule:\n%s", text)
+	}
+	if _, err := os.Stat(filepath.Join(home, "..", "outside", "superpowers", "SKILL.md")); !os.IsNotExist(err) {
+		t.Error("a rejected escape must not write a file")
+	}
+
+	// An absolute path outside home is explicit intent.
+	absDir := t.TempDir()
+	res = callTool(t, session, "skill_install",
+		map[string]any{"slug": "superpowers", "path": absDir})
+	if res.IsError {
+		t.Fatalf("unexpected tool error: %s", textOf(t, res))
+	}
+	absPath := filepath.Join(absDir, "superpowers", "SKILL.md")
 	if _, err := os.Stat(absPath); err != nil {
 		t.Errorf("expected install at %s: %v", absPath, err)
 	}

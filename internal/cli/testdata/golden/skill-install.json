@@ -1,0 +1,10 @@
+{
+  "installed": {
+    "slug": "superpowers",
+    "name": "superpowers",
+    "version": "1.0.0",
+    "target": "agents",
+    "path": "/home/mock/.agents/skills/superpowers/SKILL.md",
+    "bytes": 167
+  }
+}

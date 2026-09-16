@@ -1,0 +1,9 @@
+{
+  "listing": {
+    "slug": "plain-skill",
+    "name": "Plain Skill",
+    "type": "skill"
+  },
+  "installCmd": "npx plain-skill install",
+  "executed": false
+}

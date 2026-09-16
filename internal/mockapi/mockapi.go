@@ -261,6 +261,60 @@ var Listings = []api.Listing{
 		UpdatedAt:        "2026-04-02T09:00:00.000Z",
 	},
 	{
+		ID:               "01LSTPLAINSKILL000000000XX",
+		Slug:             "plain-skill",
+		ProfileHandle:    "obra",
+		ProfileName:      "Jesse Vincent",
+		ProfileTier:      ptr("verified"),
+		Name:             "Plain Skill",
+		Type:             "skill",
+		Tagline:          "A skill listing with no hosted SKILL.md asset",
+		Description:      ptr("Installs through its own command — no hosted asset for this listing."),
+		Category:         "AI/ML",
+		Tags:             []string{"skills"},
+		Official:         true,
+		SourceURL:        "https://example.com/plain-skill",
+		RepoURL:          ptr("https://example.com/obra/plain-skill"),
+		InstallCmd:       ptr("npx plain-skill install"),
+		Data:             map[string]any{},
+		HasAsset:         false,
+		AssetVersion:     nil,
+		AssetContentHash: nil,
+		Confidence:       "official",
+		Status:           "published",
+		DownloadCount:    3,
+		ChargeCount:      0,
+		CreatedAt:        "2026-04-03T09:00:00.000Z",
+		UpdatedAt:        "2026-04-03T09:00:00.000Z",
+	},
+	{
+		ID:               "01LSTMISMATCHSKILL0000000",
+		Slug:             "mismatched-skill",
+		ProfileHandle:    "obra",
+		ProfileName:      "Jesse Vincent",
+		ProfileTier:      ptr("verified"),
+		Name:             "Mismatched Skill",
+		Type:             "skill",
+		Tagline:          "A hosted skill whose SKILL.md name disagrees with its slug",
+		Description:      ptr("Fixture for the frontmatter-name-must-equal-slug install rule."),
+		Category:         "AI/ML",
+		Tags:             []string{"skills"},
+		Official:         true,
+		SourceURL:        "https://example.com/mismatched-skill",
+		RepoURL:          ptr("https://example.com/obra/mismatched-skill"),
+		InstallCmd:       nil,
+		Data:             map[string]any{},
+		HasAsset:         true,
+		AssetVersion:     ptr("1.0.0"),
+		AssetContentHash: ptr("22bb22bb22bb22bb22bb22bb22bb22bb22bb22bb22bb22bb22bb22bb22bb22bb"),
+		Confidence:       "official",
+		Status:           "published",
+		DownloadCount:    1,
+		ChargeCount:      0,
+		CreatedAt:        "2026-04-04T09:00:00.000Z",
+		UpdatedAt:        "2026-04-04T09:00:00.000Z",
+	},
+	{
 		ID:            "01LSTPRTOGREEN0000000000XX",
 		Slug:          "pr-to-green",
 		ProfileHandle: "nsollazzo",
@@ -328,6 +382,19 @@ var Listings = []api.Listing{
 		CreatedAt:        "2026-06-01T09:00:00.000Z",
 		UpdatedAt:        "2026-06-02T09:00:00.000Z",
 	},
+}
+
+// SkillContent is the fixture hosted SKILL.md body for skill listings whose
+// HasAsset is true, keyed by slug — kept separate from api.Listing since the
+// real JSON detail endpoint has no content field (only the .md endpoint
+// serves the body; see internal/api's SkillMarkdown). superpowers' frontmatter
+// name matches its slug (the happy path); mismatched-skill's deliberately
+// doesn't, for the name-must-equal-slug install rule.
+var SkillContent = map[string]string{
+	"superpowers": "---\nname: superpowers\ndescription: Skills for planning, debugging and shipping.\n" +
+		"---\n\n# Superpowers\n\nA battle-tested methodology pack: plan, then execute, then verify.\n",
+	"mismatched-skill": "---\nname: not-mismatched-skill\ndescription: name disagrees with the slug.\n" +
+		"---\n\n# Mismatched Skill\n",
 }
 
 // ResearchPosts is the fixture "what's new" feed: one of each post kind
@@ -482,9 +549,9 @@ func PostMarkdown(p api.Post) string {
 
 // Handler returns an http.Handler implementing the read API over the fixture
 // data, including the server's JSON error envelope on 404 and on an unknown
-// ?type=. Requests to /api/souls/{slug}.md are answered with 418 — the .md
-// endpoint bumps the install counter, so any read command hitting it is a bug
-// the consuming test must surface.
+// ?type=. Requests to /api/souls/{slug}.md and /api/skills/{slug}.md are
+// answered with 418 — both .md endpoints bump an install counter, so any
+// read command hitting them is a bug the consuming test must surface.
 func Handler() http.Handler {
 	mux := http.NewServeMux()
 	registerAdmin(mux) // the /api/admin write surface (see admin.go)
@@ -538,6 +605,19 @@ func Handler() http.Handler {
 			}
 		}
 		writeError(w, http.StatusNotFound, "not_found", "Listing not found")
+	})
+
+	// Only the .md body is served under /api/skills/ (a skill's JSON detail
+	// is the shared /api/listings/{slug}); Handler answers 418 on it and
+	// 404 otherwise, mirroring the souls route's read-command guard.
+	mux.HandleFunc("GET /api/skills/{slug}", func(w http.ResponseWriter, r *http.Request) {
+		slug := r.PathValue("slug")
+		if strings.HasSuffix(slug, ".md") {
+			writeError(w, http.StatusTeapot, "md_endpoint_hit",
+				"the .md endpoint bumps the install counter; read commands must use the listing JSON detail endpoint")
+			return
+		}
+		writeError(w, http.StatusNotFound, "not_found", "Skill not found")
 	})
 
 	mux.HandleFunc("GET /api/research", func(w http.ResponseWriter, r *http.Request) {
@@ -665,15 +745,20 @@ func Handler() http.Handler {
 }
 
 // InstallHandler returns Handler plus the install contract: GET
-// /api/souls/{slug}.md answers the soul's markdown body verbatim — the one
-// endpoint that bumps the server's download counter. Read-command tests must
-// keep using Handler (which answers 418 on .md so an accidental hit fails
-// loudly); only install-path tests opt into this handler.
+// /api/souls/{slug}.md answers a soul's markdown body verbatim, and GET
+// /api/skills/{slug}.md answers a skill's hosted SKILL.md body from
+// SkillContent — the endpoints that bump the server's download counter.
+// Read-command tests must keep using Handler (which answers 418 on both .md
+// paths so an accidental hit fails loudly); only install-path tests opt into
+// this handler.
 func InstallHandler() http.Handler {
 	inner := Handler()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		slug, isMD := strings.CutSuffix(strings.TrimPrefix(r.URL.Path, "/api/souls/"), ".md")
-		if r.Method == http.MethodGet && isMD &&
+		if r.Method != http.MethodGet {
+			inner.ServeHTTP(w, r)
+			return
+		}
+		if slug, isMD := strings.CutSuffix(strings.TrimPrefix(r.URL.Path, "/api/souls/"), ".md"); isMD &&
 			strings.HasPrefix(r.URL.Path, "/api/souls/") && !strings.Contains(slug, "/") {
 			for _, s := range Souls {
 				if s.Slug == slug {
@@ -683,6 +768,18 @@ func InstallHandler() http.Handler {
 				}
 			}
 			writeError(w, http.StatusNotFound, "not_found", "Soul not found")
+			return
+		}
+		if slug, isMD := strings.CutSuffix(strings.TrimPrefix(r.URL.Path, "/api/skills/"), ".md"); isMD &&
+			strings.HasPrefix(r.URL.Path, "/api/skills/") && !strings.Contains(slug, "/") {
+			for _, l := range Listings {
+				if l.Slug == slug && l.Type == "skill" && l.HasAsset {
+					w.Header().Set("Content-Type", "text/markdown; charset=utf-8")
+					_, _ = w.Write([]byte(SkillContent[slug]))
+					return
+				}
+			}
+			writeError(w, http.StatusNotFound, "not_found", "Skill not found")
 			return
 		}
 		inner.ServeHTTP(w, r)

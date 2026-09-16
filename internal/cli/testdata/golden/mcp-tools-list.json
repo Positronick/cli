@@ -251,6 +251,80 @@
     }
   },
   {
+    "description": "Install a skill's hosted SKILL.md where the target agent reads it (counts as a download on positronick.com). It never overwrites: an existing file is an error — pass a different path or remove the file first. A relative path must resolve inside the user's home directory; pass an absolute path to install elsewhere. A skill without a hosted asset returns an error; use listing_show to see its official install command instead.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "write to this exact directory instead of the target's conventional path",
+          "type": "string"
+        },
+        "project": {
+          "description": "write the project-local variant under the working directory instead of home",
+          "type": "boolean"
+        },
+        "slug": {
+          "description": "the skill's slug, as returned by listing_search",
+          "type": "string"
+        },
+        "target": {
+          "description": "install target (default: agents, the shared standard read by Codex, Cursor, Grok Build and OpenClaw)",
+          "enum": [
+            "agents",
+            "claude",
+            "cursor",
+            "grok",
+            "codex",
+            "openclaw"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "slug"
+      ],
+      "type": "object"
+    },
+    "name": "skill_install",
+    "outputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "installed": {
+          "additionalProperties": false,
+          "properties": {
+            "bytes": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "slug": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "slug",
+            "name",
+            "target",
+            "path",
+            "bytes"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "installed"
+      ],
+      "type": "object"
+    }
+  },
+  {
     "description": "Install a soul's SOUL.md where the target harness reads it (counts as a download on positronick.com). It never overwrites: an existing file is an error — pass a different path or remove the file first. A relative path must resolve inside the user's home directory; pass an absolute path to install elsewhere.",
     "inputSchema": {
       "additionalProperties": false,

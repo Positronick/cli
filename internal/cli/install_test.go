@@ -732,3 +732,193 @@ func TestSuggestClaudeMCPAdd(t *testing.T) {
 		}
 	})
 }
+
+// The default `skill install` for a hosted skill: --target defaults to
+// "agents" (the shared standard dir), the install folder is the slug, the
+// body is written verbatim, and the download counter bumps exactly once.
+func TestSkillInstallDefaultJSON(t *testing.T) {
+	home := isolateHome(t)
+	srv, mdHits := newInstallServer(t)
+
+	stdout, stderr, code := executeAgainst(t, srv.URL, "skill", "install", "superpowers", "--json")
+	if code != 0 {
+		t.Fatalf("exit code = %d, want 0 (stderr: %s)", code, stderr)
+	}
+	assertGolden(t, "skill-install.json", strings.ReplaceAll(stdout, home, mockHome))
+
+	dest := filepath.Join(home, ".agents", "skills", "superpowers", "SKILL.md")
+	got, err := os.ReadFile(dest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != mockapi.SkillContent["superpowers"] {
+		t.Errorf("installed body = %q, want the verbatim fixture body", got)
+	}
+	if n := mdHits.Load(); n != 1 {
+		t.Errorf(".md endpoint hit %d times, want exactly 1", n)
+	}
+}
+
+// `skill install --help` documents the folder-name/frontmatter-name rule and
+// the target table; pinned so its wording is a deliberate change.
+func TestSkillInstallHelpGolden(t *testing.T) {
+	stdout, _, code := executeAgainst(t, "", "skill", "install", "--help")
+	if code != 0 {
+		t.Fatalf("exit code = %d, want 0", code)
+	}
+	assertGolden(t, "skill-install-help.txt", stdout)
+}
+
+// --target claude writes under ~/.claude/skills instead of the default.
+func TestSkillInstallClaudeTarget(t *testing.T) {
+	home := isolateHome(t)
+	srv, _ := newInstallServer(t)
+
+	_, stderr, code := executeAgainst(t, srv.URL,
+		"skill", "install", "superpowers", "--target", "claude", "--json")
+	if code != 0 {
+		t.Fatalf("exit code = %d, want 0 (stderr: %s)", code, stderr)
+	}
+	dest := filepath.Join(home, ".claude", "skills", "superpowers", "SKILL.md")
+	if _, err := os.Stat(dest); err != nil {
+		t.Errorf("SKILL.md missing at the claude path: %v", err)
+	}
+}
+
+// --project writes the project-local variant under cwd instead of home.
+func TestSkillInstallProjectCursorTarget(t *testing.T) {
+	isolateHome(t)
+	t.Chdir(t.TempDir())
+	srv, _ := newInstallServer(t)
+
+	stdout, stderr, code := executeAgainst(t, srv.URL,
+		"skill", "install", "superpowers", "--project", "--target", "cursor", "--json")
+	if code != 0 {
+		t.Fatalf("exit code = %d, want 0 (stderr: %s)", code, stderr)
+	}
+	if !strings.Contains(stdout, `"target": "cursor"`) {
+		t.Errorf("stdout = %q, want target \"cursor\"", stdout)
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	dest := filepath.Join(cwd, ".cursor", "skills", "superpowers", "SKILL.md")
+	got, err := os.ReadFile(dest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != mockapi.SkillContent["superpowers"] {
+		t.Errorf("body = %q, want verbatim", got)
+	}
+}
+
+// Non-interactive overwrite is refused without --force — and the refused
+// attempt must not bump the download counter, exactly like soul install.
+func TestSkillInstallOverwriteNonInteractive(t *testing.T) {
+	home := isolateHome(t)
+	srv, mdHits := newInstallServer(t)
+	dest := filepath.Join(home, ".agents", "skills", "superpowers", "SKILL.md")
+	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dest, []byte("hand-edited"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	stdout, stderr, code := executeAgainst(t, srv.URL, "skill", "install", "superpowers", "--json")
+	if code != output.ExitError {
+		t.Fatalf("exit code = %d, want %d", code, output.ExitError)
+	}
+	if stdout != "" {
+		t.Errorf("stdout = %q, want empty on error", stdout)
+	}
+	if !strings.Contains(stderr, "--force") {
+		t.Errorf("stderr = %q, want the --force hint", stderr)
+	}
+	if n := mdHits.Load(); n != 0 {
+		t.Errorf(".md endpoint hit %d times on a refused install, want 0", n)
+	}
+
+	if _, _, code = executeAgainst(t, srv.URL, "skill", "install", "superpowers", "--force"); code != 0 {
+		t.Fatalf("--force exit code = %d, want 0", code)
+	}
+	if got, _ := os.ReadFile(dest); string(got) != mockapi.SkillContent["superpowers"] {
+		t.Errorf("body = %q, want the fresh install after --force", got)
+	}
+}
+
+// A skill listing without a hosted asset falls back to the plain
+// print-or-run install-command flow, unchanged — same JSON shape as any
+// other listing's install verb.
+func TestSkillInstallFallbackNoAsset(t *testing.T) {
+	isolateHome(t)
+	srv, mdHits := newInstallServer(t)
+
+	stdout, stderr, code := executeAgainst(t, srv.URL, "skill", "install", "plain-skill", "--json")
+	if code != 0 {
+		t.Fatalf("exit code = %d, want 0 (stderr: %s)", code, stderr)
+	}
+	assertGolden(t, "skill-install-fallback.json", stdout)
+	if n := mdHits.Load(); n != 0 {
+		t.Errorf(".md endpoint hit %d times for a non-hosted skill, want 0", n)
+	}
+}
+
+// --run/--yes only make sense for the fallback path; a hosted skill rejects
+// them outright.
+func TestSkillInstallRunRejectedForHostedAsset(t *testing.T) {
+	isolateHome(t)
+	srv, _ := newInstallServer(t)
+
+	_, stderr, code := executeAgainst(t, srv.URL, "skill", "install", "superpowers", "--run")
+	if code != output.ExitError {
+		t.Errorf("exit code = %d, want %d", code, output.ExitError)
+	}
+	if !strings.Contains(stderr, "--run does not apply to a hosted skill") {
+		t.Errorf("stderr = %q, want the --run rejection", stderr)
+	}
+}
+
+// A frontmatter name that doesn't match the slug fails loud and writes
+// nothing.
+func TestSkillInstallNameMismatch(t *testing.T) {
+	home := isolateHome(t)
+	srv, _ := newInstallServer(t)
+
+	_, stderr, code := executeAgainst(t, srv.URL, "skill", "install", "mismatched-skill", "--json")
+	if code != output.ExitError {
+		t.Errorf("exit code = %d, want %d", code, output.ExitError)
+	}
+	if !strings.Contains(stderr, `does not match the slug`) {
+		t.Errorf("stderr = %q, want the name-mismatch error", stderr)
+	}
+	if _, err := os.Stat(filepath.Join(home, ".agents", "skills", "mismatched-skill", "SKILL.md")); !os.IsNotExist(err) {
+		t.Error("a name mismatch must not write a file")
+	}
+}
+
+// An unknown --target fails loud, before any network call.
+func TestSkillInstallUnknownTarget(t *testing.T) {
+	isolateHome(t)
+	_, stderr, code := executeAgainst(t, mockHost, "skill", "install", "superpowers", "--target", "emacs")
+	if code != output.ExitError {
+		t.Errorf("exit code = %d, want %d", code, output.ExitError)
+	}
+	if !strings.Contains(stderr, "emacs") {
+		t.Errorf("stderr = %q, want the bad target named", stderr)
+	}
+}
+
+// --path is incompatible with --target/--project.
+func TestSkillInstallPathIncompatibleWithTarget(t *testing.T) {
+	isolateHome(t)
+	_, stderr, code := executeAgainst(t, mockHost,
+		"skill", "install", "superpowers", "--path", "/tmp/x", "--target", "claude")
+	if code != output.ExitError {
+		t.Errorf("exit code = %d, want %d", code, output.ExitError)
+	}
+	if !strings.Contains(stderr, "--path") {
+		t.Errorf("stderr = %q, want --path named in the conflict", stderr)
+	}
+}

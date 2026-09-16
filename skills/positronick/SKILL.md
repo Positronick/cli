@@ -13,8 +13,9 @@ description: >-
 
 positronick.com is a registry of agent capabilities. You reach it two ways:
 
-- **MCP server** (`positronick mcp serve`) — five tools: `soul_search`,
-  `soul_show`, `soul_install`, `listing_search`, `listing_show`.
+- **MCP server** (`positronick mcp serve`) — six tools: `soul_search`,
+  `soul_show`, `soul_install`, `listing_search`, `listing_show`,
+  `skill_install`.
 - **CLI** (`positronick`, alias `pck`) — same data, plus auth and admin.
   Run `positronick agent-docs` for its full self-describing manual.
 
@@ -58,14 +59,33 @@ Everything else is a listing with one of these types: `harness`, `cli`,
    the official `installCmd` and verified `sourceUrl`.
 2. `listing_show` — the full record plus type-specific data. For loops that
    means the recipe (goal, check command, exit condition, max iterations) and
-   a ready-to-paste kickoff prompt.
+   a ready-to-paste kickoff prompt. For skills, `hasAsset` says whether a
+   hosted SKILL.md exists to install with `skill_install`.
 
 To install a listing, run its official `installCmd` — ask the user before
 executing it, like any shell command from the network. The CLI equivalent is
 `positronick <type> install <slug> --run`. Loops and bots are the exception:
 they install as a prompt, not a file — `positronick loop install <slug>` and
 `positronick bot install <slug>` (no `--run`) print the prompt to paste into
-your agent.
+your agent. Skills with a hosted asset are another exception — see below.
+
+## Skills with a hosted asset: skill_install
+
+A skill listing with `hasAsset: true` has its own SKILL.md hosted on
+positronick.com, installable directly with `skill_install` instead of the
+generic `installCmd` flow above.
+
+- `target` is one of `agents`, `claude`, `cursor`, `grok`, `codex`,
+  `openclaw`; default `agents`, the shared standard read by Codex, Cursor,
+  Grok Build and OpenClaw. `project` writes the project-local variant under
+  the working directory instead of home. The install folder is always the
+  listing's slug: `<target dir>/<slug>/SKILL.md`.
+- The MCP tool **never overwrites**: an existing file is an error — pass a
+  different `path` or remove the file first, after confirming with the user.
+- It **counts as a public download** on positronick.com, so don't install
+  speculatively; decide from `listing_show` first.
+- A skill listing with `hasAsset: false` has no hosted asset to fetch — use
+  its `installCmd` via the generic listing flow instead.
 
 ## Driving the CLI
 

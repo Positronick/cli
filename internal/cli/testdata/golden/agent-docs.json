@@ -878,12 +878,42 @@
     {
       "path": "positronick skill install",
       "use": "positronick skill install \u003cslug\u003e [flags]",
-      "description": "Print (or run with --run) the official install command for one skill",
+      "description": "Install a skill's SKILL.md, or print its install command",
       "flags": [
+        {
+          "name": "force",
+          "shorthand": "",
+          "usage": "overwrite an existing file without asking",
+          "default": "false"
+        },
+        {
+          "name": "path",
+          "shorthand": "",
+          "usage": "write the SKILL.md to this exact directory instead of the target's path",
+          "default": ""
+        },
+        {
+          "name": "project",
+          "shorthand": "",
+          "usage": "write the project-local variant under the working directory instead of home",
+          "default": "false"
+        },
         {
           "name": "run",
           "shorthand": "",
-          "usage": "execute the install command via `sh -c` instead of printing it",
+          "usage": "execute the install command via `sh -c` instead of printing it (only when the skill has no hosted asset)",
+          "default": "false"
+        },
+        {
+          "name": "target",
+          "shorthand": "",
+          "usage": "install target: agents, claude, cursor, grok, codex or openclaw (default: agents)",
+          "default": "agents"
+        },
+        {
+          "name": "yes",
+          "shorthand": "",
+          "usage": "skip the confirmation prompt for --run (only when the skill has no hosted asset)",
           "default": "false"
         }
       ]
