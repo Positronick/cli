@@ -1,0 +1,13 @@
+{
+	"name": "positronick",
+	"owner": { "name": "Positronick", "url": "https://positronick.com" },
+	"description": "Positronick's Claude Code plugins",
+	"plugins": [
+		{
+			"name": "positronick",
+			"source": "./",
+			"description": "Discover and install agent capabilities (souls, skills, MCP servers, CLIs) from positronick.com — the positronick skill plus the embedded MCP server.",
+			"version": "0.1.0"
+		}
+	]
+}
