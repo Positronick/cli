@@ -18,13 +18,17 @@ const claudeImportLine = "@~/.claude/SOUL.md"
 
 // TargetPath returns the conventional SOUL.md location for a target.
 // hermes, claude and openclaw are home-anchored; cursor is project-local
-// (its rules live inside the repository).
+// (its rules live inside the repository). openclaw's result is the
+// no-config default (~/.openclaw/workspace/SOUL.md) — the actual OpenClaw
+// destination for `soul install` is resolved per-machine by
+// ResolveOpenClawWorkspaces + OpenClawSoulPath, since OpenClaw reads
+// SOUL.md from its configured agent workspace, not ~/.openclaw.
 func TargetPath(target, cwd, home string) (string, error) {
 	switch target {
 	case "hermes":
 		return filepath.Join(home, ".hermes", "SOUL.md"), nil
 	case "openclaw":
-		return filepath.Join(home, ".openclaw", "SOUL.md"), nil
+		return filepath.Join(home, ".openclaw", "workspace", "SOUL.md"), nil
 	case "claude":
 		return filepath.Join(home, ".claude", "SOUL.md"), nil
 	case "cursor":

@@ -173,7 +173,11 @@ func soulInstallHandler(opts Options) mcp.ToolHandlerFor[soulInstallIn, soulInst
 		var dest string
 		if in.Path == "" {
 			var err error
-			if dest, err = install.TargetPath(target, opts.Cwd, opts.Home); err != nil {
+			if target == "openclaw" {
+				if dest, err = openClawDest(opts); err != nil {
+					return nil, out, err
+				}
+			} else if dest, err = install.TargetPath(target, opts.Cwd, opts.Home); err != nil {
 				return nil, out, err
 			}
 		} else {
@@ -242,6 +246,23 @@ func soulNotFoundErr(ctx context.Context, opts Options, slug string) error {
 		}
 		return slugs, nil
 	})
+}
+
+// openClawDest resolves the real OpenClaw SOUL.md destination: OpenClaw
+// reads SOUL.md from its configured agent's workspace, not
+// install.TargetPath's ~/.openclaw — with no --workspace flag on this tool,
+// several configured agents is a loud error naming them (unlike the CLI,
+// this tool cannot pick one for the caller; pass path instead).
+func openClawDest(opts Options) (string, error) {
+	workspaces, err := install.ResolveOpenClawWorkspaces(opts.Home, os.Getenv, os.ReadFile)
+	if err != nil {
+		return "", err
+	}
+	if len(workspaces) != 1 {
+		return "", fmt.Errorf("several OpenClaw agents configured: %s; pass path to choose",
+			install.DescribeOpenClawWorkspaces(workspaces))
+	}
+	return filepath.Join(workspaces[0].Path, "SOUL.md"), nil
 }
 
 // safeInstallPath resolves a caller-supplied install path. An absolute path

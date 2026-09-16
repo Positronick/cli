@@ -34,8 +34,12 @@ Souls are installable SOUL.md personality files for coding agents.
      `target` and `path` are omitted, it is detected from marker directories
      (`.hermes`/`.claude`/`.cursor`/`.openclaw` in cwd, then home),
      defaulting to `hermes`. Cursor is project-local — the soul lands in
-     `./.cursor/rules/soul.mdc`, wrapped in mdc frontmatter — the other
-     targets get `~/.<harness>/SOUL.md` verbatim.
+     `./.cursor/rules/soul.mdc`, wrapped in mdc frontmatter — `hermes` and
+     `claude` get `~/.<harness>/SOUL.md` verbatim, and `openclaw` gets
+     `<workspace>/SOUL.md` (its configured agent workspace, default
+     `~/.openclaw/workspace/SOUL.md`). With several OpenClaw agents
+     configured, this tool has no `--workspace` flag to pick one — pass
+     `path` explicitly, or use the CLI's `soul install --workspace`.
    - The MCP tool **never overwrites**: an existing file is an error — pass
      a different `path` or remove the file first, after confirming with the
      user. (The CLI's `soul install` differs: it prompts before overwriting,

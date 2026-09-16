@@ -162,6 +162,134 @@ func TestSoulInstallCursorTarget(t *testing.T) {
 	}
 }
 
+// --target openclaw with no openclaw.json writes to the no-config default
+// workspace, not ~/.openclaw/SOUL.md — OpenClaw never reads that file.
+func TestSoulInstallOpenClawNoConfig(t *testing.T) {
+	home := isolateHome(t)
+	srv, mdHits := newInstallServer(t)
+
+	stdout, stderr, code := executeAgainst(t, srv.URL,
+		"soul", "install", "sherlock", "--target", "openclaw", "--json")
+	if code != 0 {
+		t.Fatalf("exit code = %d, want 0 (stderr: %s)", code, stderr)
+	}
+	assertGolden(t, "soul-install-openclaw.json", strings.ReplaceAll(stdout, home, mockHome))
+
+	dest := filepath.Join(home, ".openclaw", "workspace", "SOUL.md")
+	if _, err := os.Stat(dest); err != nil {
+		t.Errorf("SOUL.md missing at the workspace default: %v", err)
+	}
+	if n := mdHits.Load(); n != 1 {
+		t.Errorf(".md endpoint hit %d times, want exactly 1", n)
+	}
+}
+
+// Several configured OpenClaw agents and no --workspace is a loud, upfront
+// error — and, crucially, the fetch-after-gate order means no download
+// counter bump for a request that was never going to succeed.
+func TestSoulInstallOpenClawSeveralAgentsRequiresWorkspace(t *testing.T) {
+	home := isolateHome(t)
+	mainWS := filepath.Join(home, "agents", "main-ws")
+	researchWS := filepath.Join(home, "agents", "research-ws")
+	writeOpenClawConfig(t, home, fmt.Sprintf(`{"agents":{"entries":{
+		"main": {"default": true, "workspace": %q},
+		"researcher": {"workspace": %q}
+	}}}`, mainWS, researchWS))
+	srv, mdHits := newInstallServer(t)
+
+	stdout, stderr, code := executeAgainst(t, srv.URL,
+		"soul", "install", "sherlock", "--target", "openclaw", "--json")
+	if code != output.ExitError {
+		t.Fatalf("exit code = %d, want %d (stderr: %s)", code, output.ExitError, stderr)
+	}
+	if stdout != "" {
+		t.Errorf("stdout = %q, want empty on error", stdout)
+	}
+	for _, want := range []string{
+		fmt.Sprintf("main (%s)", mainWS),
+		fmt.Sprintf("researcher (%s)", researchWS),
+		"--workspace",
+	} {
+		if !strings.Contains(stderr, want) {
+			t.Errorf("stderr = %q, want it to contain %q", stderr, want)
+		}
+	}
+	if n := mdHits.Load(); n != 0 {
+		t.Errorf(".md endpoint hit %d times on a refused install, want 0", n)
+	}
+	if _, err := os.Stat(mainWS); err == nil {
+		t.Error("nothing should have been written for a refused install")
+	}
+}
+
+// --workspace <id> picks a specific configured agent.
+func TestSoulInstallOpenClawWorkspaceByID(t *testing.T) {
+	home := isolateHome(t)
+	mainWS := filepath.Join(home, "agents", "main-ws")
+	researchWS := filepath.Join(home, "agents", "research-ws")
+	writeOpenClawConfig(t, home, fmt.Sprintf(`{"agents":{"entries":{
+		"main": {"default": true, "workspace": %q},
+		"researcher": {"workspace": %q}
+	}}}`, mainWS, researchWS))
+	srv, mdHits := newInstallServer(t)
+
+	stdout, stderr, code := executeAgainst(t, srv.URL,
+		"soul", "install", "sherlock", "--target", "openclaw", "--workspace", "researcher", "--json")
+	if code != 0 {
+		t.Fatalf("exit code = %d, want 0 (stderr: %s)", code, stderr)
+	}
+	wantPath := filepath.Join(researchWS, "SOUL.md")
+	if !strings.Contains(stdout, fmt.Sprintf(`"path": %q`, wantPath)) {
+		t.Errorf("stdout = %q, want the researcher workspace path %q", stdout, wantPath)
+	}
+	if got, err := os.ReadFile(wantPath); err != nil || string(got) != mockapi.Souls[0].Content {
+		t.Errorf("SOUL.md at %s = (%q, %v), want the verbatim fixture body", wantPath, got, err)
+	}
+	if n := mdHits.Load(); n != 1 {
+		t.Errorf(".md endpoint hit %d times, want exactly 1", n)
+	}
+}
+
+// --workspace only applies to the openclaw target.
+func TestSoulInstallWorkspaceFlagValidation(t *testing.T) {
+	isolateHome(t)
+
+	t.Run("--workspace with a non-openclaw target", func(t *testing.T) {
+		_, stderr, code := executeAgainst(t, mockHost,
+			"soul", "install", "sherlock", "--target", "hermes", "--workspace", "main")
+		if code != output.ExitError {
+			t.Errorf("exit code = %d, want %d", code, output.ExitError)
+		}
+		if !strings.Contains(stderr, "--target openclaw") {
+			t.Errorf("stderr = %q, want the --target openclaw hint", stderr)
+		}
+	})
+
+	t.Run("--workspace combined with --path", func(t *testing.T) {
+		_, stderr, code := executeAgainst(t, mockHost,
+			"soul", "install", "sherlock", "--target", "openclaw", "--workspace", "main", "--path", "/tmp/x")
+		if code != output.ExitError {
+			t.Errorf("exit code = %d, want %d", code, output.ExitError)
+		}
+		if !strings.Contains(stderr, "--workspace cannot be combined with --path") {
+			t.Errorf("stderr = %q, want the combination error", stderr)
+		}
+	})
+}
+
+// writeOpenClawConfig drops an openclaw.json fixture at home's default state
+// dir (~/.openclaw/openclaw.json).
+func writeOpenClawConfig(t *testing.T, home, body string) {
+	t.Helper()
+	dir := filepath.Join(home, ".openclaw")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "openclaw.json"), []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
 // Non-interactive overwrite is refused without --force — and the refused
 // attempt must not bump the download counter.
 func TestSoulInstallOverwriteNonInteractive(t *testing.T) {

@@ -1,0 +1,36 @@
+Fetch a soul's SOUL.md body verbatim and write it where the target framework
+reads it:
+
+  hermes    ~/.hermes/SOUL.md (the default)
+  claude    ~/.claude/SOUL.md (--link also adds an @-import to ~/.claude/CLAUDE.md)
+  cursor    ./.cursor/rules/soul.mdc (wrapped in mdc frontmatter)
+  openclaw  <workspace>/SOUL.md (default ~/.openclaw/workspace/SOUL.md; --workspace
+            picks the agent when several are configured)
+
+Without --target the harness is detected from marker directories (.hermes,
+.claude, .cursor, .openclaw) in the working directory, then your home
+directory; hermes is the fallback. --path overrides everything and writes the
+body verbatim to that exact file (the cursor wrapper applies only when
+--target cursor is set explicitly).
+
+This is the one command that counts as a download on positronick.com. An
+existing file is only overwritten after a confirmation prompt (interactive)
+or with --force.
+
+Usage:
+  positronick soul install <slug> [flags]
+
+Flags:
+      --force              overwrite an existing file without asking
+  -h, --help               help for install
+      --link               claude target only: add an @-import line to ~/.claude/CLAUDE.md
+      --path string        write the SOUL.md to this exact file instead of the target's path
+      --target string      install target: hermes, claude, cursor or openclaw (default: detected harness, else hermes)
+      --workspace string   openclaw target only: the OpenClaw agent id or workspace dir; default: the single configured agent
+
+Global Flags:
+      --base-url string   override the positronick.com API base URL
+      --json              emit machine-readable JSON on stdout
+      --no-color          disable color output
+      --quiet             suppress progress output on stderr
+      --yes               assume yes for confirmation prompts

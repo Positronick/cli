@@ -978,6 +978,12 @@
           "shorthand": "",
           "usage": "install target: hermes, claude, cursor or openclaw (default: detected harness, else hermes)",
           "default": ""
+        },
+        {
+          "name": "workspace",
+          "shorthand": "",
+          "usage": "openclaw target only: the OpenClaw agent id or workspace dir; default: the single configured agent",
+          "default": ""
         }
       ]
     },

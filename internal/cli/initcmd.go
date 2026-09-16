@@ -109,7 +109,7 @@ func newInitCmd() *cobra.Command {
 				}
 			}
 
-			installed, err := installSoul(cmd, p, client, soulInstallSpec{
+			initSpec := soulInstallSpec{
 				slug:          slug,
 				target:        target,
 				reportTarget:  target,
@@ -117,7 +117,20 @@ func newInitCmd() *cobra.Command {
 				home:          home,
 				force:         yes,
 				overwriteHint: "--yes",
-			})
+			}
+			if target == "openclaw" {
+				// OpenClaw reads SOUL.md from its configured agent
+				// workspace, not ~/.openclaw; no --workspace flag here, so a
+				// multi-agent setup fails loudly with the same message
+				// `soul install` gives.
+				dest, err := resolveOpenClawDest(home, "")
+				if err != nil {
+					return err
+				}
+				initSpec.path = dest
+			}
+
+			installed, err := installSoul(cmd, p, client, initSpec)
 			if err != nil {
 				return err
 			}

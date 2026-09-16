@@ -633,6 +633,7 @@ Flags:
 - `--link` (default `false`): claude target only: add an @-import line to ~/.claude/CLAUDE.md
 - `--path` (default ``): write the SOUL.md to this exact file instead of the target's path
 - `--target` (default ``): install target: hermes, claude, cursor or openclaw (default: detected harness, else hermes)
+- `--workspace` (default ``): openclaw target only: the OpenClaw agent id or workspace dir; default: the single configured agent
 
 ## positronick soul list
 
